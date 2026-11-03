@@ -23,6 +23,7 @@ export class TouchController {
   private raycaster: THREE.Raycaster;
   private plane: THREE.Plane;
   private intersectionPoint: THREE.Vector3;
+  private pointerNdc: THREE.Vector2;
   private isDragging = false;
   private isIgnited = false;
   public readonly proximityDetector: WickProximityDetector;
@@ -51,6 +52,7 @@ export class TouchController {
     // Plane equation: n · p + d = 0 -> (0, 1, 0) · (x, 0.68, z) + (-0.68) = 0
     this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.68);
     this.intersectionPoint = new THREE.Vector3();
+    this.pointerNdc = new THREE.Vector2();
 
     // Ensure match follower starts hidden
     this.matchFollower.visible = false;
@@ -105,7 +107,8 @@ export class TouchController {
     const ndcX = ((clientX - rect.left) / width) * 2 - 1;
     const ndcY = -(((clientY - rect.top) / height) * 2 - 1);
 
-    this.raycaster.setFromCamera({ x: ndcX, y: ndcY }, this.cameraRig.camera);
+    this.pointerNdc.set(ndcX, ndcY);
+    this.raycaster.setFromCamera(this.pointerNdc, this.cameraRig.camera);
 
     const hit = this.raycaster.ray.intersectPlane(this.plane, this.intersectionPoint);
     if (hit) {
