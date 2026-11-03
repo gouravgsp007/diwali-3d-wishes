@@ -11,6 +11,8 @@
  * - ASVS V5 volume and gain clamping [0.0, 1.0] to prevent acoustic clipping
  */
 
+import { SfxSynthesizer } from './sfx-synthesizer';
+
 export interface SfxPlayer {
   playMatchStrike(): void;
   playFlameCrackle(): void;
@@ -91,6 +93,10 @@ export class AudioEngine {
         src.buffer = silentBuf;
         src.connect(this.audioCtx.destination);
         src.start(0);
+
+        if (!this.sfxSynth) {
+          this.sfxSynth = new SfxSynthesizer(this.audioCtx, this.sfxGain);
+        }
       }
     } catch (err) {
       console.warn('Web Audio init skipped:', err);
