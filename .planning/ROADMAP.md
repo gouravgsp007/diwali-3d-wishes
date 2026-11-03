@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core Architecture, State Machine & Cryptographic Codec** - Establish foundational state machine, mobile viewport container, and zero-backend AES-GCM passcode unlock gate
 - [x] **Phase 2: WebGL Scene Engine, Camera Rig & 3D Diya Mesh** - Build mobile-optimized Three.js scene, responsive camera rig, and procedural/low-poly terracotta diya model
-- [ ] **Phase 3: Procedural GLSL Flame Shader, Additive Bloom & Particle FX** - Implement organic flickering flame shader, warm amber point light, additive glow halo, and bursting sparklers
+- [x] **Phase 3: Procedural GLSL Flame Shader, Additive Bloom & Particle FX** - Implement organic flickering flame shader, warm amber point light, additive glow halo, and bursting sparklers
 - [ ] **Phase 4: Touch Interaction Controller & Dual-Tier Audio Architecture** - Add touch-and-drag match ignition, proximity detection, haptics, and dual-tier audio bypassing iOS silent switch
 - [ ] **Phase 5: Festive Greeting Reveal, Typography & Celebration Polish** - Deliver glassmorphic greeting card with gold shimmer typography, confetti celebration, tap sparklers, and WhatsApp reaction
 - [ ] **Phase 6: Creator Portal & Delivery Message Generator Tool** - Create standalone generator for sellers to encrypt wishes, set passcodes, and 1-click copy pre-formatted DM delivery text
@@ -135,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Core Architecture, State Machine & Cryptographic Codec | 2/2 | Complete | 2026-11-04 |
 | 2. WebGL Scene Engine, Camera Rig & 3D Diya Mesh | 2/2 | Complete | 2026-11-04 |
-| 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 0/2 | Not started | - |
+| 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 2/2 | Complete | 2026-11-04 |
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 0/TBD | Not started | - |
 | 5. Festive Greeting Reveal, Typography & Celebration Polish | 0/TBD | Not started | - |
 | 6. Creator Portal & Delivery Message Generator Tool | 0/TBD | Not started | - |
