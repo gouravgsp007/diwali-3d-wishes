@@ -931,12 +931,12 @@ export class BokehMotes {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Optional `.glb` model delivery:**
+   - *RESOLVED:* Implement the procedural geometry and CanvasTextures as the fully self-contained default. Provide the `GLTFLoader` loader hook that silently checks for `/models/diya.glb`. If absent, the procedural model runs seamlessly with zero errors.
    - *What we know:* D-01 states that primary geometry is procedural, with optional `.glb` fallback if placed in `public/models/diya.glb`.
-   - *What's unclear:* Whether a 3D artist will supply a `.glb` asset prior to production release.
-   - *Recommendation:* Implement the procedural geometry and CanvasTextures as the fully self-contained default. Provide the `GLTFLoader` loader hook that silently checks for `/models/diya.glb`. If absent, the procedural model runs seamlessly with zero errors.
+   - *Resolution detail:* Procedural geometry is primary; `loadDiyaModelWithFallback()` silently falls back if external `.glb` is absent.
 
 ---
 
