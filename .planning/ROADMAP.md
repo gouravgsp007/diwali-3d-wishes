@@ -35,7 +35,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
 - [ ] 01-01-PLAN.md — Scaffold project infra, test setup, typed FSM, and Web Crypto AES-GCM + lz-string GreetingCodec
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — PasscodeGate glassmorphic UI, responsive 100svh viewport, shake error animations, URL hash/query resolution with Instagram link shim stripping, and synchronous audio unlock stub
 
 **UI hint**: yes
