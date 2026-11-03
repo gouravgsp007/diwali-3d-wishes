@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import type { AppStateMachine, AppState } from '../app/state-machine';
 import { CameraRig } from './camera-rig';
+import { DiyaMesh } from './meshes/diya-mesh';
+import { createBrassThaliMesh } from './meshes/thali-mesh';
+import { createLightingRig, type LightingRigResult } from './lighting-rig';
+import { BokehMotes } from './particles/bokeh-motes';
 
 /**
  * Resilient SceneManager foundation for the Diwali 3D WebGL engine.
@@ -10,10 +14,13 @@ import { CameraRig } from './camera-rig';
  * - High-DPI DPR clamping (Math.min(window.devicePixelRatio || 1, 1.75)) preventing GPU thermal throttling (D-16, T-02-02)
  * - PCFSoftShadowMap for soft directional contact shadows (D-12)
  * - Transparent background canvas mounted behind the glassmorphism UI card (z-index 0)
+ * - Authentic 3D DiyaMesh, brass thali platter, and 50 drifting golden bokeh motes (D-01, D-09, D-11)
+ * - Dual-tier nocturnal lighting baseline with pre-warmed flame PointLight (D-10, T-02-04)
  * - Lifecycle pausing on backgrounded tabs via Page Visibility API (D-16)
  * - WebGL context loss recovery (webglcontextlost / webglcontextrestored) (D-16)
  * - Forwarding normalized pointer events to CameraRig
  * - Coordinated tween updates and clock tick in RAF loop
+ * - Camera dolly on UNLOCKED_INTRO and upward pan on IGNITING (D-07, D-15)
  */
 export class SceneManager {
   private renderer!: THREE.WebGLRenderer;
@@ -23,8 +30,14 @@ export class SceneManager {
   private animationFrameId: number | null = null;
   private isPaused = false;
   private timer = new THREE.Timer();
+  private elapsedTime = 0;
   private clampedDpr = 1;
   private unsubscribeFsm: (() => void) | null = null;
+
+  private diyaMesh: DiyaMesh | null = null;
+  private thaliMesh: THREE.Mesh | null = null;
+  private lightingRig: LightingRigResult | null = null;
+  private bokehMotes: BokehMotes | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -32,7 +45,7 @@ export class SceneManager {
   ) {}
 
   /**
-   * Initializes WebGL scene graph, camera rig, renderer, and lifecycle event listeners.
+   * Initializes WebGL scene graph, camera rig, renderer, meshes, lights, and lifecycle event listeners.
    */
   public start(): void {
     this.scene = new THREE.Scene();
@@ -54,7 +67,7 @@ export class SceneManager {
     const height = this.container.clientHeight || window.innerHeight || 600;
     this.cameraRig = new CameraRig(width, height);
 
-    // 3. Initialize WebGLRenderer with DPR clamping
+    // 3. Initialize WebGLRenderer with DPR clamping (D-16, T-02-02)
     this.clampedDpr = Math.min(window.devicePixelRatio || 1, 1.75);
 
     try {
@@ -88,18 +101,54 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // 4. Attach lifecycle listeners
+    // 4. Build 3D scene elements: DiyaMesh, Thali, LightingRig, BokehMotes
+    this.buildSceneComponents();
+
+    // 5. Pre-warm WebGL shader compilation (T-02-04)
+    try {
+      if (typeof this.renderer?.compile === 'function') {
+        this.renderer.compile(this.scene, this.cameraRig.camera);
+      }
+    } catch {
+      // Ignored in test/headless environments lacking WebGL context
+    }
+
+    // 6. Attach lifecycle listeners
     this.initListeners();
 
-    // 5. Subscribe to FSM state changes if provided
+    // 7. Subscribe to FSM state changes if provided
     if (this.fsm) {
       this.unsubscribeFsm = this.fsm.subscribe((state) => this.handleStateChange(state));
     }
 
-    // 6. Start timer and kickoff render loop
+    // 8. Start timer and kickoff render loop
     this.timer.update();
+    this.elapsedTime = 0;
     this.isPaused = false;
     this.render();
+  }
+
+  /**
+   * Instantiates and adds DiyaMesh, brass thali, dual-tier lighting, and bokeh motes to scene graph.
+   */
+  private buildSceneComponents(): void {
+    // 1. Procedural Diya Mesh (D-01, D-02, D-04)
+    this.diyaMesh = new DiyaMesh();
+    this.scene.add(this.diyaMesh.group);
+
+    // 2. Antique Brass Thali Platter (D-09, D-12)
+    this.thaliMesh = createBrassThaliMesh();
+    this.scene.add(this.thaliMesh);
+
+    // 3. Dual-Tier Lighting Rig with pre-warmed PointLight (D-10, T-02-04)
+    this.lightingRig = createLightingRig(this.diyaMesh.wickAnchor);
+    this.scene.add(this.lightingRig.ambientLight);
+    this.scene.add(this.lightingRig.rimLight);
+    this.scene.add(this.lightingRig.flamePointLight);
+
+    // 4. Drifting Golden Bokeh Motes (D-11)
+    this.bokehMotes = new BokehMotes();
+    this.scene.add(this.bokehMotes.points);
   }
 
   /**
@@ -110,9 +159,15 @@ export class SceneManager {
 
     this.timer.update();
     const dt = this.timer.getDelta();
+    this.elapsedTime += dt;
 
     // Update tween animations
     TWEEN.update();
+
+    // Update bokeh motes particle drift (D-11)
+    if (this.bokehMotes) {
+      this.bokehMotes.update(dt, this.elapsedTime);
+    }
 
     // Update camera rig with breathing sway and parallax damping
     if (this.cameraRig) {
@@ -124,15 +179,15 @@ export class SceneManager {
   };
 
   /**
-   * Handles FSM state transitions to orchestrate camera cinematography.
+   * Handles FSM state transitions to orchestrate camera cinematography (D-07, D-15).
    */
   private handleStateChange(state: AppState): void {
     if (state === 'UNLOCKED_INTRO') {
       // Cinematic dolly forward upon passcode unlock (D-15)
-      this.cameraRig.dollyTo(new THREE.Vector3(0, 2.0, 3.2), 1200);
+      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.0, 3.2), 1200);
     } else if (state === 'IGNITING') {
       // Smooth upward target pan to frame flame + greeting card (D-07)
-      this.cameraRig.panTargetTo(new THREE.Vector3(0, 0.65, 0), 1000);
+      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.65, 0), 1000);
     }
   }
 
@@ -236,7 +291,50 @@ export class SceneManager {
    * Reconstructs scene graph assets upon WebGL context restoration.
    */
   public rebuildScene(): void {
-    // Phase 2 Wave 2 will re-instantiate DiyaMesh, ThaliMesh, and BokehMotes here
+    if (!this.scene) return;
+
+    this.disposeSceneComponents();
+    this.buildSceneComponents();
+
+    try {
+      if (typeof this.renderer?.compile === 'function') {
+        this.renderer.compile(this.scene, this.cameraRig.camera);
+      }
+    } catch {
+      // Ignored in test/headless environments
+    }
+  }
+
+  private disposeSceneComponents(): void {
+    if (this.diyaMesh) {
+      this.scene.remove(this.diyaMesh.group);
+      this.diyaMesh.dispose();
+      this.diyaMesh = null;
+    }
+
+    if (this.thaliMesh) {
+      this.scene.remove(this.thaliMesh);
+      this.thaliMesh.geometry.dispose();
+      if (Array.isArray(this.thaliMesh.material)) {
+        this.thaliMesh.material.forEach((m) => m.dispose());
+      } else {
+        this.thaliMesh.material.dispose();
+      }
+      this.thaliMesh = null;
+    }
+
+    if (this.lightingRig) {
+      this.scene.remove(this.lightingRig.ambientLight);
+      this.scene.remove(this.lightingRig.rimLight);
+      this.scene.remove(this.lightingRig.flamePointLight);
+      this.lightingRig = null;
+    }
+
+    if (this.bokehMotes) {
+      this.scene.remove(this.bokehMotes.points);
+      this.bokehMotes.dispose();
+      this.bokehMotes = null;
+    }
   }
 
   public getPixelRatio(): number {
@@ -257,6 +355,22 @@ export class SceneManager {
 
   public getRenderer(): THREE.WebGLRenderer {
     return this.renderer;
+  }
+
+  public getDiyaMesh(): DiyaMesh | null {
+    return this.diyaMesh;
+  }
+
+  public getThaliMesh(): THREE.Mesh | null {
+    return this.thaliMesh;
+  }
+
+  public getLightingRig(): LightingRigResult | null {
+    return this.lightingRig;
+  }
+
+  public getBokehMotes(): BokehMotes | null {
+    return this.bokehMotes;
   }
 
   /**
@@ -283,6 +397,8 @@ export class SceneManager {
     this.container.removeEventListener('pointermove', this.onPointerMove);
     this.container.removeEventListener('pointerup', this.onPointerUp);
     this.container.removeEventListener('pointercancel', this.onPointerUp);
+
+    this.disposeSceneComponents();
 
     if (this.renderer) {
       this.renderer.dispose();

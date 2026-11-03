@@ -122,4 +122,53 @@ describe('SceneManager Foundation', () => {
     expect(sceneManager.isRenderLoopActive()).toBe(false);
     expect(container.querySelector('canvas')).toBeNull();
   });
+
+  it('instantiates DiyaMesh, brass thali, lighting rig, and bokeh motes into scene graph on start()', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    expect(sceneManager.getDiyaMesh()).toBeDefined();
+    expect(sceneManager.getThaliMesh()).toBeDefined();
+    expect(sceneManager.getLightingRig()).toBeDefined();
+    expect(sceneManager.getBokehMotes()).toBeDefined();
+
+    const scene = sceneManager.getScene();
+    expect(scene.children.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('triggers camera dollyTo on UNLOCKED_INTRO and panTargetTo on IGNITING', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const cameraRig = sceneManager.getCameraRig();
+    const dollySpy = vi.spyOn(cameraRig, 'dollyTo');
+    const panSpy = vi.spyOn(cameraRig, 'panTargetTo');
+
+    // Simulate boot complete
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+
+    // Simulate valid passcode submit -> UNLOCKED_INTRO
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: {
+        recipient: 'Priya',
+        sender: 'Aarav',
+        message: 'Happy Diwali',
+        templateId: 'diya-classic',
+        createdAt: Date.now(),
+      },
+    });
+
+    expect(fsm.getState()).toBe('UNLOCKED_INTRO');
+    expect(dollySpy).toHaveBeenCalledWith(expect.any(THREE.Vector3), 1200);
+
+    // Complete intro to reach INTERACTIVE_UNLIT
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    expect(fsm.getState()).toBe('INTERACTIVE_UNLIT');
+
+    // Simulate touching wick -> IGNITING
+    fsm.transition({ type: 'WICK_TOUCHED' });
+    expect(fsm.getState()).toBe('IGNITING');
+    expect(panSpy).toHaveBeenCalledWith(expect.any(THREE.Vector3), 1000);
+  });
 });
