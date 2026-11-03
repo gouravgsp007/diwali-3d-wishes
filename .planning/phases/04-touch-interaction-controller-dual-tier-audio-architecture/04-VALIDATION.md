@@ -38,12 +38,12 @@ created: "2026-11-04"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 04-01-01 | 01 | 1 | DIYA-02 | T-04-01 | Raycaster horizontal plane projection and proximity check (<0.35) | unit | `npx vitest run tests/interaction/match-controller.test.ts` | ❌ W0 | ⬜ pending |
+| 04-01-01 | 01 | 1 | DIYA-02 | T-04-01 | Raycaster horizontal plane projection and proximity check (<0.35) | unit | `npx vitest run tests/interaction/touch-controller.test.ts` | ❌ W0 | ⬜ pending |
 | 04-01-02 | 01 | 1 | DIYA-02 | T-04-02 | Touch hint UI appears in INTERACTIVE_UNLIT and dissolves on touch | unit | `npx vitest run tests/interaction/touch-hint.test.ts` | ❌ W0 | ⬜ pending |
-| 04-01-03 | 01 | 1 | AUDIO-01, 02 | T-04-03 | Synchronous unlock handshake and HTML5 audio silent-switch streaming | unit | `npx vitest run tests/audio/ambient-music.test.ts` | ❌ W0 | ⬜ pending |
-| 04-02-01 | 02 | 2 | AUDIO-03 | T-04-04 | Synthesized Web Audio API match-strike and flame crackle sound effects | unit | `npx vitest run tests/audio/sfx-synthesizer.test.ts` | ❌ W0 | 0 pending |
-| 04-02-02 | 02 | 2 | AUDIO-04 | T-04-05 | Floating glassmorphic audio toggle with smooth gain mute/unmute | unit | `npx vitest run tests/audio/audio-toggle.test.ts` | ❌ W0 | ⬜ pending |
-| 04-02-03 | 02 | 2 | DIYA-02, AUDIO-01..04 | — | SceneManager, PasscodeGate, and main.ts integration with production build | build | `npm test; npx vite build` | ✅ | ⬜ pending |
+| 04-01-03 | 01 | 1 | AUDIO-01, 02 | T-04-03 | Synchronous unlock handshake and HTML5 audio silent-switch streaming | unit | `npx vitest run tests/audio/audio-engine.test.ts` | ❌ W0 | ⬜ pending |
+| 04-02-01 | 02 | 2 | AUDIO-03 | T-04-04 | Synthesized Web Audio API match-strike and flame crackle sound effects | unit | `npx vitest run tests/audio/sfx-synthesizer.test.ts` | ❌ W0 | ⬜ pending |
+| 04-02-02 | 02 | 2 | AUDIO-04 | T-04-05 | Floating glassmorphic audio toggle with smooth gain mute/unmute | unit | `npx vitest run tests/ui/audio-toggle.test.ts` | ❌ W0 | ⬜ pending |
+| 04-02-03 | 02 | 2 | DIYA-02, AUDIO-01..04 | T-04-06 | SceneManager, PasscodeGate, and main.ts integration with production build | build | `npm test && npx vite build` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,11 +52,11 @@ created: "2026-11-04"
 ## Wave 0 Requirements
 
 - [x] Existing Three.js and Vitest test runner
-- [ ] `tests/interaction/match-controller.test.ts` — stubs for Raycaster projection, proximity calculation, and auto-ignition
+- [ ] `tests/interaction/touch-controller.test.ts` — stubs for Raycaster projection, proximity calculation, and auto-ignition
 - [ ] `tests/interaction/touch-hint.test.ts` — stubs for floating hint DOM lifecycle and fadeout
-- [ ] `tests/audio/ambient-music.test.ts` — stubs for audio unlock, volume fading, and tab visibility pause
+- [ ] `tests/audio/audio-engine.test.ts` — stubs for audio unlock, volume fading, and tab visibility pause
 - [ ] `tests/audio/sfx-synthesizer.test.ts` — stubs for Web Audio API match strike and crackle sound generators
-- [ ] `tests/audio/audio-toggle.test.ts` — stubs for floating mute/unmute pill and master gain ramp
+- [ ] `tests/ui/audio-toggle.test.ts` — stubs for floating mute/unmute pill and master gain ramp
 
 ---
 

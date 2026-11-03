@@ -86,7 +86,11 @@ Plans:
   3. Continuous ambient Indian classical sitar/flute soundtrack plays via HTML5 audio even when an iOS device has its physical hardware switch set to silent.
   4. Match-strike and flame crackle sound effects trigger with zero perceptible latency upon wick ignition via Web Audio API.
   5. Recipient can mute or unmute all sound at any moment via a floating glassmorphic audio toggle.
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — TouchController & horizontal plane raycasting, TouchHint floating prompt, and AudioEngine foundation with synchronous gesture unlock
+- [ ] 04-02-PLAN.md — Procedural Web Audio SfxSynthesizer, floating AudioToggle button, SceneManager/PasscodeGate/main.ts integration, and production build
 **UI hint**: yes
 
 ### Phase 5: Festive Greeting Reveal, Typography & Celebration Polish
