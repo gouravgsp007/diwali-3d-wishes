@@ -21,14 +21,19 @@ async function verify() {
     hasTouch: true,
   });
 
-  await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#passcode-card');
+  await page.waitForSelector('canvas');
 
-  // 1. Check layout geometry
+  // 1. Check layout geometry and 3D Canvas
   const layout = await page.evaluate(() => {
     const card = document.getElementById('passcode-card');
     const rect = card.getBoundingClientRect();
     const app = document.getElementById('app');
     const appRect = app.getBoundingClientRect();
+    const canvas = document.querySelector('canvas');
+    const canvasRect = canvas ? canvas.getBoundingClientRect() : null;
+
     return {
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
@@ -39,6 +44,11 @@ async function verify() {
       cardCentered: Math.abs((window.innerWidth - rect.width) / 2 - rect.left) < 2,
       appWidth: appRect.width,
       appHeight: appRect.height,
+      canvasFound: !!canvas,
+      canvasWidth: canvasRect ? canvasRect.width : 0,
+      canvasHeight: canvasRect ? canvasRect.height : 0,
+      canvasZIndex: canvas ? window.getComputedStyle(canvas).zIndex : null,
+      devicePixelRatio: window.devicePixelRatio,
     };
   });
 

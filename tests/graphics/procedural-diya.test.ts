@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { createProceduralDiyaGeometry } from '../../src/graphics/meshes/procedural-diya-geometry';
 import { DiyaMesh } from '../../src/graphics/meshes/diya-mesh';
