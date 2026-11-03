@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import * as THREE from 'three';
+import * as TWEEN from '@tweenjs/tween.js';
 import { SceneManager } from '../../src/graphics/scene-manager';
 import { AppStateMachine } from '../../src/app/state-machine';
 
@@ -123,7 +124,7 @@ describe('SceneManager Foundation', () => {
     expect(container.querySelector('canvas')).toBeNull();
   });
 
-  it('instantiates DiyaMesh, brass thali, lighting rig, and bokeh motes into scene graph on start()', () => {
+  it('instantiates DiyaMesh, brass thali, lighting rig, bokeh motes, and FlameController into scene graph on start()', () => {
     sceneManager = new SceneManager(container, fsm);
     sceneManager.start();
 
@@ -131,18 +132,23 @@ describe('SceneManager Foundation', () => {
     expect(sceneManager.getThaliMesh()).toBeDefined();
     expect(sceneManager.getLightingRig()).toBeDefined();
     expect(sceneManager.getBokehMotes()).toBeDefined();
+    expect(sceneManager.getFlameController()).toBeDefined();
 
     const scene = sceneManager.getScene();
-    expect(scene.children.length).toBeGreaterThanOrEqual(4);
+    const flameController = sceneManager.getFlameController()!;
+    expect(scene.children).toContain(flameController.group);
+    expect(scene.children.length).toBeGreaterThanOrEqual(5);
   });
 
-  it('triggers camera dollyTo on UNLOCKED_INTRO and panTargetTo on IGNITING', () => {
+  it('triggers camera dollyTo on UNLOCKED_INTRO and panTargetTo + flame ignition on IGNITING', async () => {
     sceneManager = new SceneManager(container, fsm);
     sceneManager.start();
 
     const cameraRig = sceneManager.getCameraRig();
+    const flameController = sceneManager.getFlameController()!;
     const dollySpy = vi.spyOn(cameraRig, 'dollyTo');
     const panSpy = vi.spyOn(cameraRig, 'panTargetTo');
+    const igniteSpy = vi.spyOn(flameController, 'ignite');
 
     // Simulate boot complete
     fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
@@ -170,5 +176,27 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'WICK_TOUCHED' });
     expect(fsm.getState()).toBe('IGNITING');
     expect(panSpy).toHaveBeenCalledWith(expect.any(THREE.Vector3), 1000);
+    expect(igniteSpy).toHaveBeenCalledOnce();
+
+    // Advance TWEEN time past 750ms ignition duration
+    TWEEN.update(performance.now() + 850);
+
+    // Allow promise resolution microtask to transition FSM via IGNITION_COMPLETE to LIT_CELEBRATION
+    await vi.waitFor(() => {
+      expect(fsm.getState()).toBe('LIT_CELEBRATION');
+    });
+  });
+
+  it('disposes and cleans up FlameController GPU resources on dispose()', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const flameController = sceneManager.getFlameController()!;
+    const disposeSpy = vi.spyOn(flameController, 'dispose');
+
+    sceneManager.dispose();
+
+    expect(disposeSpy).toHaveBeenCalledOnce();
+    expect(sceneManager.getFlameController()).toBeNull();
   });
 });

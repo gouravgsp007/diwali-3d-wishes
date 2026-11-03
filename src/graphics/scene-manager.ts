@@ -6,6 +6,7 @@ import { DiyaMesh } from './meshes/diya-mesh';
 import { createBrassThaliMesh } from './meshes/thali-mesh';
 import { createLightingRig, type LightingRigResult } from './lighting-rig';
 import { BokehMotes } from './particles/bokeh-motes';
+import { FlameController } from './fx/flame-controller';
 
 /**
  * Resilient SceneManager foundation for the Diwali 3D WebGL engine.
@@ -38,6 +39,7 @@ export class SceneManager {
   private thaliMesh: THREE.Mesh | null = null;
   private lightingRig: LightingRigResult | null = null;
   private bokehMotes: BokehMotes | null = null;
+  private flameController: FlameController | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -149,6 +151,10 @@ export class SceneManager {
     // 4. Drifting Golden Bokeh Motes (D-11)
     this.bokehMotes = new BokehMotes();
     this.scene.add(this.bokehMotes.points);
+
+    // 5. Procedural GLSL Flame Controller & Particle Systems (D-12)
+    this.flameController = new FlameController(this.diyaMesh.wickAnchor, this.lightingRig.flamePointLight);
+    this.scene.add(this.flameController.group);
   }
 
   /**
@@ -167,6 +173,11 @@ export class SceneManager {
     // Update bokeh motes particle drift (D-11)
     if (this.bokehMotes) {
       this.bokehMotes.update(dt, this.elapsedTime);
+    }
+
+    // Update flame controller (shader waft, halo breathing, sparkler kinematics, light jitter) (D-12)
+    if (this.flameController) {
+      this.flameController.update(dt, this.elapsedTime);
     }
 
     // Update camera rig with breathing sway and parallax damping
@@ -188,6 +199,9 @@ export class SceneManager {
     } else if (state === 'IGNITING') {
       // Smooth upward target pan to frame flame + greeting card (D-07)
       this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.65, 0), 1000);
+      this.flameController?.ignite().then(() => {
+        this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
+      });
     }
   }
 
@@ -335,6 +349,12 @@ export class SceneManager {
       this.bokehMotes.dispose();
       this.bokehMotes = null;
     }
+
+    if (this.flameController) {
+      this.scene.remove(this.flameController.group);
+      this.flameController.dispose();
+      this.flameController = null;
+    }
   }
 
   public getPixelRatio(): number {
@@ -371,6 +391,10 @@ export class SceneManager {
 
   public getBokehMotes(): BokehMotes | null {
     return this.bokehMotes;
+  }
+
+  public getFlameController(): FlameController | null {
+    return this.flameController;
   }
 
   /**
