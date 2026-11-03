@@ -82,8 +82,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PASS-04 | Phase 1 | Pending |
 | DIYA-01 | Phase 2 | Pending |
 | DIYA-02 | Phase 4 | Pending |
-| DIYA-03 | Phase 2 | Pending |
-| DIYA-04 | Phase 2 | Pending |
+| DIYA-03 | Phase 7 | Pending |
+| DIYA-04 | Phase 7 | Pending |
 | VFX-01 | Phase 3 | Pending |
 | VFX-02 | Phase 3 | Pending |
 | VFX-03 | Phase 3 | Pending |
@@ -100,10 +100,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CREATOR-02 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 21 total
-- Mapped to phases: 21
+- v1 requirements: 22 total
+- Mapped to phases: 22
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-11-03*  
-*Last updated: 2026-11-03 after initial definition*
+*Last updated: 2026-11-03 after roadmap creation*
