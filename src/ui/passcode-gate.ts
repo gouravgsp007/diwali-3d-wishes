@@ -1,6 +1,6 @@
 import { GreetingCodec } from '../crypto/greeting-codec';
 import { DEMO_GREETINGS } from '../crypto/demo-greeting';
-import { primeAudioContext } from '../audio/audio-unlock';
+import { AudioEngine } from '../audio/audio-engine';
 import type { AppStateMachine } from '../app/state-machine';
 import type { ResolvedToken } from './url-resolver';
 
@@ -60,9 +60,9 @@ export class PasscodeGate {
       return;
     }
 
-    // 1. Synchronously prime Web Audio API context during the user gesture callback (D-11)
+    // 1. Synchronously prime Web Audio API and HTML5 audio during the user gesture callback (D-04, D-11)
     // Must be invoked prior to any await microtask tick to satisfy mobile WebKit policies
-    primeAudioContext();
+    AudioEngine.getInstance().unlock();
 
     try {
       let payload;

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import { SceneManager } from '../../src/graphics/scene-manager';
 import { AppStateMachine } from '../../src/app/state-machine';
+import { AudioEngine } from '../../src/audio/audio-engine';
 
 describe('SceneManager Foundation', () => {
   let container: HTMLElement;
@@ -14,10 +15,14 @@ describe('SceneManager Foundation', () => {
     document.body.innerHTML = '<div id="app" style="width: 800px; height: 600px;"></div>';
     container = document.getElementById('app')!;
     fsm = new AppStateMachine();
+
+    // Reset AudioEngine
+    AudioEngine.getInstance().dispose();
   });
 
   afterEach(() => {
     sceneManager?.dispose();
+    AudioEngine.getInstance().dispose();
   });
 
   it('instantiates WebGLRenderer with clamped pixel ratio Math.min(DPR, 1.75) (D-16, T-02-02)', () => {
@@ -140,20 +145,32 @@ describe('SceneManager Foundation', () => {
     expect(scene.children.length).toBeGreaterThanOrEqual(5);
   });
 
-  it('triggers camera dollyTo on UNLOCKED_INTRO and panTargetTo + flame ignition on IGNITING', async () => {
+  it('instantiates TouchController, TouchHint, and match follower into scene on start() per D-01, D-03', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    expect(sceneManager.getTouchController()).toBeDefined();
+    expect(sceneManager.getTouchHint()).toBeDefined();
+    expect(sceneManager.getMatchFollower()).toBeDefined();
+
+    const matchFollower = sceneManager.getMatchFollower()!;
+    expect(matchFollower.visible).toBe(false);
+    expect(sceneManager.getScene().children).toContain(matchFollower);
+
+    // TouchHint prompt mounted into DOM
+    expect(container.querySelector('#touch-hint-prompt')).not.toBeNull();
+  });
+
+  it('starts BGM on UNLOCKED_INTRO and transitions FSM to INTERACTIVE_UNLIT when camera dolly completes per D-05, D-08', async () => {
+    const bgmSpy = vi.spyOn(AudioEngine.getInstance(), 'startBgm').mockImplementation(() => {});
+
     sceneManager = new SceneManager(container, fsm);
     sceneManager.start();
 
     const cameraRig = sceneManager.getCameraRig();
-    const flameController = sceneManager.getFlameController()!;
     const dollySpy = vi.spyOn(cameraRig, 'dollyTo');
-    const panSpy = vi.spyOn(cameraRig, 'panTargetTo');
-    const igniteSpy = vi.spyOn(flameController, 'ignite');
 
-    // Simulate boot complete
     fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
-
-    // Simulate valid passcode submit -> UNLOCKED_INTRO
     fsm.transition({
       type: 'UNLOCK_SUCCESS',
       payload: {
@@ -166,14 +183,109 @@ describe('SceneManager Foundation', () => {
     });
 
     expect(fsm.getState()).toBe('UNLOCKED_INTRO');
+    expect(bgmSpy).toHaveBeenCalledOnce();
     expect(dollySpy).toHaveBeenCalledWith(expect.any(THREE.Vector3), 1200);
 
-    // Complete intro to reach INTERACTIVE_UNLIT
+    // Advance TWEEN time past 1200ms dolly duration
+    TWEEN.update(performance.now() + 1300);
+
+    // Wait for promise resolution to transition to INTERACTIVE_UNLIT
+    await vi.waitFor(() => {
+      expect(fsm.getState()).toBe('INTERACTIVE_UNLIT');
+    });
+
+    // TouchHint should now be visible
+    const hintEl = container.querySelector('#touch-hint-prompt');
+    expect(hintEl?.classList.contains('opacity-100')).toBe(true);
+  });
+
+  it('fires match strike and flame crackle SFX when wick proximity is crossed and transitions FSM to IGNITING per D-02, D-06, D-08', async () => {
+    const matchStrikeSpy = vi.spyOn(AudioEngine.getInstance(), 'playMatchStrike').mockImplementation(() => {});
+    const crackleSpy = vi.spyOn(AudioEngine.getInstance(), 'playFlameCrackle').mockImplementation(() => {});
+
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    // Transition to INTERACTIVE_UNLIT
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: {
+        recipient: 'Priya',
+        sender: 'Aarav',
+        message: 'Happy Diwali',
+        templateId: 'diya-classic',
+        createdAt: Date.now(),
+      },
+    });
     fsm.transition({ type: 'INTRO_COMPLETE' });
     expect(fsm.getState()).toBe('INTERACTIVE_UNLIT');
 
-    // Simulate touching wick -> IGNITING
+    // Simulate proximity trigger via TouchController's proximity detector
+    const touchController = sceneManager.getTouchController()!;
+    vi.spyOn(touchController.proximityDetector, 'isNearWick').mockReturnValue(true);
+
+    // Pointer move triggering updatePosition and onIgnite callback
+    touchController.updatePosition(400, 300);
+
+    expect(matchStrikeSpy).toHaveBeenCalled();
+    expect(crackleSpy).toHaveBeenCalled();
+    expect(fsm.getState()).toBe('IGNITING');
+  });
+
+  it('hides TouchHint and match follower on IGNITING per D-03, D-08', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: {
+        recipient: 'Priya',
+        sender: 'Aarav',
+        message: 'Happy Diwali',
+        templateId: 'diya-classic',
+        createdAt: Date.now(),
+      },
+    });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+
+    const matchFollower = sceneManager.getMatchFollower()!;
+    matchFollower.visible = true;
+
+    // Transition to IGNITING
     fsm.transition({ type: 'WICK_TOUCHED' });
+
+    expect(fsm.getState()).toBe('IGNITING');
+    expect(matchFollower.visible).toBe(false);
+
+    const hintEl = container.querySelector('#touch-hint-prompt');
+    expect(hintEl?.classList.contains('opacity-0')).toBe(true);
+  });
+
+  it('triggers camera panTargetTo and flame ignition on IGNITING, completing to LIT_CELEBRATION', async () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const cameraRig = sceneManager.getCameraRig();
+    const flameController = sceneManager.getFlameController()!;
+    const panSpy = vi.spyOn(cameraRig, 'panTargetTo');
+    const igniteSpy = vi.spyOn(flameController, 'ignite');
+
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: {
+        recipient: 'Priya',
+        sender: 'Aarav',
+        message: 'Happy Diwali',
+        templateId: 'diya-classic',
+        createdAt: Date.now(),
+      },
+    });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    fsm.transition({ type: 'WICK_TOUCHED' });
+
     expect(fsm.getState()).toBe('IGNITING');
     expect(panSpy).toHaveBeenCalledWith(expect.any(THREE.Vector3), 1000);
     expect(igniteSpy).toHaveBeenCalledOnce();
@@ -181,22 +293,29 @@ describe('SceneManager Foundation', () => {
     // Advance TWEEN time past 750ms ignition duration
     TWEEN.update(performance.now() + 850);
 
-    // Allow promise resolution microtask to transition FSM via IGNITION_COMPLETE to LIT_CELEBRATION
     await vi.waitFor(() => {
       expect(fsm.getState()).toBe('LIT_CELEBRATION');
     });
   });
 
-  it('disposes and cleans up FlameController GPU resources on dispose()', () => {
+  it('disposes and cleans up TouchController, TouchHint, and match follower on dispose() per D-09, ASVS V14', () => {
     sceneManager = new SceneManager(container, fsm);
     sceneManager.start();
 
-    const flameController = sceneManager.getFlameController()!;
-    const disposeSpy = vi.spyOn(flameController, 'dispose');
+    const touchController = sceneManager.getTouchController()!;
+    const touchHint = sceneManager.getTouchHint()!;
+    const touchCtrlDisposeSpy = vi.spyOn(touchController, 'dispose');
+    const touchHintDisposeSpy = vi.spyOn(touchHint, 'dispose');
+
+    expect(container.querySelector('#touch-hint-prompt')).not.toBeNull();
 
     sceneManager.dispose();
 
-    expect(disposeSpy).toHaveBeenCalledOnce();
-    expect(sceneManager.getFlameController()).toBeNull();
+    expect(touchCtrlDisposeSpy).toHaveBeenCalledOnce();
+    expect(touchHintDisposeSpy).toHaveBeenCalledOnce();
+    expect(sceneManager.getTouchController()).toBeNull();
+    expect(sceneManager.getTouchHint()).toBeNull();
+    expect(sceneManager.getMatchFollower()).toBeNull();
+    expect(container.querySelector('#touch-hint-prompt')).toBeNull();
   });
 });

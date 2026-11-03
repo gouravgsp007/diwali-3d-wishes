@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PasscodeGate } from '../../src/ui/passcode-gate';
 import { AppStateMachine } from '../../src/app/state-machine';
-import * as audioUnlock from '../../src/audio/audio-unlock';
+import { AudioEngine } from '../../src/audio/audio-engine';
 import { GreetingCodec } from '../../src/crypto/greeting-codec';
 import type { GreetingPayload } from '../../src/crypto/types';
 
@@ -51,8 +51,8 @@ describe('PasscodeGate UI Controller', () => {
     expect(errorEl.classList.contains('hidden')).toBe(true);
   });
 
-  it('synchronously invokes primeAudioContext during form submission event before async decryption', async () => {
-    const primeAudioSpy = vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+  it('synchronously invokes AudioEngine.getInstance().unlock during form submission event before async decryption', async () => {
+    const unlockSpy = vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
 
     const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
     gate.mount();
@@ -60,11 +60,11 @@ describe('PasscodeGate UI Controller', () => {
     inputEl.value = 'DIWALI';
     formEl.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    expect(primeAudioSpy).toHaveBeenCalledTimes(1);
+    expect(unlockSpy).toHaveBeenCalledTimes(1);
   });
 
   it('transitions AppStateMachine to UNLOCKED_INTRO and fades passcode modal on valid demo passcode', async () => {
-    vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
 
     const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
     gate.mount();
@@ -84,7 +84,7 @@ describe('PasscodeGate UI Controller', () => {
   });
 
   it('transitions AppStateMachine and decrypts ciphertext on valid encrypted token', async () => {
-    vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
 
     const testPayload: GreetingPayload = {
       recipient: 'Ananya',
@@ -112,7 +112,7 @@ describe('PasscodeGate UI Controller', () => {
   });
 
   it('triggers animate-shake CSS class, reflow, and friendly textContent error on wrong passcode', async () => {
-    vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
     const selectSpy = vi.spyOn(inputEl, 'select');
 
     const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
@@ -131,7 +131,7 @@ describe('PasscodeGate UI Controller', () => {
   });
 
   it('re-selects input text on rejection to facilitate quick user correction', async () => {
-    vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
     const selectSpy = vi.spyOn(inputEl, 'select');
 
     const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
@@ -145,7 +145,7 @@ describe('PasscodeGate UI Controller', () => {
   });
 
   it('does not attempt unlock if passcode length is less than 4 or greater than 6', async () => {
-    const primeAudioSpy = vi.spyOn(audioUnlock, 'primeAudioContext').mockImplementation(() => {});
+    const unlockSpy = vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
 
     const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
     gate.mount();
@@ -154,7 +154,7 @@ describe('PasscodeGate UI Controller', () => {
     formEl.dispatchEvent(new Event('submit', { cancelable: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(primeAudioSpy).not.toHaveBeenCalled();
+    expect(unlockSpy).not.toHaveBeenCalled();
     expect(fsm.state).toBe('LOCKED');
   });
 
