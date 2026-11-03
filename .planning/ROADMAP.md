@@ -69,7 +69,11 @@ Plans:
   2. Lit flame casts dynamic warm amber PointLight illuminating the earthen diya rim and sacred floor pattern with subtle intensity jitter.
   3. A single-pass additive glow billboard quad creates a radiant golden halo around the flame without full-screen bloom passes.
   4. Flame ignition triggers an outward-bursting golden sparkler particle fountain (*phuljhadi*) in a single draw call.
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Procedural GLSL FlameShader, teardrop FlameMesh, dynamic PointLight jitter, and additive GlowHalo
+- [ ] 03-02-PLAN.md — Single-buffer SparklerSystem (phuljhadi), FlameController orchestrator, and SceneManager/FSM integration
 
 ### Phase 4: Touch Interaction Controller & Dual-Tier Audio Architecture
 **Goal:** Implement responsive mobile touch-and-drag match ignition, proximity detection, haptic feedback, and dual-tier audio engine bypassing iOS silent switches.
@@ -131,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Core Architecture, State Machine & Cryptographic Codec | 2/2 | Complete | 2026-11-04 |
 | 2. WebGL Scene Engine, Camera Rig & 3D Diya Mesh | 2/2 | Complete | 2026-11-04 |
-| 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 0/TBD | Not started | - |
+| 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 0/2 | Not started | - |
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 0/TBD | Not started | - |
 | 5. Festive Greeting Reveal, Typography & Celebration Polish | 0/TBD | Not started | - |
 | 6. Creator Portal & Delivery Message Generator Tool | 0/TBD | Not started | - |
