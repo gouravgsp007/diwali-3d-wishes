@@ -36,9 +36,11 @@ export function bootstrap(): {
 
 if (typeof window !== 'undefined') {
   if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', () => bootstrap());
+    window.addEventListener('DOMContentLoaded', () => {
+      (window as unknown as { __DIWALI__: ReturnType<typeof bootstrap> }).__DIWALI__ = bootstrap();
+    });
   } else {
     // Already loaded
-    bootstrap();
+    (window as unknown as { __DIWALI__: ReturnType<typeof bootstrap> }).__DIWALI__ = bootstrap();
   }
 }

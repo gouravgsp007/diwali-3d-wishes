@@ -95,7 +95,7 @@ describe('SparklerSystem (Phuljhadi)', () => {
     }
 
     // Now particles should have experienced downward acceleration and updated buffer attribute version
-    expect(posAttr.version).toBeGreaterThan(0);
+    expect((posAttr as THREE.BufferAttribute).version).toBeGreaterThan(0);
 
     system.dispose();
   });
