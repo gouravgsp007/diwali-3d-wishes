@@ -32,14 +32,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. System decrypts encrypted payload locally using Web Crypto AES-GCM (PBKDF2 key derivation) without any server calls.
   3. Entering an incorrect passcode triggers an elegant festive shake/rejection animation without leaking plaintext data.
   4. System cleanly parses encrypted greeting data from both URL hash fragments (`#d=...`) and query parameters (`?c=...`) with Instagram link shim protection.
-**Plans**: 2 plans
+**Plans**: 2/2 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 01-01-PLAN.md — Scaffold project infra, test setup, typed FSM, and Web Crypto AES-GCM + lz-string GreetingCodec
+- [x] 01-01-PLAN.md — Scaffold project infra, test setup, typed FSM, and Web Crypto AES-GCM + lz-string GreetingCodec
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-02-PLAN.md — PasscodeGate glassmorphic UI, responsive 100svh viewport, shake error animations, URL hash/query resolution with Instagram link shim stripping, and synchronous audio unlock stub
+- [x] 01-02-PLAN.md — PasscodeGate glassmorphic UI, responsive 100svh viewport, shake error animations, URL hash/query resolution with Instagram link shim stripping, and synchronous audio unlock stub
 
 **UI hint**: yes
 
@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Architecture, State Machine & Cryptographic Codec | 0/2 | Not started | - |
+| 1. Core Architecture, State Machine & Cryptographic Codec | 2/2 | Complete | 2026-11-04 |
 | 2. WebGL Scene Engine, Camera Rig & 3D Diya Mesh | 0/TBD | Not started | - |
 | 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 0/TBD | Not started | - |
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 0/TBD | Not started | - |
