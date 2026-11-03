@@ -673,9 +673,9 @@ export const DEMO_GREETINGS: Record<string, GreetingPayload> = {
 | A1 | Alphanumeric passcodes 4-6 chars (`[A-Za-z0-9]{4,6}`) normalized to uppercase provide sufficient entropy (~2.17B combinations) for casual e-commerce greeting gifting without online database rate limiting. | Architecture Patterns | Low — recipients only share greetings within private family/friend circles; PBKDF2 100k iterations prevents automated fast brute-forcing. |
 | A2 | Demo mode passcode support for `DIWALI` and `HAPPY` is hardcoded as client fallback when URL token is absent. | Code Examples | Low — satisfies D-07 requirement for instant exploratory testing. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **How should the Creator Portal (Phase 6) share the salt and PBKDF2 iteration constant?**
+1. **How should the Creator Portal (Phase 6) share the salt and PBKDF2 iteration constant?** — RESOLVED: Keep `GreetingCodec` as a shared singleton/utility in `src/crypto/greeting-codec.ts` imported by both the recipient runtime and the future creator generator, ensuring 100% cryptographic compatibility.
    - *What we know:* `ShubhDiwali2026Salt` and `100000` iterations are defined in `GreetingCodec`.
    - *Recommendation:* Keep `GreetingCodec` as a shared singleton/utility in `src/crypto/` imported by both the recipient runtime and the future creator generator, ensuring 100% cryptographic compatibility.
 

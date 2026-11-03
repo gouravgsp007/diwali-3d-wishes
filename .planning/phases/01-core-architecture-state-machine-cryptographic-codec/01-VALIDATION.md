@@ -38,12 +38,12 @@ created: "2026-11-03"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 01-01-01 | 01 | 0 | PASS-01..04 | — | Wave 0 setup (Vite, TS, Tailwind v4, Vitest) | infra | `npm test` | ❌ W0 | ⬜ pending |
-| 01-01-02 | 01 | 1 | PASS-02 | T-01-01, T-01-02 | AES-GCM 256-bit + PBKDF2 encryption/decryption roundtrip | unit | `npx vitest run tests/crypto/greeting-codec.test.ts` | ❌ W0 | ⬜ pending |
-| 01-01-03 | 01 | 1 | PASS-03 | T-01-02 | Invalid passcode throws authentication error without leaking payload | unit | `npx vitest run tests/crypto/greeting-codec.test.ts -t "rejection"` | ❌ W0 | ⬜ pending |
-| 01-01-04 | 01 | 1 | PASS-04 | T-01-01 | Extracts hash fragment `#d=...` and query `?c=...` while stripping `fbclid`/`igsh` | unit | `npx vitest run tests/ui/url-resolver.test.ts` | ❌ W0 | ⬜ pending |
-| 01-02-01 | 02 | 2 | PASS-01 | T-01-03 | FSM state transitions and passcode input handling | unit / DOM | `npx vitest run tests/state/state-machine.test.ts` | ❌ W0 | ⬜ pending |
-| 01-02-02 | 02 | 2 | PASS-01 | T-01-03 | PasscodeGate UI modal rendering, shake animation on error | DOM | `npx vitest run tests/ui/passcode-gate.test.ts` | ❌ W0 | ⬜ pending |
+| 01-01-01 | 01 | 1 | PASS-01..04 | — | Wave 0 setup (Vite, TS, Tailwind v4, Vitest, happy-dom) | infra | `npx vitest run --passWithNoTests` | ❌ W0 | ⬜ pending |
+| 01-01-02 | 01 | 1 | PASS-01 | — | Deterministic FSM state transitions and subscriber dispatch | unit | `npx vitest run tests/state/state-machine.test.ts` | ❌ W0 | ⬜ pending |
+| 01-01-03 | 01 | 1 | PASS-02, PASS-03 | T-01-01, T-01-02, T-01-03 | AES-GCM 256-bit + PBKDF2 roundtrip, tag rejection on bad key | unit | `npx vitest run tests/crypto/greeting-codec.test.ts` | ❌ W0 | ⬜ pending |
+| 01-02-01 | 02 | 2 | PASS-04 | T-01-01 | URL hash `#d=...` extraction, Meta link shim cleaning, demo fallback | unit | `npx vitest run tests/ui/url-resolver.test.ts` | ❌ W0 | ⬜ pending |
+| 01-02-02 | 02 | 2 | PASS-01 | — | Mobile 100svh layout, audio priming stub, entry point bootstrap | build | `npx vite build` | ❌ W0 | ⬜ pending |
+| 01-02-03 | 02 | 2 | PASS-01, PASS-03 | T-01-04, T-01-05 | PasscodeGate modal rendering, input normalization, shake on error, Create Wish CTA | unit / DOM | `npx vitest run tests/ui/passcode-gate.test.ts` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
