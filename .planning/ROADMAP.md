@@ -52,7 +52,11 @@ Plans:
   1. Recipient views an authentic 3D terracotta earthen diya (*mitti ka diya*) with cotton wick rendered in Three.js at 60 FPS on mobile.
   2. Camera framing automatically adapts to mobile portrait, tablet, and desktop viewports, keeping the diya centered without clipping.
   3. Diya material displays realistic baked clay ambient occlusion and subtle earthen roughness under neutral ambient lighting.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Dependencies, procedural CanvasTextures, responsive portrait vFOV CameraRig, and resilient SceneManager engine
+- [ ] 02-02-PLAN.md — Procedural Diya mesh, brass thali platter, dual-tier lighting baseline, golden bokeh motes, and FSM bootstrap integration
 **UI hint**: yes
 
 ### Phase 3: Procedural GLSL Flame Shader, Additive Bloom & Particle FX
