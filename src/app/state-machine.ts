@@ -27,7 +27,15 @@ export class AppStateMachine {
     return this.currentState;
   }
 
+  public get state(): AppState {
+    return this.currentState;
+  }
+
   public getGreeting(): GreetingPayload | null {
+    return this.greetingData;
+  }
+
+  public get payload(): GreetingPayload | null {
     return this.greetingData;
   }
 
