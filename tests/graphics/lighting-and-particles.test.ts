@@ -47,7 +47,7 @@ describe('Dual-Tier Lighting Rig', () => {
     expect(rig.flamePointLight.intensity).toBeCloseTo(0.0001, 4);
     expect(rig.flamePointLight.castShadow).toBe(false);
     expect(rig.flamePointLight.position.x).toBeCloseTo(wickAnchor.x, 2);
-    expect(rig.flamePointLight.position.y).toBeCloseTo(wickAnchor.y, 2);
+    expect(rig.flamePointLight.position.y).toBeCloseTo(wickAnchor.y + 0.15, 2);
     expect(rig.flamePointLight.position.z).toBeCloseTo(wickAnchor.z, 2);
   });
 });

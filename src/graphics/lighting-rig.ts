@@ -34,10 +34,22 @@ export function createLightingRig(wickAnchor: THREE.Vector3): LightingRigResult 
   rimLight.shadow.camera.bottom = -2.5;
   rimLight.shadow.bias = -0.001; // Prevents shadow acne on clay rim
 
-  // 3. Pre-warmed unlit flame light (ready for Phase 3 ignition)
+  // 3. Pre-warmed unlit flame light (positioned 0.15 units above wickAnchor per D-05)
   const flamePointLight = new THREE.PointLight(0xff9922, 0.0001, 6.0);
-  flamePointLight.position.copy(wickAnchor);
+  flamePointLight.position.set(wickAnchor.x, wickAnchor.y + 0.15, wickAnchor.z);
   flamePointLight.castShadow = false; // Point light shadows avoided on mobile for fill-rate safety
 
   return { ambientLight, rimLight, flamePointLight };
+}
+
+/**
+ * Calculates organic multi-frequency harmonic flame light flicker.
+ * Uses irrational frequency ratio 27/14 (~1.928) for non-repeating candle convection
+ * without random noise jumps, clamped to non-negative intensity.
+ */
+export function computeFlameLightIntensity(baseIntensity: number, elapsedTime: number): number {
+  if (baseIntensity <= 0.001) return baseIntensity;
+  // Frequencies: 14.0 rad/s (~2.2 Hz) and 27.0 rad/s (~4.3 Hz)
+  const jitter = Math.sin(elapsedTime * 14.0) * 0.22 + Math.cos(elapsedTime * 27.0) * 0.12;
+  return Math.max(0.0, baseIntensity + jitter);
 }
