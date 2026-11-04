@@ -106,8 +106,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Dependencies (canvas-confetti), GreetingModal with gold shimmer typography, WhatsApp reciprocation link, and CelebrationManager dual-cannon confetti / tap-to-sparkle
-- [ ] 05-02-PLAN.md — SceneManager FSM auto-transition (1500ms celebration delay), camera pan re-framing, PasscodeGate payload handoff, main.ts bootstrap, and full test suite verification
+- [x] 05-01-PLAN.md — Dependencies (canvas-confetti), GreetingModal with gold shimmer typography, WhatsApp reciprocation link, and CelebrationManager dual-cannon confetti / tap-to-sparkle
+- [x] 05-02-PLAN.md — SceneManager FSM auto-transition (1500ms celebration delay), camera pan re-framing, PasscodeGate payload handoff, main.ts bootstrap, and full test suite verification
 **UI hint**: yes
 
 ### Phase 6: Creator Portal & Delivery Message Generator Tool
@@ -145,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. WebGL Scene Engine, Camera Rig & 3D Diya Mesh | 2/2 | Complete | 2026-11-04 |
 | 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 2/2 | Complete | 2026-11-04 |
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 2/2 | Complete | 2026-11-04 |
-| 5. Festive Greeting Reveal, Typography & Celebration Polish | 0/2 | Not started | - |
+| 5. Festive Greeting Reveal, Typography & Celebration Polish | 2/2 | Complete | 2026-11-04 |
 | 6. Creator Portal & Delivery Message Generator Tool | 0/TBD | Not started | - |
 | 7. Mobile WebView Hardening & Platform Resilience | 0/TBD | Not started | - |
