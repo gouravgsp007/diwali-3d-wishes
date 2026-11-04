@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+@layer base {
+  html, body {
+    width: 100%;
+    height: 100%;
+    height: 100svh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-overscroll-behavior: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-text-size-adjust: 100%;
+    touch-action: none;
+    background-color: #0d0208;
+  }
+
+  /* Allow text selection specifically within inputs and textareas */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-8px); }

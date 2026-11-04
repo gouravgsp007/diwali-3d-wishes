@@ -429,4 +429,55 @@ describe('SceneManager Foundation', () => {
     expect(sceneManager.getCelebrationManager()).toBeNull();
     expect(container.querySelector('#greeting-modal-overlay')).toBeNull();
   });
+
+  it('maintains clamped DPR <= 1.75 upon window resize per D-03, DIYA-03', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    // Simulate high-DPI retina display
+    Object.defineProperty(window, 'devicePixelRatio', { value: 3.5, configurable: true });
+
+    window.dispatchEvent(new Event('resize'));
+
+    expect(sceneManager.getPixelRatio()).toBe(1.75);
+    expect(sceneManager.getRenderer().getPixelRatio()).toBe(1.75);
+
+    // Restore standard
+    Object.defineProperty(window, 'devicePixelRatio', { value: 1.0, configurable: true });
+  });
+
+  it('performs state-aware scene graph reconstruction upon webglcontextrestored when in GREETING_REVEAL per D-04, DIYA-04', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const greetingPayload = { recipient: 'Pooja', sender: 'Rohit', message: 'Happy Deepavali' };
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({ type: 'UNLOCK_SUCCESS', payload: greetingPayload });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    fsm.transition({ type: 'WICK_TOUCHED' });
+    fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'CELEBRATION_COMPLETE' });
+
+    expect(fsm.getState()).toBe('GREETING_REVEAL');
+
+    // Simulate WebGL context lost event
+    const canvas = container.querySelector('canvas')!;
+    const contextLostEvent = new Event('webglcontextlost', { cancelable: true });
+    canvas.dispatchEvent(contextLostEvent);
+
+    expect(contextLostEvent.defaultPrevented).toBe(true);
+    expect(sceneManager.isRenderLoopActive()).toBe(false);
+
+    // Simulate WebGL context restored event
+    const contextRestoredEvent = new Event('webglcontextrestored');
+    canvas.dispatchEvent(contextRestoredEvent);
+
+    expect(sceneManager.isRenderLoopActive()).toBe(true);
+
+    // Verify flame is restored and greeting modal is unfurled
+    const flameController = sceneManager.getFlameController()!;
+    expect(flameController).not.toBeNull();
+    expect(sceneManager.getGreetingModal()).not.toBeNull();
+    expect(sceneManager.getCelebrationManager()!.getActive()).toBe(true);
+  });
 });

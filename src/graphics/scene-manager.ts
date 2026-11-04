@@ -345,11 +345,14 @@ export class SceneManager {
     const height = this.container.clientHeight || window.innerHeight;
     const aspect = width / height;
 
+    // Maintain clamped DPR on resize (D-03, DIYA-03)
+    this.clampedDpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    if (this.renderer) {
+      this.renderer.setPixelRatio(this.clampedDpr);
+      this.renderer.setSize(width, height);
+    }
     if (this.cameraRig) {
       this.cameraRig.updateFov(aspect);
-    }
-    if (this.renderer) {
-      this.renderer.setSize(width, height);
     }
   };
 
@@ -421,12 +424,38 @@ export class SceneManager {
 
   /**
    * Reconstructs scene graph assets upon WebGL context restoration.
+   * State-aware: restores lit flame, halo, point light, and modal state
+   * if context loss occurred while the diya was lit (D-04, DIYA-04).
    */
   public rebuildScene(): void {
     if (!this.scene) return;
 
+    const currentState = this.fsm?.getState();
+
     this.disposeSceneComponents();
     this.buildSceneComponents();
+
+    // State-aware restoration (DIYA-04)
+    if (currentState === 'LIT_CELEBRATION' || currentState === 'GREETING_REVEAL') {
+      // Restore lit flame and halo
+      this.flameController?.ignite();
+      this.touchHint?.hide();
+      if (this.matchFollower) {
+        this.matchFollower.visible = false;
+      }
+
+      if (currentState === 'GREETING_REVEAL') {
+        this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.85, 0), 0);
+        this.greetingModal?.show(this.fsm?.getGreeting() ?? null);
+        this.celebrationManager?.setActive(true);
+      }
+    } else if (currentState === 'INTERACTIVE_UNLIT') {
+      this.touchHint?.show();
+    } else if (currentState === 'IGNITING') {
+      this.flameController?.ignite().then(() => {
+        this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
+      });
+    }
 
     try {
       if (typeof this.renderer?.compile === 'function') {
