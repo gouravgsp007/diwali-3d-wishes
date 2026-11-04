@@ -16,9 +16,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: WebGL Scene Engine, Camera Rig & 3D Diya Mesh** - Build mobile-optimized Three.js scene, responsive camera rig, and procedural/low-poly terracotta diya model
 - [x] **Phase 3: Procedural GLSL Flame Shader, Additive Bloom & Particle FX** - Implement organic flickering flame shader, warm amber point light, additive glow halo, and bursting sparklers
 - [x] **Phase 4: Touch Interaction Controller & Dual-Tier Audio Architecture** - Add touch-and-drag match ignition, proximity detection, haptics, and dual-tier audio bypassing iOS silent switch
-- [ ] **Phase 5: Festive Greeting Reveal, Typography & Celebration Polish** - Deliver glassmorphic greeting card with gold shimmer typography, confetti celebration, tap sparklers, and WhatsApp reaction
-- [ ] **Phase 6: Creator Portal & Delivery Message Generator Tool** - Create standalone generator for sellers to encrypt wishes, set passcodes, and 1-click copy pre-formatted DM delivery text
-- [ ] **Phase 7: Mobile WebView Hardening & Platform Resilience** - Harden against mobile in-app browser quirks, DPR thermal throttling, and WebGL context restoration across app switches
+- [x] **Phase 5: Festive Greeting Reveal, Typography & Celebration Polish** - Deliver glassmorphic greeting card with gold shimmer typography, confetti celebration, tap sparklers, and WhatsApp reaction
+- [x] **Phase 6: Creator Portal & Delivery Message Generator Tool** - Create standalone generator for sellers to encrypt wishes, set passcodes, and 1-click copy pre-formatted DM delivery text
+- [x] **Phase 7: Mobile WebView Hardening & Platform Resilience** - Harden against mobile in-app browser quirks, DPR thermal throttling, and WebGL context restoration across app switches
 
 ## Phase Details
 
@@ -55,8 +55,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Dependencies, procedural CanvasTextures, responsive portrait vFOV CameraRig, and resilient SceneManager engine
-- [ ] 02-02-PLAN.md — Procedural Diya mesh, brass thali platter, dual-tier lighting baseline, golden bokeh motes, and FSM bootstrap integration
+- [x] 02-01-PLAN.md — Dependencies, procedural CanvasTextures, responsive portrait vFOV CameraRig, and resilient SceneManager engine
+- [x] 02-02-PLAN.md — Procedural Diya mesh, brass thali platter, dual-tier lighting baseline, golden bokeh motes, and FSM bootstrap integration
 **UI hint**: yes
 
 ### Phase 3: Procedural GLSL Flame Shader, Additive Bloom & Particle FX
@@ -72,8 +72,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Procedural GLSL FlameShader, teardrop FlameMesh, dynamic PointLight jitter, and additive GlowHalo
-- [ ] 03-02-PLAN.md — Single-buffer SparklerSystem (phuljhadi), FlameController orchestrator, and SceneManager/FSM integration
+- [x] 03-01-PLAN.md — Procedural GLSL FlameShader, teardrop FlameMesh, dynamic PointLight jitter, and additive GlowHalo
+- [x] 03-02-PLAN.md — Single-buffer SparklerSystem (phuljhadi), FlameController orchestrator, and SceneManager/FSM integration
 
 ### Phase 4: Touch Interaction Controller & Dual-Tier Audio Architecture
 **Goal:** Implement responsive mobile touch-and-drag match ignition, proximity detection, haptic feedback, and dual-tier audio engine bypassing iOS silent switches.
@@ -89,8 +89,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — TouchController & horizontal plane raycasting, TouchHint floating prompt, and AudioEngine foundation with synchronous gesture unlock
-- [ ] 04-02-PLAN.md — Procedural Web Audio SfxSynthesizer, floating AudioToggle button, SceneManager/PasscodeGate/main.ts integration, and production build
+- [x] 04-01-PLAN.md — TouchController & horizontal plane raycasting, TouchHint floating prompt, and AudioEngine foundation with synchronous gesture unlock
+- [x] 04-02-PLAN.md — Procedural Web Audio SfxSynthesizer, floating AudioToggle button, SceneManager/PasscodeGate/main.ts integration, and production build
 **UI hint**: yes
 
 ### Phase 5: Festive Greeting Reveal, Typography & Celebration Polish
@@ -135,11 +135,10 @@ Plans:
   1. System strictly clamps device pixel ratio (`Math.min(window.devicePixelRatio, 1.75)`) and viewport (`100svh`), eliminating GPU overheating and browser pull-to-refresh jitter.
   2. System listens to `webglcontextlost` and `webglcontextrestored` to seamlessly recover 3D scene state without crashes when switching between mobile apps.
   3. Full interactive experience maintains stable 60 FPS on mid-tier mobile hardware within a <2.5 MB total transfer budget.
-**Plans**: 2 plans
+**Plans**: 1 plan
 
 Plans:
-- [x] 06-01-PLAN.md — Robust dual-tier clipboard utility (navigator.clipboard + execCommand fallback) and emoji-rich delivery message formatter with universal WhatsApp link
-- [x] 06-02-PLAN.md — CreatorPortal glassmorphic modal controller, form validation, client-side encryption via GreetingCodec, #create hash routing, and e2e integration
+- [x] 07-01-PLAN.md — Mobile WebView viewport/touch hardening (100svh, overscroll-behavior: none), DPR clamp (<=1.75), state-aware WebGL context restoration, and production build verification
 **UI hint**: yes
 
 ## Progress
@@ -155,4 +154,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 2/2 | Complete | 2026-11-04 |
 | 5. Festive Greeting Reveal, Typography & Celebration Polish | 2/2 | Complete | 2026-11-04 |
 | 6. Creator Portal & Delivery Message Generator Tool | 2/2 | Complete | 2026-11-04 |
-| 7. Mobile WebView Hardening & Platform Resilience | 0/TBD | Not started | - |
+| 7. Mobile WebView Hardening & Platform Resilience | 1/1 | Complete | 2026-11-04 |
