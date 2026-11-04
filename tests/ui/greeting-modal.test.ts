@@ -197,12 +197,31 @@ describe('GreetingModal UI Component', () => {
     expect(card?.className).not.toContain('pointer-events-auto');
   });
 
+  it('provides public element getters returning corresponding DOM references', () => {
+    modal.mount(container);
+
+    expect(modal.getOverlayElement()).toBe(document.getElementById('greeting-modal-overlay'));
+    expect(modal.getCardElement()).toBe(document.getElementById('greeting-card'));
+    expect(modal.getRecipientElement()).toBe(document.getElementById('greeting-recipient'));
+    expect(modal.getMessageElement()).toBe(document.getElementById('greeting-message'));
+    expect(modal.getSenderElement()).toBe(document.getElementById('greeting-sender'));
+    expect(modal.getWhatsAppButtonElement()).toBe(document.getElementById('whatsapp-reply-btn'));
+    expect(modal.getCreatorBadgeElement()).toBe(document.getElementById('creator-badge'));
+  });
+
   it('dispose() removes overlay element from DOM and nullifies all element references per D-07, ASVS V14, and T-05-05', () => {
     modal.mount(container);
     expect(document.getElementById('greeting-modal-overlay')).not.toBeNull();
 
     modal.dispose();
     expect(document.getElementById('greeting-modal-overlay')).toBeNull();
+    expect(modal.getOverlayElement()).toBeNull();
+    expect(modal.getCardElement()).toBeNull();
+    expect(modal.getRecipientElement()).toBeNull();
+    expect(modal.getMessageElement()).toBeNull();
+    expect(modal.getSenderElement()).toBeNull();
+    expect(modal.getWhatsAppButtonElement()).toBeNull();
+    expect(modal.getCreatorBadgeElement()).toBeNull();
 
     // Calling show or hide after dispose should not throw
     expect(() => modal.show(null)).not.toThrow();

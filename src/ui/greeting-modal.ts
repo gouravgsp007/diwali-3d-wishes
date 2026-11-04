@@ -143,6 +143,41 @@ export class GreetingModal {
   }
 
   /**
+   * Returns creator badge link element or null if not mounted.
+   */
+  public getCreatorBadgeElement(): HTMLAnchorElement | null {
+    return this.creatorBadgeEl;
+  }
+
+  /**
+   * Returns WhatsApp reply button element or null if not mounted.
+   */
+  public getWhatsAppButtonElement(): HTMLAnchorElement | null {
+    return this.whatsappBtnEl;
+  }
+
+  /**
+   * Returns recipient paragraph element or null if not mounted.
+   */
+  public getRecipientElement(): HTMLElement | null {
+    return this.recipientEl;
+  }
+
+  /**
+   * Returns message paragraph element or null if not mounted.
+   */
+  public getMessageElement(): HTMLElement | null {
+    return this.messageEl;
+  }
+
+  /**
+   * Returns sender paragraph element or null if not mounted.
+   */
+  public getSenderElement(): HTMLElement | null {
+    return this.senderEl;
+  }
+
+  /**
    * Cleans up DOM elements and nullifies references per ASVS V14.
    */
   public dispose(): void {
