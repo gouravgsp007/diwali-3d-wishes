@@ -10,6 +10,8 @@ import { FlameController } from './fx/flame-controller';
 import { TouchController } from '../interaction/touch-controller';
 import { TouchHint } from '../interaction/touch-hint';
 import { AudioEngine } from '../audio/audio-engine';
+import { GreetingModal } from '../ui/greeting-modal';
+import { CelebrationManager } from '../fx/celebration-manager';
 
 /**
  * Resilient SceneManager foundation for the Diwali 3D WebGL engine.
@@ -46,6 +48,9 @@ export class SceneManager {
   private touchController: TouchController | null = null;
   private touchHint: TouchHint | null = null;
   private matchFollower: THREE.Object3D | null = null;
+  private celebrationTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private celebrationManager: CelebrationManager | null = null;
+  private greetingModal: GreetingModal | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -183,6 +188,13 @@ export class SceneManager {
         this.touchHint?.hide();
       }
     );
+
+    // 9. Opulent Glassmorphic Greeting Modal (D-01, D-02)
+    this.greetingModal = new GreetingModal();
+    this.greetingModal.mount(this.container);
+
+    // 10. Festive Celebration Manager with dual cannons & tap-to-sparkle (D-04, D-05)
+    this.celebrationManager = new CelebrationManager();
   }
 
   /**
@@ -254,6 +266,11 @@ export class SceneManager {
    * Handles FSM state transitions to orchestrate camera cinematography and interaction (D-03, D-05, D-07, D-08, D-15).
    */
   private handleStateChange(state: AppState): void {
+    if (state !== 'LIT_CELEBRATION' && this.celebrationTimeoutId) {
+      clearTimeout(this.celebrationTimeoutId);
+      this.celebrationTimeoutId = null;
+    }
+
     if (state === 'UNLOCKED_INTRO') {
       // Start BGM playback with 2-second volume fade-in (D-05)
       AudioEngine.getInstance().startBgm();
@@ -277,6 +294,32 @@ export class SceneManager {
       this.flameController?.ignite().then(() => {
         this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
       });
+    } else if (state === 'LIT_CELEBRATION') {
+      // 1500ms celebratory pause before transitioning to GREETING_REVEAL per D-01
+      if (this.celebrationTimeoutId) {
+        clearTimeout(this.celebrationTimeoutId);
+      }
+      this.celebrationTimeoutId = setTimeout(() => {
+        this.celebrationTimeoutId = null;
+        this.fsm?.transition({ type: 'CELEBRATION_COMPLETE' });
+      }, 1500);
+    } else if (state === 'GREETING_REVEAL') {
+      if (this.celebrationTimeoutId) {
+        clearTimeout(this.celebrationTimeoutId);
+        this.celebrationTimeoutId = null;
+      }
+
+      // Smooth camera pan target up by +0.20 units: framing diya in lower third (D-01)
+      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.85, 0), 1200);
+
+      // Launch celebratory golden confetti cannons (D-04)
+      this.celebrationManager?.fireCelebrationBurst();
+
+      // Reveal greeting modal with decrypted payload (D-01, D-02)
+      this.greetingModal?.show(this.fsm?.getGreeting() ?? null);
+
+      // Enable interactive background screen tap sparkles (D-05, VFX-05)
+      this.celebrationManager?.setActive(true);
     }
   }
 
@@ -455,6 +498,21 @@ export class SceneManager {
       });
       this.matchFollower = null;
     }
+
+    if (this.celebrationTimeoutId) {
+      clearTimeout(this.celebrationTimeoutId);
+      this.celebrationTimeoutId = null;
+    }
+
+    if (this.greetingModal) {
+      this.greetingModal.dispose();
+      this.greetingModal = null;
+    }
+
+    if (this.celebrationManager) {
+      this.celebrationManager.dispose();
+      this.celebrationManager = null;
+    }
   }
 
   public getPixelRatio(): number {
@@ -507,6 +565,14 @@ export class SceneManager {
 
   public getMatchFollower(): THREE.Object3D | null {
     return this.matchFollower;
+  }
+
+  public getGreetingModal(): GreetingModal | null {
+    return this.greetingModal;
+  }
+
+  public getCelebrationManager(): CelebrationManager | null {
+    return this.celebrationManager;
   }
 
   /**

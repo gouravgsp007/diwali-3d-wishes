@@ -21,6 +21,7 @@ describe('SceneManager Foundation', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     sceneManager?.dispose();
     AudioEngine.getInstance().dispose();
   });
@@ -317,5 +318,115 @@ describe('SceneManager Foundation', () => {
     expect(sceneManager.getTouchHint()).toBeNull();
     expect(sceneManager.getMatchFollower()).toBeNull();
     expect(container.querySelector('#touch-hint-prompt')).toBeNull();
+  });
+
+  it('instantiates GreetingModal and CelebrationManager on start() and mounts GreetingModal to container per D-01, D-07', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    expect(sceneManager.getGreetingModal()).not.toBeNull();
+    expect(sceneManager.getCelebrationManager()).not.toBeNull();
+    expect(container.querySelector('#greeting-modal-overlay')).not.toBeNull();
+  });
+
+  it('automatically advances LIT_CELEBRATION to GREETING_REVEAL after 1500ms delay per D-01', () => {
+    vi.useFakeTimers();
+
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    // Advance to LIT_CELEBRATION
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: { recipient: 'Priya', sender: 'Aarav', message: 'Happy Diwali' },
+    });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    fsm.transition({ type: 'WICK_TOUCHED' });
+    fsm.transition({ type: 'IGNITION_COMPLETE' });
+
+    expect(fsm.getState()).toBe('LIT_CELEBRATION');
+
+    // 1499ms: Still in LIT_CELEBRATION
+    vi.advanceTimersByTime(1499);
+    expect(fsm.getState()).toBe('LIT_CELEBRATION');
+
+    // 1500ms: Advances to GREETING_REVEAL
+    vi.advanceTimersByTime(1);
+    expect(fsm.getState()).toBe('GREETING_REVEAL');
+
+    vi.useRealTimers();
+  });
+
+  it('cancels pending celebration timer on dispose() or state replay per D-07, T-05-04', () => {
+    vi.useFakeTimers();
+
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: { recipient: 'Priya', sender: 'Aarav', message: 'Happy Diwali' },
+    });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    fsm.transition({ type: 'WICK_TOUCHED' });
+    fsm.transition({ type: 'IGNITION_COMPLETE' });
+
+    expect(fsm.getState()).toBe('LIT_CELEBRATION');
+
+    // Dispose before timer fires
+    sceneManager.dispose();
+
+    vi.advanceTimersByTime(2000);
+    // State remains LIT_CELEBRATION because timer was cleared
+    expect(fsm.getState()).toBe('LIT_CELEBRATION');
+
+    vi.useRealTimers();
+  });
+
+  it('coordinates camera pan, confetti burst, greeting modal unfurl, and tap sparkles on GREETING_REVEAL per D-01, D-02, D-04, D-05', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const panSpy = vi.spyOn(sceneManager.getCameraRig(), 'panTargetTo');
+    const burstSpy = vi.spyOn(sceneManager.getCelebrationManager()!, 'fireCelebrationBurst');
+    const setActiveSpy = vi.spyOn(sceneManager.getCelebrationManager()!, 'setActive');
+    const showSpy = vi.spyOn(sceneManager.getGreetingModal()!, 'show');
+
+    const greetingPayload = { recipient: 'Aarav', sender: 'Diya', message: 'Festive wishes' };
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({ type: 'UNLOCK_SUCCESS', payload: greetingPayload });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    fsm.transition({ type: 'WICK_TOUCHED' });
+    fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'CELEBRATION_COMPLETE' });
+
+    expect(fsm.getState()).toBe('GREETING_REVEAL');
+    expect(panSpy).toHaveBeenCalledWith(expect.objectContaining({ x: 0, y: 0.85, z: 0 }), 1200);
+    expect(burstSpy).toHaveBeenCalledOnce();
+    expect(showSpy).toHaveBeenCalledWith(greetingPayload);
+    expect(setActiveSpy).toHaveBeenCalledWith(true);
+    expect(sceneManager.getCelebrationManager()!.getActive()).toBe(true);
+  });
+
+  it('disposes GreetingModal, CelebrationManager, and clears celebrationTimeoutId on dispose() per D-07, ASVS V14, T-05-05', () => {
+    sceneManager = new SceneManager(container, fsm);
+    sceneManager.start();
+
+    const greetingModal = sceneManager.getGreetingModal()!;
+    const celebrationManager = sceneManager.getCelebrationManager()!;
+    const modalDisposeSpy = vi.spyOn(greetingModal, 'dispose');
+    const celebDisposeSpy = vi.spyOn(celebrationManager, 'dispose');
+
+    expect(container.querySelector('#greeting-modal-overlay')).not.toBeNull();
+
+    sceneManager.dispose();
+
+    expect(modalDisposeSpy).toHaveBeenCalledOnce();
+    expect(celebDisposeSpy).toHaveBeenCalledOnce();
+    expect(sceneManager.getGreetingModal()).toBeNull();
+    expect(sceneManager.getCelebrationManager()).toBeNull();
+    expect(container.querySelector('#greeting-modal-overlay')).toBeNull();
   });
 });
