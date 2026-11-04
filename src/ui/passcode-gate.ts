@@ -40,9 +40,12 @@ export class PasscodeGate {
       this.hideError();
     });
 
-    // Secondary action: "Create Your Own Wish" stub notice (D-07)
+    // Secondary action: "Create Your Own Wish" routes to #create hash
     if (this.createWishBtn) {
       this.createWishBtn.addEventListener('click', () => {
+        if (typeof window !== 'undefined') {
+          window.location.hash = '#create';
+        }
         this.showCreateWishNotice();
       });
     }

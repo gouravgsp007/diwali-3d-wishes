@@ -57,12 +57,12 @@ export class CreatorPortal {
     this.overlayEl = document.createElement('div');
     this.overlayEl.id = 'creator-portal-overlay';
     this.overlayEl.className =
-      'fixed inset-0 z-30 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto transition-opacity duration-300 opacity-0 pointer-events-none select-none';
+      'fixed inset-0 z-30 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto transition-opacity duration-300 opacity-0 pointer-events-none select-none';
 
     this.overlayEl.innerHTML = `
       <div
         id="creator-card"
-        class="relative w-full max-w-lg my-auto rounded-3xl p-6 sm:p-8 bg-neutral-950/90 border border-amber-500/40 shadow-2xl shadow-amber-950/50 text-amber-100 flex flex-col gap-5 pointer-events-auto transform transition-all duration-300 scale-95"
+        class="relative w-full max-w-lg my-auto rounded-3xl p-6 sm:p-8 bg-neutral-950/90 border border-amber-500/40 shadow-2xl shadow-amber-950/50 text-amber-100 flex flex-col gap-5 pointer-events-none transform transition-all duration-300 scale-95"
       >
         <!-- Close Button -->
         <button
@@ -505,11 +505,11 @@ export class CreatorPortal {
   public show(): void {
     this.isVisible = true;
     if (this.overlayEl) {
-      this.overlayEl.classList.remove('opacity-0', 'pointer-events-none');
-      this.overlayEl.classList.add('opacity-100', 'pointer-events-auto');
+      this.overlayEl.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      this.overlayEl.classList.add('flex', 'opacity-100', 'pointer-events-auto');
       const card = this.overlayEl.querySelector('#creator-card');
-      card?.classList.remove('scale-95');
-      card?.classList.add('scale-100');
+      card?.classList.remove('scale-95', 'pointer-events-none');
+      card?.classList.add('scale-100', 'pointer-events-auto');
     }
   }
 
@@ -519,11 +519,11 @@ export class CreatorPortal {
   public hide(updateHash = true): void {
     this.isVisible = false;
     if (this.overlayEl) {
-      this.overlayEl.classList.remove('opacity-100', 'pointer-events-auto');
-      this.overlayEl.classList.add('opacity-0', 'pointer-events-none');
+      this.overlayEl.classList.remove('flex', 'opacity-100', 'pointer-events-auto');
+      this.overlayEl.classList.add('hidden', 'opacity-0', 'pointer-events-none');
       const card = this.overlayEl.querySelector('#creator-card');
-      card?.classList.remove('scale-100');
-      card?.classList.add('scale-95');
+      card?.classList.remove('scale-100', 'pointer-events-auto');
+      card?.classList.add('scale-95', 'pointer-events-none');
     }
 
     if (updateHash && typeof window !== 'undefined' && window.location.hash.startsWith('#create')) {
