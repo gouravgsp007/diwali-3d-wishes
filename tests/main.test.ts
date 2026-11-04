@@ -7,13 +7,14 @@ describe('Application Bootstrap', () => {
       '<div id="app"><div id="passcode-card"><form id="passcode-form"><input id="passcode-input" /><button id="unlock-btn"></button><p id="error-feedback"></p></form></div></div>';
   });
 
-  it('initializes FSM, SceneManager, PasscodeGate, and AudioToggle, mounting them to DOM', () => {
-    const { fsm, passcodeGate, sceneManager, audioToggle } = bootstrap();
+  it('initializes FSM, SceneManager, PasscodeGate, AudioToggle, and CreatorPortal, mounting them to DOM', () => {
+    const { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal } = bootstrap();
 
     expect(fsm).toBeDefined();
     expect(passcodeGate).toBeDefined();
     expect(sceneManager).toBeDefined();
     expect(audioToggle).toBeDefined();
+    expect(creatorPortal).toBeDefined();
 
     expect(fsm.getState()).toBe('LOCKED');
 
@@ -33,6 +34,11 @@ describe('Application Bootstrap', () => {
     const greetingOverlay = document.querySelector('#greeting-modal-overlay');
     expect(greetingOverlay).not.toBeNull();
 
+    // CreatorPortal overlay mounted into DOM container
+    const creatorOverlay = document.querySelector('#creator-portal-overlay');
+    expect(creatorOverlay).not.toBeNull();
+
+    creatorPortal.dispose();
     audioToggle.dispose();
     sceneManager.dispose();
   });
