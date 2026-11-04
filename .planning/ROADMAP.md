@@ -119,7 +119,11 @@ Plans:
   1. Seller can input recipient name, sender name, message, and 4-to-6 digit passcode into an intuitive generator and produce an encrypted URL in seconds.
   2. Seller can 1-click copy pre-formatted Instagram DM / WhatsApp delivery copy with festive emojis and clear unlock instructions.
   3. Generated encrypted links unlock seamlessly in recipient view when the matching passcode is entered.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Robust dual-tier clipboard utility (navigator.clipboard + execCommand fallback) and emoji-rich delivery message formatter with universal WhatsApp link
+- [x] 06-02-PLAN.md — CreatorPortal glassmorphic modal controller, form validation, client-side encryption via GreetingCodec, #create hash routing, and e2e integration
 **UI hint**: yes
 
 ### Phase 7: Mobile WebView Hardening & Platform Resilience
@@ -131,7 +135,11 @@ Plans:
   1. System strictly clamps device pixel ratio (`Math.min(window.devicePixelRatio, 1.75)`) and viewport (`100svh`), eliminating GPU overheating and browser pull-to-refresh jitter.
   2. System listens to `webglcontextlost` and `webglcontextrestored` to seamlessly recover 3D scene state without crashes when switching between mobile apps.
   3. Full interactive experience maintains stable 60 FPS on mid-tier mobile hardware within a <2.5 MB total transfer budget.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Robust dual-tier clipboard utility (navigator.clipboard + execCommand fallback) and emoji-rich delivery message formatter with universal WhatsApp link
+- [x] 06-02-PLAN.md — CreatorPortal glassmorphic modal controller, form validation, client-side encryption via GreetingCodec, #create hash routing, and e2e integration
 **UI hint**: yes
 
 ## Progress
@@ -146,5 +154,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Procedural GLSL Flame Shader, Additive Bloom & Particle FX | 2/2 | Complete | 2026-11-04 |
 | 4. Touch Interaction Controller & Dual-Tier Audio Architecture | 2/2 | Complete | 2026-11-04 |
 | 5. Festive Greeting Reveal, Typography & Celebration Polish | 2/2 | Complete | 2026-11-04 |
-| 6. Creator Portal & Delivery Message Generator Tool | 0/TBD | Not started | - |
+| 6. Creator Portal & Delivery Message Generator Tool | 2/2 | Complete | 2026-11-04 |
 | 7. Mobile WebView Hardening & Platform Resilience | 0/TBD | Not started | - |
