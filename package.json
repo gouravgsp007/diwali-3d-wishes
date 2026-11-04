@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",
+    "canvas-confetti": "^1.9.4",
     "lz-string": "^1.5.0",
     "three": "^0.187.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/lz-string": "^1.5.0",
     "@types/three": "^0.187.0",
     "happy-dom": "^21.0.0",
