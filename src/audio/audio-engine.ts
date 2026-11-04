@@ -31,6 +31,8 @@ export class AudioEngine {
   private wasPlayingBeforeHide = false;
   private visibilityHandler: (() => void) | null = null;
   private fadeInterval: ReturnType<typeof setInterval> | null = null;
+  private proceduralDroneNodes: { stop: () => void } | null = null;
+  private isBgmPlaying = false;
 
   private constructor() {
     this.initVisibilityListener();
@@ -116,8 +118,10 @@ export class AudioEngine {
       this.bgmAudio
         .play()
         .then(() => {
-          this.bgmAudio?.pause();
-          if (this.bgmAudio) this.bgmAudio.currentTime = 0;
+          if (!this.isBgmPlaying) {
+            this.bgmAudio?.pause();
+            if (this.bgmAudio) this.bgmAudio.currentTime = 0;
+          }
         })
         .catch(() => {});
     } catch (err) {
@@ -126,15 +130,35 @@ export class AudioEngine {
   }
 
   /**
-   * Begins HTML5 BGM soundtrack playback and smoothly ramps volume 0.0 -> 0.7 over 2.0s per D-05.
+   * Begins festive soundtrack playback: attempts HTML5 audio playback with 2.0s volume ramp,
+   * seamlessly engaging Web Audio API procedural Tanpura ambient fallback if HTML5 playback
+   * is blocked or encounters network error (D-05).
    */
   public startBgm(): void {
-    if (!this.bgmAudio || this.isMuted) return;
+    if (this.isMuted) return;
+    this.isBgmPlaying = true;
 
-    this.bgmAudio.currentTime = 0;
-    this.bgmAudio.volume = 0;
-    this.bgmAudio.play().catch(() => {});
+    if (this.bgmAudio) {
+      this.bgmAudio.currentTime = 0;
+      this.bgmAudio.volume = 0;
+      try {
+        const playPromise = this.bgmAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('HTML5 Audio playback prevented, starting procedural ambient fallback:', err);
+            this.startProceduralAmbient();
+          });
+        }
+      } catch (err) {
+        this.startProceduralAmbient();
+      }
+      this.fadeInBgm();
+    } else {
+      this.startProceduralAmbient();
+    }
+  }
 
+  private fadeInBgm(): void {
     if (this.fadeInterval !== null) {
       clearInterval(this.fadeInterval);
       this.fadeInterval = null;
@@ -157,6 +181,80 @@ export class AudioEngine {
         }
       }
     }, intervalMs);
+  }
+
+  /**
+   * Generates a warm, meditative Indian classical Tanpura drone and harmonic chord
+   * via Web Audio API oscillators, guaranteeing audible ambient music in any environment.
+   */
+  public startProceduralAmbient(): void {
+    if (this.isMuted || this.proceduralDroneNodes || !this.audioCtx) return;
+
+    try {
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume().catch(() => {});
+      }
+
+      const t = this.audioCtx.currentTime;
+      const master = this.audioCtx.createGain();
+      master.gain.setValueAtTime(0.001, t);
+      master.gain.linearRampToValueAtTime(0.20, t + 2.0); // Gentle 2s volume ramp
+      master.connect(this.sfxGain || this.audioCtx.destination);
+
+      // Tanpura Harmonics: Root (D3 = 146.83Hz), Fifth (A3 = 220Hz), Octave (D4 = 293.66Hz)
+      const osc1 = this.audioCtx.createOscillator();
+      const osc2 = this.audioCtx.createOscillator();
+      const osc3 = this.audioCtx.createOscillator();
+
+      osc1.type = 'triangle';
+      osc1.frequency.setValueAtTime(146.83, t);
+
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(220.0, t);
+
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(293.66, t);
+
+      // Subtle LFO frequency chorus modulation
+      const lfo = this.audioCtx.createOscillator();
+      const lfoGain = this.audioCtx.createGain();
+      lfo.frequency.setValueAtTime(0.18, t);
+      lfoGain.gain.setValueAtTime(1.2, t);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc1.frequency);
+
+      // Warm acoustic lowpass filter
+      const filter = this.audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(750, t);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      osc3.connect(filter);
+      filter.connect(master);
+
+      osc1.start(t);
+      osc2.start(t);
+      osc3.start(t);
+      lfo.start(t);
+
+      this.proceduralDroneNodes = {
+        stop: () => {
+          try {
+            osc1.stop();
+            osc2.stop();
+            osc3.stop();
+            lfo.stop();
+            master.disconnect();
+          } catch {
+            // Safe no-op
+          }
+          this.proceduralDroneNodes = null;
+        },
+      };
+    } catch (err) {
+      console.warn('Procedural ambient fallback skipped:', err);
+    }
   }
 
   /**
@@ -257,6 +355,10 @@ export class AudioEngine {
    * Cleans up audio streams, closes context, unbinds listeners, and resets singleton.
    */
   public dispose(): void {
+    if (this.proceduralDroneNodes) {
+      this.proceduralDroneNodes.stop();
+      this.proceduralDroneNodes = null;
+    }
     if (this.fadeInterval !== null) {
       clearInterval(this.fadeInterval);
       this.fadeInterval = null;

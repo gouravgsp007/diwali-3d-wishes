@@ -1,5 +1,5 @@
 import { GreetingCodec } from '../crypto/greeting-codec';
-import { DEMO_GREETINGS } from '../crypto/demo-greeting';
+import { getDemoGreeting } from '../crypto/demo-greeting';
 import { AudioEngine } from '../audio/audio-engine';
 import type { AppStateMachine } from '../app/state-machine';
 import type { ResolvedToken } from './url-resolver';
@@ -72,7 +72,7 @@ export class PasscodeGate {
 
       if (this.tokenInfo.isDemo || !this.tokenInfo.token) {
         // Built-in demo fallback (D-07)
-        const demo = DEMO_GREETINGS[passcode];
+        const demo = getDemoGreeting(passcode);
         if (!demo) {
           throw new Error('Invalid demo passcode');
         }
@@ -121,7 +121,17 @@ export class PasscodeGate {
 
   private hideModal(): void {
     if (this.cardEl) {
+      this.cardEl.style.pointerEvents = 'none';
+      this.cardEl.classList.remove('pointer-events-auto');
       this.cardEl.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+      if (this.inputEl) {
+        this.inputEl.style.pointerEvents = 'none';
+        this.inputEl.classList.remove('pointer-events-auto');
+        this.inputEl.classList.add('pointer-events-none');
+      }
+      setTimeout(() => {
+        this.cardEl?.classList.add('hidden');
+      }, 300);
     }
   }
 

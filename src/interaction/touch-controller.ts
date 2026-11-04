@@ -26,6 +26,7 @@ export class TouchController {
   private pointerNdc: THREE.Vector2;
   private isDragging = false;
   private isIgnited = false;
+  private isEnabled = true;
   public readonly proximityDetector: WickProximityDetector;
 
   private onPointerDownBound: (e: PointerEvent) => void;
@@ -68,26 +69,57 @@ export class TouchController {
     window.addEventListener('pointercancel', this.onPointerCancelBound);
   }
 
+  public setEnabled(enabled: boolean): void {
+    this.isEnabled = enabled;
+    if (!enabled) {
+      this.isDragging = false;
+      this.matchFollower.visible = false;
+    }
+  }
+
+  public getEnabled(): boolean {
+    return this.isEnabled;
+  }
+
   private onPointerDown(e: PointerEvent): void {
-    if (this.isIgnited) return;
+    if (!this.isEnabled || this.isIgnited) return;
+
+    // Ignore clicks on buttons, inputs, modals
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('button, input, textarea, a, #passcode-card, #creator-card, #greeting-card')) {
+      return;
+    }
 
     this.isDragging = true;
     this.onTouchStart?.();
     this.matchFollower.visible = true;
+
+    try {
+      (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    } catch {
+      // Safe no-op if unsupported
+    }
+
     this.updatePosition(e.clientX, e.clientY);
   }
 
   private onPointerMove(e: PointerEvent): void {
-    if (!this.isDragging || this.isIgnited) return;
+    if (!this.isEnabled || !this.isDragging || this.isIgnited) return;
 
     this.updatePosition(e.clientX, e.clientY);
   }
 
-  private onPointerUp(_e: PointerEvent): void {
+  private onPointerUp(e: PointerEvent): void {
     if (this.isIgnited) return;
 
     this.isDragging = false;
     this.matchFollower.visible = false;
+
+    try {
+      (e.target as HTMLElement)?.releasePointerCapture?.(e.pointerId);
+    } catch {
+      // Safe no-op
+    }
   }
 
   private onPointerCancel(e: PointerEvent): void {

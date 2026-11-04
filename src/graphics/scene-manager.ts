@@ -8,6 +8,7 @@ import { createLightingRig, type LightingRigResult } from './lighting-rig';
 import { BokehMotes } from './particles/bokeh-motes';
 import { FlameController } from './fx/flame-controller';
 import { TouchController } from '../interaction/touch-controller';
+import { WickProximityDetector } from '../interaction/proximity-detector';
 import { TouchHint } from '../interaction/touch-hint';
 import { AudioEngine } from '../audio/audio-engine';
 import { GreetingModal } from '../ui/greeting-modal';
@@ -186,8 +187,10 @@ export class SceneManager {
       },
       () => {
         this.touchHint?.hide();
-      }
+      },
+      new WickProximityDetector(this.diyaMesh.wickAnchor, 0.85)
     );
+    this.touchController.setEnabled(this.fsm?.getState() === 'INTERACTIVE_UNLIT');
 
     // 9. Opulent Glassmorphic Greeting Modal (D-01, D-02)
     this.greetingModal = new GreetingModal();
@@ -213,16 +216,26 @@ export class SceneManager {
     stick.position.set(0, -0.20, 0); // Tip aligns with group origin (0, 0, 0)
     group.add(stick);
 
-    // Glowing ember tip sphere (radius: 0.04, widthSegments: 16, heightSegments: 16)
-    const tipGeo = new THREE.SphereGeometry(0.04, 16, 16);
+    // Glowing ember tip sphere (radius: 0.06, widthSegments: 16, heightSegments: 16)
+    const tipGeo = new THREE.SphereGeometry(0.06, 16, 16);
     const tipMat = new THREE.MeshBasicMaterial({
       color: 0xff6600,
     });
     const tip = new THREE.Mesh(tipGeo, tipMat);
     group.add(tip);
 
+    // Outer golden flame aura (radius: 0.12)
+    const haloGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa22,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    group.add(halo);
+
     // Warm luminescent point light
-    const light = new THREE.PointLight(0xffaa33, 1.0, 1.5);
+    const light = new THREE.PointLight(0xffaa33, 1.2, 1.8);
     group.add(light);
 
     group.visible = false;
@@ -272,6 +285,7 @@ export class SceneManager {
     }
 
     if (state === 'UNLOCKED_INTRO') {
+      this.touchController?.setEnabled(false);
       // Start BGM playback with 2-second volume fade-in (D-05)
       AudioEngine.getInstance().startBgm();
 
@@ -280,9 +294,12 @@ export class SceneManager {
         this.fsm?.transition({ type: 'INTRO_COMPLETE' });
       });
     } else if (state === 'INTERACTIVE_UNLIT') {
-      // Show touch hint prompt (D-03)
+      // Enable touch drag and show touch hint prompt (D-01, D-03)
+      this.touchController?.reset();
+      this.touchController?.setEnabled(true);
       this.touchHint?.show();
     } else if (state === 'IGNITING') {
+      this.touchController?.setEnabled(false);
       // Hide touch hint and ensure match follower is hidden (D-03, D-08)
       this.touchHint?.hide();
       if (this.matchFollower) {
