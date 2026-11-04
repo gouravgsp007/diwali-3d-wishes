@@ -169,4 +169,61 @@ describe('PasscodeGate UI Controller', () => {
     expect(toast?.textContent).toContain('Create Your Own Wish');
     expect(fsm.state).toBe('LOCKED');
   });
+
+  it('delivers valid GreetingPayload (recipient, sender, message) to AppStateMachine upon UNLOCK_SUCCESS accessible via fsm.getGreeting() per D-02', async () => {
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
+
+    const testPayload: GreetingPayload = {
+      recipient: 'Rohan',
+      sender: 'Meera',
+      message: 'Wishing you sparkling joy and auspicious blessings!',
+      templateId: 'diya-classic',
+    };
+    const token = await GreetingCodec.encrypt(testPayload, 'MEERA');
+
+    const encryptedFsm = new AppStateMachine();
+    encryptedFsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+
+    const gate = new PasscodeGate(encryptedFsm, { token, isDemo: false });
+    gate.mount();
+
+    inputEl.value = 'MEERA';
+    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    expect(encryptedFsm.state).toBe('UNLOCKED_INTRO');
+    const greeting = encryptedFsm.getGreeting();
+    expect(greeting).not.toBeNull();
+    expect(greeting?.recipient).toBe('Rohan');
+    expect(greeting?.sender).toBe('Meera');
+    expect(greeting?.message).toBe('Wishing you sparkling joy and auspicious blessings!');
+  });
+
+  it('preserves error rejection on invalid passcode without populating or leaking fsm.getGreeting() per T-01-04', async () => {
+    vi.spyOn(AudioEngine.getInstance(), 'unlock').mockImplementation(() => {});
+
+    const testPayload: GreetingPayload = {
+      recipient: 'Secret',
+      sender: 'Sender',
+      message: 'Top secret Diwali wish!',
+      templateId: 'diya-classic',
+    };
+    const token = await GreetingCodec.encrypt(testPayload, 'VALID');
+
+    const encryptedFsm = new AppStateMachine();
+    encryptedFsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+
+    const gate = new PasscodeGate(encryptedFsm, { token, isDemo: false });
+    gate.mount();
+
+    inputEl.value = 'WRONG';
+    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    expect(encryptedFsm.state).toBe('LOCKED');
+    expect(encryptedFsm.getGreeting()).toBeNull();
+    expect(errorEl.classList.contains('hidden')).toBe(false);
+  });
 });

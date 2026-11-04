@@ -25,6 +25,14 @@ describe('Application Bootstrap', () => {
     const audioBtn = document.querySelector('#audio-toggle-btn');
     expect(audioBtn).not.toBeNull();
 
+    // SceneManager should create GreetingModal and CelebrationManager (Phase 5)
+    expect(sceneManager.getGreetingModal()).not.toBeNull();
+    expect(sceneManager.getCelebrationManager()).not.toBeNull();
+
+    // GreetingModal overlay mounted into DOM container
+    const greetingOverlay = document.querySelector('#greeting-modal-overlay');
+    expect(greetingOverlay).not.toBeNull();
+
     audioToggle.dispose();
     sceneManager.dispose();
   });
