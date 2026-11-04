@@ -198,15 +198,15 @@ export class AudioEngine {
       const t = this.audioCtx.currentTime;
       const master = this.audioCtx.createGain();
       master.gain.setValueAtTime(0.001, t);
-      master.gain.linearRampToValueAtTime(0.20, t + 2.0); // Gentle 2s volume ramp
+      master.gain.linearRampToValueAtTime(0.12, t + 2.0); // Gentle 2s volume ramp
       master.connect(this.sfxGain || this.audioCtx.destination);
 
-      // Tanpura Harmonics: Root (D3 = 146.83Hz), Fifth (A3 = 220Hz), Octave (D4 = 293.66Hz)
+      // Warm Meditative Tanpura Harmonics: Root (D3 = 146.83Hz), Fifth (A3 = 220Hz), Octave (D4 = 293.66Hz)
       const osc1 = this.audioCtx.createOscillator();
       const osc2 = this.audioCtx.createOscillator();
       const osc3 = this.audioCtx.createOscillator();
 
-      osc1.type = 'triangle';
+      osc1.type = 'sine';
       osc1.frequency.setValueAtTime(146.83, t);
 
       osc2.type = 'sine';
@@ -218,15 +218,15 @@ export class AudioEngine {
       // Subtle LFO frequency chorus modulation
       const lfo = this.audioCtx.createOscillator();
       const lfoGain = this.audioCtx.createGain();
-      lfo.frequency.setValueAtTime(0.18, t);
-      lfoGain.gain.setValueAtTime(1.2, t);
+      lfo.frequency.setValueAtTime(0.12, t);
+      lfoGain.gain.setValueAtTime(0.8, t);
       lfo.connect(lfoGain);
       lfoGain.connect(osc1.frequency);
 
-      // Warm acoustic lowpass filter
+      // Velvety warm acoustic lowpass filter at 450Hz
       const filter = this.audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(750, t);
+      filter.frequency.setValueAtTime(450, t);
 
       osc1.connect(filter);
       osc2.connect(filter);

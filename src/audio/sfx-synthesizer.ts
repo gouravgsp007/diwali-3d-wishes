@@ -91,11 +91,13 @@ export class SfxSynthesizer implements SfxPlayer {
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < bufferSize; i++) {
-      // 1.5% probability of micro-burst impulse
-      if (Math.random() < 0.015) {
-        data[i] = (Math.random() * 2 - 1) * 0.9;
-      } else {
-        data[i] = 0;
+      // Gentle organic micro-pop bursts (cozy oil lamp crackle instead of harsh spikes)
+      if (Math.random() < 0.008 && i + 8 < bufferSize) {
+        const amp = (Math.random() * 2 - 1) * 0.35;
+        for (let j = 0; j < 8; j++) {
+          data[i + j] += amp * Math.exp(-j * 0.6);
+        }
+        i += 7;
       }
     }
 
