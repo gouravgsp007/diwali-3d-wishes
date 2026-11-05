@@ -19,6 +19,28 @@
         class="absolute inset-0 bg-gradient-to-b from-[#0d0208] via-[#1a0614] to-[#080105] pointer-events-none -z-10"
       ></div>
 
+      <!-- Top Festive Bar with Auspicious Header & Fireworks Trigger -->
+      <header
+        class="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 bg-black/40 backdrop-blur-md border-b border-amber-500/20 text-xs sm:text-sm text-amber-200 select-none"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🪔</span>
+          <span class="font-serif font-bold tracking-wider text-amber-300">SHUBH DEEPAVALI</span>
+          <span class="hidden sm:inline text-amber-400/60 font-sans text-xs">• शुभ दीपावली</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="header-fireworks-btn"
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/30 hover:from-amber-500/30 hover:to-amber-600/40 active:scale-95 border border-amber-400/40 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer pointer-events-auto flex items-center gap-1 shadow-md"
+            title="Burst golden Diwali fireworks"
+          >
+            <span>🎆</span>
+            <span>Fireworks</span>
+          </button>
+        </div>
+      </header>
+
       <!-- Glassmorphic Passcode Card Modal -->
       <div
         id="passcode-card"
@@ -29,11 +51,11 @@
           ✨ Shubh Deepavali ✨
         </p>
         <h1 class="text-xl font-bold text-amber-100 mb-2">Unlock Your Diwali Surprise</h1>
-        <p class="text-xs text-amber-200/70 mb-6 leading-relaxed">
+        <p class="text-xs text-amber-200/70 mb-5 leading-relaxed">
           Enter the secret passcode sent by your loved one
         </p>
 
-        <form id="passcode-form" class="space-y-4">
+        <form id="passcode-form" class="space-y-3">
           <div>
             <input
               id="passcode-input"
@@ -43,6 +65,7 @@
               minlength="4"
               required
               pattern="[A-Za-z0-9]{4,6}"
+              value="PRIYA"
               placeholder="e.g. PRIYA"
               autocomplete="off"
               autocapitalize="characters"
@@ -59,9 +82,22 @@
             Open Festive Wish 🪔
           </button>
 
+          <button
+            id="quick-demo-btn"
+            type="button"
+            class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wider uppercase bg-amber-500/15 hover:bg-amber-500/25 active:scale-[0.98] border border-amber-400/30 text-amber-200 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>✨ 1-Tap Quick Experience</span>
+            <span class="text-[10px] bg-amber-400/20 px-1.5 py-0.5 rounded text-amber-300">DEMO</span>
+          </button>
+
+          <p class="text-[11px] text-amber-300/60 leading-tight">
+            💡 Direct visitor? Tap Quick Experience for instant celebration!
+          </p>
+
           <p
             id="error-feedback"
-            class="hidden mt-4 text-xs font-medium text-rose-400/90 leading-tight"
+            class="hidden mt-2 text-xs font-medium text-rose-400/90 leading-tight"
           ></p>
         </form>
 

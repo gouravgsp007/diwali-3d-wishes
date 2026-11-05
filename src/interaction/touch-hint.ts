@@ -2,7 +2,7 @@
  * Floating glassmorphic touch hint prompt component per D-03.
  *
  * Displays an ethereal floating pill prompt ("Touch & drag the flame to light your Diya")
- * with a pulsing gold indicator and smooth opacity/scale transitions.
+ * with a pulsing gold indicator, explicit instruction, and a 1-tap "Tap to Light Diya" fallback button.
  *
  * Security & Reliability:
  * - Strictly static DOM template without dynamic unsanitized string interpolation (ASVS V5, T-04-02).
@@ -11,6 +11,16 @@
 export class TouchHint {
   private element: HTMLElement | null = null;
   private isPromptVisible = false;
+  private tapButtonListener: ((e: MouseEvent) => void) | null = null;
+
+  constructor(private onTapLight?: () => void) {}
+
+  /**
+   * Updates or sets the 1-tap ignition callback.
+   */
+  public setOnTapLight(callback: () => void): void {
+    this.onTapLight = callback;
+  }
 
   /**
    * Mounts the floating hint element into the parent DOM container.
@@ -24,16 +34,35 @@ export class TouchHint {
     this.element.setAttribute('aria-live', 'polite');
     this.element.className =
       'fixed bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none ' +
-      'flex items-center gap-2 px-5 py-2.5 rounded-full ' +
+      'flex flex-col items-center gap-2 px-5 py-2.5 rounded-full ' +
       'bg-amber-950/80 backdrop-blur-md border border-amber-400/40 text-amber-200 text-xs md:text-sm font-medium ' +
       'shadow-xl shadow-black/50 transition-all duration-500 opacity-0 scale-95 select-none';
 
     // Strictly static safe template with pulsing indicator per T-04-02
     this.element.innerHTML = `
-      <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-      <span>Touch &amp; drag the flame to light your Diya</span>
-      <span class="text-amber-400 font-bold select-none">&rarr;</span>
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span>Touch &amp; drag the flame to light your Diya</span>
+        <span class="text-amber-400 font-bold select-none">&rarr;</span>
+      </div>
+      <button
+        type="button"
+        id="tap-to-light-btn"
+        class="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all pointer-events-auto cursor-pointer flex items-center gap-1.5"
+      >
+        <span>✨ Tap to Light Diya</span>
+        <span>🪔</span>
+      </button>
     `;
+
+    const btn = this.element.querySelector('#tap-to-light-btn');
+    if (btn) {
+      this.tapButtonListener = (e: MouseEvent) => {
+        e.stopPropagation();
+        this.onTapLight?.();
+      };
+      btn.addEventListener('click', this.tapButtonListener as EventListener);
+    }
 
     parentContainer.appendChild(this.element);
   }
@@ -76,6 +105,11 @@ export class TouchHint {
    * Removes element from DOM and cleans up state per D-09, ASVS V14.
    */
   public dispose(): void {
+    if (this.element && this.tapButtonListener) {
+      const btn = this.element.querySelector('#tap-to-light-btn');
+      btn?.removeEventListener('click', this.tapButtonListener as EventListener);
+      this.tapButtonListener = null;
+    }
     this.element?.remove();
     this.element = null;
     this.isPromptVisible = false;

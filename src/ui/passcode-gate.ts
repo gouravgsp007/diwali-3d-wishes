@@ -32,6 +32,11 @@ export class PasscodeGate {
 
     if (!this.formEl || !this.inputEl) return;
 
+    // Pre-fill default demo passcode for direct visitors with zero effort
+    if (this.inputEl && !this.inputEl.value && (this.tokenInfo.isDemo || !this.tokenInfo.token)) {
+      this.inputEl.value = 'PRIYA';
+    }
+
     // Real-time uppercase normalization and error clearing
     this.inputEl.addEventListener('input', () => {
       if (this.inputEl) {
@@ -39,6 +44,17 @@ export class PasscodeGate {
       }
       this.hideError();
     });
+
+    // Quick 1-Tap Experience button for direct visitors
+    const quickDemoBtn = document.getElementById('quick-demo-btn');
+    if (quickDemoBtn) {
+      quickDemoBtn.addEventListener('click', async () => {
+        if (this.inputEl) {
+          this.inputEl.value = 'PRIYA';
+        }
+        await this.handleUnlock();
+      });
+    }
 
     // Secondary action: "Create Your Own Wish" routes to #create hash
     if (this.createWishBtn) {

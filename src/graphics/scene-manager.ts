@@ -4,6 +4,9 @@ import type { AppStateMachine, AppState } from '../app/state-machine';
 import { CameraRig } from './camera-rig';
 import { DiyaMesh } from './meshes/diya-mesh';
 import { createBrassThaliMesh } from './meshes/thali-mesh';
+import { createRangoliMesh } from './meshes/rangoli-mesh';
+import { createMarigoldRingMesh } from './meshes/marigold-mesh';
+import { createFestiveLanterns, type FestiveLanternsHolder } from './meshes/lantern-mesh';
 import { createLightingRig, type LightingRigResult } from './lighting-rig';
 import { BokehMotes } from './particles/bokeh-motes';
 import { FlameController } from './fx/flame-controller';
@@ -43,6 +46,9 @@ export class SceneManager {
 
   private diyaMesh: DiyaMesh | null = null;
   private thaliMesh: THREE.Mesh | null = null;
+  private rangoliMesh: THREE.Mesh | null = null;
+  private marigoldMesh: THREE.Group | null = null;
+  private lanterns: FestiveLanternsHolder | null = null;
   private lightingRig: LightingRigResult | null = null;
   private bokehMotes: BokehMotes | null = null;
   private flameController: FlameController | null = null;
@@ -52,6 +58,8 @@ export class SceneManager {
   private celebrationTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private celebrationManager: CelebrationManager | null = null;
   private greetingModal: GreetingModal | null = null;
+  private headerFireworksBtn: HTMLElement | null = null;
+  private onHeaderFireworksClick: (() => void) | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -154,6 +162,18 @@ export class SceneManager {
     this.thaliMesh = createBrassThaliMesh();
     this.scene.add(this.thaliMesh);
 
+    // 2b. Sacred Golden & Crimson Rangoli Floor Mandala
+    this.rangoliMesh = createRangoliMesh();
+    this.scene.add(this.rangoliMesh);
+
+    // 2c. Fresh 3D Marigold Garland (Genda Phool) Ring
+    this.marigoldMesh = createMarigoldRingMesh();
+    this.scene.add(this.marigoldMesh);
+
+    // 2d. Floating Indian Festive Lanterns (Akash Kandil)
+    this.lanterns = createFestiveLanterns();
+    this.scene.add(this.lanterns.group);
+
     // 3. Dual-Tier Lighting Rig with pre-warmed PointLight (D-10, T-02-04)
     this.lightingRig = createLightingRig(this.diyaMesh.wickAnchor);
     this.scene.add(this.lightingRig.ambientLight);
@@ -168,8 +188,12 @@ export class SceneManager {
     this.flameController = new FlameController(this.diyaMesh.wickAnchor, this.lightingRig.flamePointLight);
     this.scene.add(this.flameController.group);
 
-    // 6. Interactive Touch Hint Prompt (D-03)
-    this.touchHint = new TouchHint();
+    // 6. Interactive Touch Hint Prompt with 1-Tap Light Fallback (D-03)
+    this.touchHint = new TouchHint(() => {
+      AudioEngine.getInstance().playMatchStrike();
+      AudioEngine.getInstance().playFlameCrackle();
+      this.fsm?.transition({ type: 'WICK_TOUCHED' });
+    });
     this.touchHint.mount(this.container);
 
     // 7. Virtual Match Follower 3D Mesh (D-01)
@@ -198,6 +222,15 @@ export class SceneManager {
 
     // 10. Festive Celebration Manager with dual cannons & tap-to-sparkle (D-04, D-05)
     this.celebrationManager = new CelebrationManager();
+
+    // 11. Wire interactive fireworks trigger in top header
+    this.headerFireworksBtn = document.getElementById('header-fireworks-btn');
+    if (this.headerFireworksBtn) {
+      this.onHeaderFireworksClick = () => {
+        this.celebrationManager?.fireCelebrationBurst();
+      };
+      this.headerFireworksBtn.addEventListener('click', this.onHeaderFireworksClick);
+    }
   }
 
   /**
@@ -259,6 +292,11 @@ export class SceneManager {
     // Update bokeh motes particle drift (D-11)
     if (this.bokehMotes) {
       this.bokehMotes.update(dt, this.elapsedTime);
+    }
+
+    // Update floating background lanterns sway
+    if (this.lanterns) {
+      this.lanterns.update(this.elapsedTime);
     }
 
     // Update flame controller (shader waft, halo breathing, sparkler kinematics, light jitter) (D-12)
@@ -501,6 +539,38 @@ export class SceneManager {
       this.thaliMesh = null;
     }
 
+    if (this.rangoliMesh) {
+      this.scene.remove(this.rangoliMesh);
+      this.rangoliMesh.geometry.dispose();
+      if (Array.isArray(this.rangoliMesh.material)) {
+        this.rangoliMesh.material.forEach((m) => m.dispose());
+      } else {
+        this.rangoliMesh.material.dispose();
+      }
+      this.rangoliMesh = null;
+    }
+
+    if (this.marigoldMesh) {
+      this.scene.remove(this.marigoldMesh);
+      this.marigoldMesh.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry?.dispose();
+          if (Array.isArray(child.material)) {
+            child.material.forEach((m) => m.dispose());
+          } else if (child.material) {
+            child.material.dispose();
+          }
+        }
+      });
+      this.marigoldMesh = null;
+    }
+
+    if (this.lanterns) {
+      this.scene.remove(this.lanterns.group);
+      this.lanterns.dispose();
+      this.lanterns = null;
+    }
+
     if (this.lightingRig) {
       this.scene.remove(this.lightingRig.ambientLight);
       this.scene.remove(this.lightingRig.rimLight);
@@ -559,6 +629,12 @@ export class SceneManager {
       this.celebrationManager.dispose();
       this.celebrationManager = null;
     }
+
+    if (this.headerFireworksBtn && this.onHeaderFireworksClick) {
+      this.headerFireworksBtn.removeEventListener('click', this.onHeaderFireworksClick);
+      this.headerFireworksBtn = null;
+      this.onHeaderFireworksClick = null;
+    }
   }
 
   public getPixelRatio(): number {
@@ -587,6 +663,18 @@ export class SceneManager {
 
   public getThaliMesh(): THREE.Mesh | null {
     return this.thaliMesh;
+  }
+
+  public getRangoliMesh(): THREE.Mesh | null {
+    return this.rangoliMesh;
+  }
+
+  public getMarigoldMesh(): THREE.Group | null {
+    return this.marigoldMesh;
+  }
+
+  public getLanterns(): FestiveLanternsHolder | null {
+    return this.lanterns;
   }
 
   public getLightingRig(): LightingRigResult | null {
