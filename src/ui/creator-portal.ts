@@ -26,7 +26,16 @@ export class CreatorPortal {
   private senderInput: HTMLInputElement | null = null;
   private messageInput: HTMLTextAreaElement | null = null;
   private passcodeInput: HTMLInputElement | null = null;
-  private musicThemeSelect: HTMLSelectElement | null = null;
+  private selectedMusicChoice = 'track1';
+  private customAudioFile: File | null = null;
+  private customAudioObjectUrl: string | null = null;
+  private customAudioUrlInput: HTMLInputElement | null = null;
+  private audioFileInput: HTMLInputElement | null = null;
+  private fileNameEl: HTMLElement | null = null;
+  private customAudioPanel: HTMLElement | null = null;
+  private previewSoundBtn: HTMLButtonElement | null = null;
+  private previewAudioEl: HTMLAudioElement | null = null;
+  private isPreviewPlaying = false;
   private charCountEl: HTMLElement | null = null;
   private errorMsgEl: HTMLElement | null = null;
   private generateBtn: HTMLButtonElement | null = null;
@@ -197,22 +206,115 @@ export class CreatorPortal {
             </p>
           </div>
 
-          <!-- Festive Music Theme Selector -->
-          <div>
-            <label for="creator-music-theme" class="block text-xs uppercase tracking-wider font-semibold text-amber-400 mb-1">
-              Festive Music Theme 🎵
-            </label>
-            <select
-              id="creator-music-theme"
-              class="w-full px-4 py-2.5 rounded-xl bg-black/60 border border-amber-500/30 text-amber-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-sm transition-all cursor-pointer"
-            >
-              <option value="sitar">🪕 Royal Sitar & Santoor (Classical Festive Raga)</option>
-              <option value="flute">🪈 Divine Bansuri (Peaceful Indian Bamboo Flute)</option>
-              <option value="temple">🔔 Sanctum Chimes (Auspicious Temple Bronze Bells)</option>
-            </select>
-            <p class="text-[11px] text-amber-400/60 mt-1">
-              The recipient will hear this chosen instrumental raga when they unlock their Diya.
-            </p>
+          <!-- Festive Soundtrack & Audio Selection (Admin/Seller Exclusive) -->
+          <div class="p-3.5 rounded-2xl bg-black/60 border border-amber-500/30 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs uppercase tracking-wider font-semibold text-amber-400">
+                Festive Soundtrack 🎶 <span class="text-[10px] text-amber-400/60 font-normal">(Admin Only)</span>
+              </label>
+              <button
+                id="creator-preview-sound-btn"
+                type="button"
+                class="px-2.5 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500/30 active:scale-95 border border-amber-400/40 text-amber-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                title="Preview selected soundtrack"
+              >
+                <span id="creator-preview-icon">▶</span>
+                <span id="creator-preview-text">Preview Sound</span>
+              </button>
+            </div>
+
+            <!-- Radio Options for the 3 Tracks -->
+            <div class="grid grid-cols-1 gap-2">
+              <label class="creator-sound-card relative flex items-center p-2.5 rounded-xl border border-amber-400/50 bg-amber-500/20 cursor-pointer transition-all hover:bg-amber-500/25 text-left">
+                <input
+                  type="radio"
+                  name="creator-music-choice"
+                  value="track1"
+                  checked
+                  class="mr-2.5 accent-amber-400"
+                />
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold text-amber-100 flex items-center gap-1">
+                    <span>🎵</span> 1. Happy Wali Feeling
+                  </span>
+                  <span class="text-[10px] text-amber-300/70">Aayi Hai Diwali Festive Beat</span>
+                </div>
+              </label>
+
+              <label class="creator-sound-card relative flex items-center p-2.5 rounded-xl border border-amber-500/20 bg-black/40 cursor-pointer transition-all hover:bg-amber-500/10 text-left">
+                <input
+                  type="radio"
+                  name="creator-music-choice"
+                  value="track2"
+                  class="mr-2.5 accent-amber-400"
+                />
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold text-amber-100 flex items-center gap-1">
+                    <span>🪔</span> 2. Mere Tumhare Sabke Liye
+                  </span>
+                  <span class="text-[10px] text-amber-300/70">Happy Diwali Classic Song</span>
+                </div>
+              </label>
+
+              <label class="creator-sound-card relative flex items-center p-2.5 rounded-xl border border-amber-500/20 bg-black/40 cursor-pointer transition-all hover:bg-amber-500/10 text-left">
+                <input
+                  type="radio"
+                  name="creator-music-choice"
+                  value="track3"
+                  class="mr-2.5 accent-amber-400"
+                />
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold text-amber-100 flex items-center gap-1">
+                    <span>🕉️</span> 3. Shree Lakshmi Aarti
+                  </span>
+                  <span class="text-[10px] text-amber-300/70">Devotional Aarti & Chants</span>
+                </div>
+              </label>
+
+              <!-- Option 4: Custom MP3 Upload -->
+              <label class="creator-sound-card relative flex items-center justify-between p-2.5 rounded-xl border border-amber-500/20 bg-black/40 cursor-pointer transition-all hover:bg-amber-500/10 text-left">
+                <div class="flex items-center">
+                  <input
+                    type="radio"
+                    name="creator-music-choice"
+                    value="custom"
+                    class="mr-2.5 accent-amber-400"
+                  />
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-amber-100 flex items-center gap-1">
+                      <span>📁</span> 4. Upload Custom MP3 / Audio
+                    </span>
+                    <span class="text-[10px] text-amber-300/70">Upload your client's custom song or paste audio URL</span>
+                  </div>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono">Custom</span>
+              </label>
+            </div>
+
+            <!-- Custom Audio Upload Panel (revealed when Custom is selected) -->
+            <div id="creator-custom-audio-panel" class="hidden flex-col gap-2 p-2.5 rounded-xl bg-neutral-900/80 border border-amber-500/30">
+              <div class="flex items-center gap-2">
+                <label
+                  for="creator-audio-file-input"
+                  class="flex-1 py-2 px-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 text-center"
+                >
+                  <span>📤 Choose MP3 File</span>
+                </label>
+                <input
+                  id="creator-audio-file-input"
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.m4a"
+                  class="hidden"
+                />
+                <span id="creator-audio-file-name" class="text-[11px] text-amber-300/70 truncate max-w-[150px] italic">No file chosen</span>
+              </div>
+              <input
+                id="creator-audio-url-input"
+                type="url"
+                placeholder="Or paste direct MP3 stream URL (e.g. https://.../song.mp3)"
+                class="w-full px-3 py-1.5 rounded-lg bg-black/60 border border-amber-500/30 text-amber-100 placeholder-amber-400/30 text-xs focus:outline-none focus:border-amber-400"
+              />
+            </div>
           </div>
 
           <!-- Validation Error Alert -->
@@ -344,7 +446,11 @@ export class CreatorPortal {
     this.senderInput = this.overlayEl.querySelector('#creator-sender');
     this.messageInput = this.overlayEl.querySelector('#creator-message');
     this.passcodeInput = this.overlayEl.querySelector('#creator-passcode');
-    this.musicThemeSelect = this.overlayEl.querySelector('#creator-music-theme');
+    this.customAudioUrlInput = this.overlayEl.querySelector('#creator-audio-url-input');
+    this.audioFileInput = this.overlayEl.querySelector('#creator-audio-file-input');
+    this.fileNameEl = this.overlayEl.querySelector('#creator-audio-file-name');
+    this.customAudioPanel = this.overlayEl.querySelector('#creator-custom-audio-panel');
+    this.previewSoundBtn = this.overlayEl.querySelector('#creator-preview-sound-btn');
     this.charCountEl = this.overlayEl.querySelector('#creator-char-count');
     this.errorMsgEl = this.overlayEl.querySelector('#creator-error-msg');
     this.generateBtn = this.overlayEl.querySelector('#creator-generate-btn');
@@ -374,6 +480,54 @@ export class CreatorPortal {
     this.passcodeInput?.addEventListener('input', () => {
       if (this.passcodeInput) {
         this.passcodeInput.value = this.passcodeInput.value.toUpperCase();
+      }
+    });
+
+    // Radio button changes for soundtrack selection
+    const radioInputs = this.overlayEl.querySelectorAll('input[name="creator-music-choice"]');
+    radioInputs.forEach((radio) => {
+      radio.addEventListener('change', (e) => {
+        const val = (e.target as HTMLInputElement).value;
+        this.selectedMusicChoice = val;
+        this.updateMusicCardsHighlight();
+        if (val === 'custom') {
+          this.customAudioPanel?.classList.remove('hidden');
+          this.customAudioPanel?.classList.add('flex');
+        } else {
+          this.customAudioPanel?.classList.add('hidden');
+          this.customAudioPanel?.classList.remove('flex');
+        }
+        if (this.isPreviewPlaying) {
+          this.playSoundPreview();
+        }
+      });
+    });
+
+    // Custom audio file input
+    this.audioFileInput?.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) {
+        this.customAudioFile = file;
+        if (this.customAudioObjectUrl) {
+          URL.revokeObjectURL(this.customAudioObjectUrl);
+        }
+        this.customAudioObjectUrl = URL.createObjectURL(file);
+        if (this.fileNameEl) {
+          this.fileNameEl.textContent = file.name;
+        }
+        if (this.isPreviewPlaying) {
+          this.playSoundPreview();
+        }
+      }
+    });
+
+    // Audio preview button
+    this.previewSoundBtn?.addEventListener('click', () => {
+      if (this.isPreviewPlaying) {
+        this.stopSoundPreview();
+      } else {
+        this.playSoundPreview();
       }
     });
 
@@ -485,18 +639,26 @@ export class CreatorPortal {
     }
 
     try {
+      this.stopSoundPreview();
+
       if (this.generateBtn) {
         this.generateBtn.disabled = true;
         this.generateBtn.textContent = 'Encrypting Wish... ✨';
       }
 
-      const musicTheme = this.musicThemeSelect?.value || 'sitar';
+      const musicTheme = this.selectedMusicChoice || 'track1';
+      let customMusicUrl: string | undefined = undefined;
+      if (this.selectedMusicChoice === 'custom') {
+        const inputUrl = this.customAudioUrlInput?.value.trim();
+        customMusicUrl = inputUrl || this.customAudioObjectUrl || undefined;
+      }
 
       const payload: GreetingPayload = {
         recipient,
         sender,
         message,
         musicTheme,
+        customMusicUrl,
         createdAt: Date.now(),
       };
 
@@ -572,14 +734,97 @@ export class CreatorPortal {
 
   private resetForm(): void {
     this.clearError();
+    this.stopSoundPreview();
     if (this.recipientInput) this.recipientInput.value = '';
     if (this.passcodeInput) this.passcodeInput.value = '';
-    if (this.musicThemeSelect) this.musicThemeSelect.value = 'sitar';
+    this.selectedMusicChoice = 'track1';
+
+    if (this.overlayEl) {
+      const track1Radio = this.overlayEl.querySelector('input[value="track1"]') as HTMLInputElement | null;
+      if (track1Radio) track1Radio.checked = true;
+      this.updateMusicCardsHighlight();
+    }
+    this.customAudioPanel?.classList.add('hidden');
+    this.customAudioPanel?.classList.remove('flex');
+    if (this.customAudioUrlInput) this.customAudioUrlInput.value = '';
+    if (this.audioFileInput) this.audioFileInput.value = '';
+    if (this.fileNameEl) this.fileNameEl.textContent = 'No file chosen';
+    if (this.customAudioObjectUrl) {
+      URL.revokeObjectURL(this.customAudioObjectUrl);
+      this.customAudioObjectUrl = null;
+    }
+    this.customAudioFile = null;
+
     this.updateCharCount();
 
     this.resultSection?.classList.add('hidden');
     this.resultSection?.classList.remove('flex');
     this.formEl?.classList.remove('hidden');
+  }
+
+  private updateMusicCardsHighlight(): void {
+    if (!this.overlayEl) return;
+    const cards = this.overlayEl.querySelectorAll('.creator-sound-card');
+    cards.forEach((card) => {
+      const radio = card.querySelector('input[type="radio"]') as HTMLInputElement | null;
+      if (radio?.checked) {
+        card.classList.add('border-amber-400/50', 'bg-amber-500/20');
+        card.classList.remove('border-amber-500/20', 'bg-black/40');
+      } else {
+        card.classList.remove('border-amber-400/50', 'bg-amber-500/20');
+        card.classList.add('border-amber-500/20', 'bg-black/40');
+      }
+    });
+  }
+
+  public playSoundPreview(): void {
+    if (!this.previewAudioEl) {
+      this.previewAudioEl = new Audio();
+      this.previewAudioEl.addEventListener('ended', () => {
+        this.stopSoundPreview();
+      });
+    }
+
+    let src = '/audio/diwali-track-1.mp3';
+    if (this.selectedMusicChoice === 'track2') {
+      src = '/audio/diwali-track-2.mp3';
+    } else if (this.selectedMusicChoice === 'track3') {
+      src = '/audio/diwali-track-3.mp3';
+    } else if (this.selectedMusicChoice === 'custom') {
+      src = this.customAudioObjectUrl || this.customAudioUrlInput?.value.trim() || '/audio/diwali-track-1.mp3';
+    }
+
+    this.previewAudioEl.src = src;
+    this.previewAudioEl.currentTime = 0;
+    this.previewAudioEl.volume = 0.8;
+    this.previewAudioEl.play().catch((err) => {
+      console.warn('Sound preview playback failed:', err);
+    });
+
+    this.isPreviewPlaying = true;
+    if (this.previewSoundBtn) {
+      const icon = this.previewSoundBtn.querySelector('#creator-preview-icon');
+      const text = this.previewSoundBtn.querySelector('#creator-preview-text');
+      if (icon) icon.textContent = '⏸';
+      if (text) text.textContent = 'Pause';
+      this.previewSoundBtn.classList.add('bg-amber-400', 'text-stone-950', 'font-bold');
+      this.previewSoundBtn.classList.remove('bg-amber-500/20', 'text-amber-300');
+    }
+  }
+
+  public stopSoundPreview(): void {
+    if (this.previewAudioEl) {
+      this.previewAudioEl.pause();
+    }
+    this.isPreviewPlaying = false;
+    if (this.previewSoundBtn) {
+      const icon = this.previewSoundBtn.querySelector('#creator-preview-icon');
+      const text = this.previewSoundBtn.querySelector('#creator-preview-text');
+      if (icon) icon.textContent = '▶';
+      if (text) text.textContent = 'Preview Sound';
+      this.previewSoundBtn.classList.remove('bg-amber-400', 'text-stone-950', 'font-bold');
+      this.previewSoundBtn.classList.add('bg-amber-500/20', 'text-amber-300');
+    }
   }
 
   private isSellerUnlocked(): boolean {
@@ -634,6 +879,7 @@ export class CreatorPortal {
    * Hides the creator portal modal and cleans up the URL hash if needed.
    */
   public hide(updateHash = true): void {
+    this.stopSoundPreview();
     this.isVisible = false;
     if (this.overlayEl) {
       this.overlayEl.classList.remove('flex', 'opacity-100', 'pointer-events-auto');
@@ -703,10 +949,47 @@ export class CreatorPortal {
     return this.shareWhatsAppBtn;
   }
 
+  public getSelectedMusicChoice(): string {
+    return this.selectedMusicChoice;
+  }
+
+  public setSelectedMusicChoice(choice: string): void {
+    this.selectedMusicChoice = choice;
+    if (this.overlayEl) {
+      const radio = this.overlayEl.querySelector(`input[value="${choice}"]`) as HTMLInputElement | null;
+      if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
+      }
+    }
+  }
+
+  public getCustomAudioFileInput(): HTMLInputElement | null {
+    return this.audioFileInput;
+  }
+
+  public getCustomAudioFile(): File | null {
+    return this.customAudioFile;
+  }
+
+  public getCustomAudioUrlInput(): HTMLInputElement | null {
+    return this.customAudioUrlInput;
+  }
+
+  public getPreviewButton(): HTMLButtonElement | null {
+    return this.previewSoundBtn;
+  }
+
   /**
    * Cleans up event listeners and deallocates DOM elements per ASVS V14.
    */
   public dispose(): void {
+    this.stopSoundPreview();
+    if (this.customAudioObjectUrl) {
+      URL.revokeObjectURL(this.customAudioObjectUrl);
+      this.customAudioObjectUrl = null;
+    }
+    this.previewAudioEl = null;
     if (typeof window !== 'undefined') {
       window.removeEventListener('hashchange', this.onHashChangeBound);
     }
@@ -734,5 +1017,10 @@ export class CreatorPortal {
     this.resetBtn = null;
     this.closeBtn = null;
     this.feedbackBadge = null;
+    this.customAudioUrlInput = null;
+    this.audioFileInput = null;
+    this.fileNameEl = null;
+    this.customAudioPanel = null;
+    this.previewSoundBtn = null;
   }
 }

@@ -42,7 +42,7 @@ describe('FestiveActionBar UI', () => {
     vi.restoreAllMocks();
   });
 
-  it('mounts toolbar and toast into container with 5 celebration action triggers', () => {
+  it('mounts toolbar and toast into container with 4 celebration action triggers', () => {
     actionBar.mount();
     const bar = container.querySelector('#festive-action-bar');
     expect(bar).not.toBeNull();
@@ -50,19 +50,10 @@ describe('FestiveActionBar UI', () => {
     const toast = container.querySelector('#festive-toast');
     expect(toast).not.toBeNull();
 
-    expect(container.querySelector('#action-music-btn')).not.toBeNull();
     expect(container.querySelector('#action-sparkler-btn')).not.toBeNull();
     expect(container.querySelector('#action-lantern-btn')).not.toBeNull();
     expect(container.querySelector('#action-flowers-btn')).not.toBeNull();
     expect(container.querySelector('#action-fireworks-btn')).not.toBeNull();
-  });
-
-  it('triggers music modal when music button is tapped', () => {
-    actionBar.mount();
-    const musicBtn = container.querySelector('#action-music-btn') as HTMLButtonElement;
-    musicBtn.click();
-
-    expect(mockMusicModal.show).toHaveBeenCalledTimes(1);
   });
 
   it('toggles sparkler and shows feedback toast', () => {

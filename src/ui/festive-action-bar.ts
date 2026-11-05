@@ -4,7 +4,6 @@ import type { MusicModal } from './music-modal';
 /**
  * Opulent festive action bar floating dock.
  * Grants immediate 1-tap access to Diwali festive celebrations:
- * - 🎵 Music Jukebox & Custom Audio
  * - ✨ Interactive Phuljhadi (Sparkler)
  * - 🏮 Akash Kandil (Sky Lantern Release)
  * - 🌸 Pushpa Vrishti (Flower Petal Shower)
@@ -19,7 +18,7 @@ export class FestiveActionBar {
   constructor(
     private readonly container: HTMLElement,
     private readonly sceneManager: SceneManager,
-    private readonly musicModal: MusicModal
+    _musicModal?: MusicModal
   ) {}
 
   public mount(): void {
@@ -32,18 +31,7 @@ export class FestiveActionBar {
       'rounded-full bg-black/70 backdrop-blur-xl border border-amber-500/40 shadow-2xl shadow-amber-950/70 select-none pointer-events-auto';
 
     this.element.innerHTML = `
-      <!-- 1. Music Jukebox -->
-      <button
-        id="action-music-btn"
-        type="button"
-        title="Choose Festive Music or Upload Song"
-        class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-400/30 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer"
-      >
-        <span>🎵</span>
-        <span class="hidden xs:inline sm:inline">Music</span>
-      </button>
-
-      <!-- 2. Interactive Sparkler (Phuljhadi) -->
+      <!-- 1. Interactive Sparkler (Phuljhadi) -->
       <button
         id="action-sparkler-btn"
         type="button"
@@ -54,7 +42,7 @@ export class FestiveActionBar {
         <span class="hidden xs:inline sm:inline">Sparkler</span>
       </button>
 
-      <!-- 3. Sky Lantern Release (Akash Kandil) -->
+      <!-- 2. Sky Lantern Release (Akash Kandil) -->
       <button
         id="action-lantern-btn"
         type="button"
@@ -65,7 +53,7 @@ export class FestiveActionBar {
         <span class="hidden xs:inline sm:inline">Sky Lantern</span>
       </button>
 
-      <!-- 4. Royal Flower Shower (Pushpa Vrishti) -->
+      <!-- 3. Royal Flower Shower (Pushpa Vrishti) -->
       <button
         id="action-flowers-btn"
         type="button"
@@ -76,7 +64,7 @@ export class FestiveActionBar {
         <span class="hidden xs:inline sm:inline">Flowers</span>
       </button>
 
-      <!-- 5. Fireworks Burst -->
+      <!-- 4. Fireworks Burst -->
       <button
         id="action-fireworks-btn"
         type="button"
@@ -103,14 +91,7 @@ export class FestiveActionBar {
   private attachEvents(): void {
     if (!this.element) return;
 
-    // 1. Music
-    const musicBtn = this.element.querySelector('#action-music-btn');
-    musicBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.musicModal.show();
-    });
-
-    // 2. Sparkler
+    // 1. Sparkler
     this.sparklerBtn = this.element.querySelector('#action-sparkler-btn') as HTMLButtonElement | null;
     this.sparklerBtn?.addEventListener('click', (e) => {
       e.stopPropagation();

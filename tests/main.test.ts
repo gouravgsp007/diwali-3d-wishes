@@ -7,15 +7,14 @@ describe('Application Bootstrap', () => {
       '<div id="app"><div id="passcode-card"><form id="passcode-form"><input id="passcode-input" /><button id="unlock-btn"></button><p id="error-feedback"></p></form></div></div>';
   });
 
-  it('initializes FSM, SceneManager, PasscodeGate, AudioToggle, CreatorPortal, MusicModal, and FestiveActionBar', () => {
-    const { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, musicModal, festiveActionBar } = bootstrap();
+  it('initializes FSM, SceneManager, PasscodeGate, AudioToggle, CreatorPortal, and FestiveActionBar', () => {
+    const { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, festiveActionBar } = bootstrap();
 
     expect(fsm).toBeDefined();
     expect(passcodeGate).toBeDefined();
     expect(sceneManager).toBeDefined();
     expect(audioToggle).toBeDefined();
     expect(creatorPortal).toBeDefined();
-    expect(musicModal).toBeDefined();
     expect(festiveActionBar).toBeDefined();
 
     expect(fsm.getState()).toBe('LOCKED');
@@ -40,16 +39,11 @@ describe('Application Bootstrap', () => {
     const creatorOverlay = document.querySelector('#creator-portal-overlay');
     expect(creatorOverlay).not.toBeNull();
 
-    // MusicModal overlay mounted into DOM container
-    const musicOverlay = document.querySelector('#music-modal-overlay');
-    expect(musicOverlay).not.toBeNull();
-
     // FestiveActionBar dock mounted into DOM container
     const actionBar = document.querySelector('#festive-action-bar');
     expect(actionBar).not.toBeNull();
 
     festiveActionBar.dispose();
-    musicModal.dispose();
     creatorPortal.dispose();
     audioToggle.dispose();
     sceneManager.dispose();

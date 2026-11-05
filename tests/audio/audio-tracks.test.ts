@@ -85,39 +85,55 @@ describe('AudioEngine Track Switching & Custom Audio', () => {
     vi.restoreAllMocks();
   });
 
-  it('provides available preset festive tracks including Sitar, Flute, and Temple bells', () => {
+  it('provides available preset festive tracks including Happy Wali Feeling, Mere Tumhare, and Lakshmi Aarti', () => {
     const engine = AudioEngine.getInstance();
     const tracks = engine.getAvailableTracks();
 
-    expect(tracks.length).toBeGreaterThanOrEqual(3);
+    expect(tracks.length).toBe(3);
     const trackIds = tracks.map((t) => t.id);
-    expect(trackIds).toContain('sitar');
-    expect(trackIds).toContain('flute');
-    expect(trackIds).toContain('temple');
+    expect(trackIds).toContain('track1');
+    expect(trackIds).toContain('track2');
+    expect(trackIds).toContain('track3');
   });
 
-  it('defaults current track to Sacred Sitar & Santoor', () => {
+  it('defaults current track to Happy Wali Feeling (Track 1)', () => {
     const engine = AudioEngine.getInstance();
-    expect(engine.getCurrentTrack().id).toBe('sitar');
-    expect(engine.getCurrentTrack().name).toContain('Sitar');
+    expect(engine.getCurrentTrack().id).toBe('track1');
+    expect(engine.getCurrentTrack().name).toContain('Happy Wali Feeling');
+    expect(engine.getCurrentTrack().src).toBe('/audio/diwali-track-1.mp3');
   });
 
-  it('switches to Divine Bansuri & Flute track on setTrack("flute")', async () => {
+  it('switches to Mere Tumhare Sabke Liye track on setTrack("track2")', async () => {
     const engine = AudioEngine.getInstance();
     engine.unlock();
+    await engine.setTrack('track2');
+
+    expect(engine.getCurrentTrack().id).toBe('track2');
+    expect(engine.getCurrentTrack().name).toContain('Mere Tumhare');
+    expect(engine.getCurrentTrack().src).toBe('/audio/diwali-track-2.mp3');
+  });
+
+  it('switches to Shree Lakshmi Aarti track on setTrack("track3")', async () => {
+    const engine = AudioEngine.getInstance();
+    engine.unlock();
+    await engine.setTrack('track3');
+
+    expect(engine.getCurrentTrack().id).toBe('track3');
+    expect(engine.getCurrentTrack().name).toContain('Lakshmi Aarti');
+    expect(engine.getCurrentTrack().src).toBe('/audio/diwali-track-3.mp3');
+  });
+
+  it('maps legacy track IDs (sitar, flute, temple) cleanly for backwards compatibility', async () => {
+    const engine = AudioEngine.getInstance();
+    engine.unlock();
+    await engine.setTrack('sitar');
+    expect(engine.getCurrentTrack().id).toBe('track1');
+
     await engine.setTrack('flute');
+    expect(engine.getCurrentTrack().id).toBe('track2');
 
-    expect(engine.getCurrentTrack().id).toBe('flute');
-    expect(engine.getCurrentTrack().name).toContain('Bansuri');
-  });
-
-  it('switches to Temple Sanctum & Aarti Chimes track on setTrack("temple")', async () => {
-    const engine = AudioEngine.getInstance();
-    engine.unlock();
     await engine.setTrack('temple');
-
-    expect(engine.getCurrentTrack().id).toBe('temple');
-    expect(engine.getCurrentTrack().name).toContain('Temple');
+    expect(engine.getCurrentTrack().id).toBe('track3');
   });
 
   it('supports custom user-uploaded soundtrack via setTrack("custom", url, title)', async () => {

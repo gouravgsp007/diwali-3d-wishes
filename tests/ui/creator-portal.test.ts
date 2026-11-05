@@ -121,6 +121,7 @@ describe('CreatorPortal UI Controller', () => {
         recipient: 'Priya',
         sender: 'Rahul',
         message: 'Happy Diwali from our family to yours!',
+        musicTheme: 'track1',
       }),
       'SHUBH'
     );
@@ -210,6 +211,35 @@ describe('CreatorPortal UI Controller', () => {
     expect(recipient?.value).toBe('');
     expect(passcode?.value).toBe('');
     expect(container.querySelector('#creator-result-section')?.classList.contains('hidden')).toBe(true);
+  });
+
+  it('allows admin/seller to choose between the 3 official tracks or custom audio with live preview', async () => {
+    portal = new CreatorPortal({ container });
+    portal.mount();
+
+    expect(portal.getSelectedMusicChoice()).toBe('track1');
+
+    // Switch to track 2
+    portal.setSelectedMusicChoice('track2');
+    expect(portal.getSelectedMusicChoice()).toBe('track2');
+
+    // Switch to custom
+    portal.setSelectedMusicChoice('custom');
+    expect(portal.getSelectedMusicChoice()).toBe('custom');
+    const customPanel = container.querySelector('#creator-custom-audio-panel');
+    expect(customPanel?.classList.contains('hidden')).toBe(false);
+
+    // Audio preview
+    const previewBtn = portal.getPreviewButton();
+    expect(previewBtn).not.toBeNull();
+    previewBtn?.click();
+
+    const previewText = previewBtn?.querySelector('#creator-preview-text');
+    expect(previewText?.textContent).toBe('Pause');
+
+    // Pause preview
+    previewBtn?.click();
+    expect(previewText?.textContent).toBe('Preview Sound');
   });
 
   it('cleans up DOM and listeners on dispose() without leaking memory per ASVS V14', () => {

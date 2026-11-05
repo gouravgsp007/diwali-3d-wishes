@@ -56,11 +56,11 @@ describe('MusicModal UI', () => {
     const audioEngine = AudioEngine.getInstance();
     const setTrackSpy = vi.spyOn(audioEngine, 'setTrack').mockResolvedValue();
 
-    const fluteBtn = container.querySelector('[data-track-id="flute"]') as HTMLButtonElement;
-    expect(fluteBtn).not.toBeNull();
-    fluteBtn.click();
+    const trackBtn = container.querySelector('[data-track-id="track2"]') as HTMLButtonElement;
+    expect(trackBtn).not.toBeNull();
+    trackBtn.click();
 
-    expect(setTrackSpy).toHaveBeenCalledWith('flute');
+    expect(setTrackSpy).toHaveBeenCalledWith('track2');
   });
 
   it('handles custom audio file selection', async () => {

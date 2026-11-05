@@ -28,6 +28,27 @@ export interface AudioTrackInfo {
   isCustom?: boolean;
 }
 
+export const FESTIVE_TRACKS: AudioTrackInfo[] = [
+  {
+    id: 'track1',
+    name: 'Happy Wali Feeling',
+    subtitle: 'Aayi Hai Diwali Festive Beat',
+    src: '/audio/diwali-track-1.mp3',
+  },
+  {
+    id: 'track2',
+    name: 'Mere Tumhare Sabke Liye',
+    subtitle: 'Happy Diwali Classic Song',
+    src: '/audio/diwali-track-2.mp3',
+  },
+  {
+    id: 'track3',
+    name: 'Shree Lakshmi Aarti',
+    subtitle: 'Devotional Aarti & Chants',
+    src: '/audio/diwali-track-3.mp3',
+  },
+];
+
 export class AudioEngine {
   private static instance: AudioEngine | null = null;
 
@@ -44,12 +65,7 @@ export class AudioEngine {
   private proceduralDroneNodes: { stop: () => void } | null = null;
   private isBgmPlaying = false;
 
-  private currentTrack: AudioTrackInfo = {
-    id: 'sitar',
-    name: 'Sacred Sitar & Santoor',
-    subtitle: 'Classical meditative sitar melody',
-    src: '/audio/festive-bgm.mp3',
-  };
+  private currentTrack: AudioTrackInfo = { ...FESTIVE_TRACKS[0] };
   private customTrack: AudioTrackInfo | null = null;
   private melodicMelodyInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -127,7 +143,7 @@ export class AudioEngine {
     try {
       this.bgmAudio = document.getElementById('festive-bgm') as HTMLAudioElement | null;
       if (!this.bgmAudio) {
-        this.bgmAudio = new Audio('/audio/festive-bgm.mp3');
+        this.bgmAudio = new Audio(this.currentTrack.src || '/audio/diwali-track-1.mp3');
         this.bgmAudio.id = 'festive-bgm';
         this.bgmAudio.loop = true;
         this.bgmAudio.preload = 'auto';
@@ -316,24 +332,7 @@ export class AudioEngine {
    * Returns list of available festive soundtracks and any custom uploaded track.
    */
   public getAvailableTracks(): AudioTrackInfo[] {
-    const list: AudioTrackInfo[] = [
-      {
-        id: 'sitar',
-        name: 'Sacred Sitar & Santoor',
-        subtitle: 'Classical meditative Indian instrumental',
-        src: '/audio/festive-bgm.mp3',
-      },
-      {
-        id: 'flute',
-        name: 'Divine Bansuri & Morning Raga',
-        subtitle: 'Soothing bamboo flute & Tanpura harmonics',
-      },
-      {
-        id: 'temple',
-        name: 'Temple Sanctum & Aarti Chimes',
-        subtitle: 'Sacred mandir ghanti & meditative singing bowls',
-      },
-    ];
+    const list: AudioTrackInfo[] = [...FESTIVE_TRACKS];
 
     if (this.customTrack) {
       list.push(this.customTrack);
@@ -350,6 +349,17 @@ export class AudioEngine {
   }
 
   /**
+   * Pauses background soundtrack playback.
+   */
+  public pauseBgm(): void {
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+    }
+    this.stopProceduralMelody();
+    this.isBgmPlaying = false;
+  }
+
+  /**
    * Switches the active soundtrack with smooth crossfade.
    */
   public async setTrack(trackId: string, customUrl?: string, customTitle?: string): Promise<void> {
@@ -358,7 +368,7 @@ export class AudioEngine {
     if (trackId === 'custom' && customUrl) {
       this.customTrack = {
         id: 'custom',
-        name: customTitle || 'My Custom Music',
+        name: customTitle || 'Custom Audio Track',
         subtitle: 'User uploaded audio',
         src: customUrl,
         isCustom: true,
@@ -380,45 +390,17 @@ export class AudioEngine {
       return;
     }
 
-    if (trackId === 'flute') {
-      this.currentTrack = {
-        id: 'flute',
-        name: 'Divine Bansuri & Morning Raga',
-        subtitle: 'Soothing bamboo flute & Tanpura harmonics',
-      };
-      if (this.bgmAudio) {
-        this.bgmAudio.pause();
-      }
-      if (this.isBgmPlaying && !this.isMuted) {
-        this.startFluteAmbient();
-      }
-      return;
-    }
+    // Map backwards-compatibility IDs (sitar -> track1, flute -> track2, temple -> track3)
+    let resolvedId = trackId;
+    if (trackId === 'sitar') resolvedId = 'track1';
+    else if (trackId === 'flute') resolvedId = 'track2';
+    else if (trackId === 'temple') resolvedId = 'track3';
 
-    if (trackId === 'temple') {
-      this.currentTrack = {
-        id: 'temple',
-        name: 'Temple Sanctum & Aarti Chimes',
-        subtitle: 'Sacred mandir ghanti & meditative singing bowls',
-      };
-      if (this.bgmAudio) {
-        this.bgmAudio.pause();
-      }
-      if (this.isBgmPlaying && !this.isMuted) {
-        this.startTempleAmbient();
-      }
-      return;
-    }
+    const found = FESTIVE_TRACKS.find((t) => t.id === resolvedId) || FESTIVE_TRACKS[0];
+    this.currentTrack = { ...found };
 
-    // Default: sitar
-    this.currentTrack = {
-      id: 'sitar',
-      name: 'Sacred Sitar & Santoor',
-      subtitle: 'Classical meditative Indian instrumental',
-      src: '/audio/festive-bgm.mp3',
-    };
-    if (this.bgmAudio) {
-      this.bgmAudio.src = '/audio/festive-bgm.mp3';
+    if (this.bgmAudio && found.src) {
+      this.bgmAudio.src = found.src;
       this.bgmAudio.load();
       if (this.isBgmPlaying && !this.isMuted) {
         try {
