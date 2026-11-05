@@ -404,6 +404,9 @@ export class SceneManager {
         this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
       });
     } else if (state === 'LIT_CELEBRATION') {
+      // Automatically burst fireworks every 2-3 seconds continuously once the diya lights up!
+      this.celebrationManager?.startAutoFireworks(2500);
+
       // 1500ms celebratory pause before transitioning to GREETING_REVEAL per D-01
       if (this.celebrationTimeoutId) {
         clearTimeout(this.celebrationTimeoutId);
@@ -423,6 +426,11 @@ export class SceneManager {
 
       // Launch celebratory golden confetti cannons (D-04)
       this.celebrationManager?.fireCelebrationBurst();
+
+      // Ensure recurring fireworks continue every 2-3s
+      if (!this.celebrationManager?.isAutoFireworksActive()) {
+        this.celebrationManager?.startAutoFireworks(2500);
+      }
 
       // Reveal greeting modal with decrypted payload (D-01, D-02)
       this.greetingModal?.show(this.fsm?.getGreeting() ?? null);
@@ -468,8 +476,13 @@ export class SceneManager {
   private onVisibilityChange = (): void => {
     if (document.hidden) {
       this.pauseRenderLoop();
+      this.celebrationManager?.stopAutoFireworks();
     } else {
       this.resumeRenderLoop();
+      const state = this.fsm?.getState();
+      if (state === 'LIT_CELEBRATION' || state === 'GREETING_REVEAL') {
+        this.celebrationManager?.startAutoFireworks(2500);
+      }
     }
   };
 

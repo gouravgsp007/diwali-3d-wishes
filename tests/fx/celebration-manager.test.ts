@@ -231,6 +231,47 @@ describe('CelebrationManager Service', () => {
     expect(vibrateMock).toHaveBeenCalledWith(15);
   });
 
+  it('Test 11: startAutoFireworks() starts recurring fireworks every 2-3s, and stopAutoFireworks() halts it', () => {
+    vi.useFakeTimers();
+    expect(manager.isAutoFireworksActive()).toBe(false);
+
+    manager.startAutoFireworks(2500);
+    expect(manager.isAutoFireworksActive()).toBe(true);
+
+    // Fast forward 2.5 seconds
+    vi.advanceTimersByTime(2500);
+    expect(confetti).toHaveBeenCalled();
+
+    // Fast forward another 2.5 seconds
+    const countBefore = (confetti as any).mock.calls.length;
+    vi.advanceTimersByTime(2500);
+    expect((confetti as any).mock.calls.length).toBeGreaterThan(countBefore);
+
+    manager.stopAutoFireworks();
+    expect(manager.isAutoFireworksActive()).toBe(false);
+
+    // Ensure no more calls after stop
+    const countAfter = (confetti as any).mock.calls.length;
+    vi.advanceTimersByTime(5000);
+    expect((confetti as any).mock.calls.length).toBe(countAfter);
+
+    vi.useRealTimers();
+  });
+
+  it('Test 12: fireRandomSkyFirework() creates celebratory celestial fireworks with audio effect', () => {
+    const sizzleSpy = vi.spyOn(AudioEngine.getInstance(), 'playSparklerSizzle').mockImplementation(() => {});
+
+    manager.fireRandomSkyFirework();
+    expect(confetti).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spread: 360,
+        disableForReducedMotion: true,
+      })
+    );
+    expect(sizzleSpy).toHaveBeenCalled();
+    sizzleSpy.mockRestore();
+  });
+
   it('Test 10: dispose() removes window pointerdown listener, invokes confetti.reset(), and sets isActive to false per D-07, ASVS V14, and T-05-05', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 

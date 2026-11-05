@@ -14,6 +14,7 @@ import { AudioEngine } from '../audio/audio-engine';
 export class CelebrationManager {
   private isActive = false;
   private readonly onPointerDownBound: (e: PointerEvent) => void;
+  private autoFireworksInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.onPointerDownBound = this.handlePointerDown.bind(this);
@@ -70,6 +71,75 @@ export class CelebrationManager {
   }
 
   /**
+   * Starts automatic recurring fireworks bursts every 2-3 seconds on screen.
+   *
+   * @param intervalMs Base interval between fireworks in milliseconds (default: 2500ms)
+   */
+  public startAutoFireworks(intervalMs = 2500): void {
+    if (this.autoFireworksInterval !== null) return;
+
+    this.autoFireworksInterval = setInterval(() => {
+      // Alternate between dual flank cannons and celestial sky bursts
+      if (Math.random() > 0.45) {
+        this.fireRandomSkyFirework();
+      } else {
+        this.fireCelebrationBurst();
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Stops recurring automatic fireworks.
+   */
+  public stopAutoFireworks(): void {
+    if (this.autoFireworksInterval !== null) {
+      clearInterval(this.autoFireworksInterval);
+      this.autoFireworksInterval = null;
+    }
+  }
+
+  /**
+   * Returns whether recurring auto-fireworks are currently firing.
+   */
+  public isAutoFireworksActive(): boolean {
+    return this.autoFireworksInterval !== null;
+  }
+
+  /**
+   * Fires a vibrant spherical sky firework burst at a random celestial position.
+   */
+  public fireRandomSkyFirework(): void {
+    const festivePalettes = [
+      ['#ffd700', '#ffa500', '#ff4500', '#ffffff', '#ffeb3b'], // Golden Amber
+      ['#ff007f', '#ff69b4', '#ffd700', '#ffffff', '#ff1493'], // Royal Magenta
+      ['#00ffcc', '#00e5ff', '#ffd700', '#ffffff', '#76ff03'], // Emerald Spark
+      ['#e040fb', '#7c4dff', '#ffd700', '#ffffff', '#ff9100'], // Radiant Violet
+    ];
+
+    const colors = festivePalettes[Math.floor(Math.random() * festivePalettes.length)];
+    const originX = 0.15 + Math.random() * 0.7; // Avoid extreme screen edges
+    const originY = 0.12 + Math.random() * 0.35; // Upper celestial sky
+
+    confetti({
+      origin: { x: originX, y: originY },
+      particleCount: 55,
+      spread: 360,
+      startVelocity: 35,
+      ticks: 180,
+      gravity: 0.8,
+      scalar: 0.85,
+      colors,
+      disableForReducedMotion: true,
+    });
+
+    try {
+      AudioEngine.getInstance().playSparklerSizzle();
+    } catch {
+      // Graceful no-op in headless test environment
+    }
+  }
+
+  /**
    * Handles pointerdown events on the screen outside of card interactive elements.
    */
   private handlePointerDown(e: PointerEvent): void {
@@ -117,6 +187,7 @@ export class CelebrationManager {
    * Cleans up window listener, resets confetti canvas, and resets active flag per ASVS V14.
    */
   public dispose(): void {
+    this.stopAutoFireworks();
     this.isActive = false;
     window.removeEventListener('pointerdown', this.onPointerDownBound);
     try {
