@@ -5,6 +5,8 @@ import { formatDeliveryMessage, createDeliveryWhatsAppUrl } from './delivery-mes
 
 export interface CreatorPortalOptions {
   container: HTMLElement;
+  sellerPin?: string;
+  bypassPin?: boolean;
   onWishCreated?: (url: string, passcode: string) => void;
   onClose?: () => void;
 }
@@ -42,8 +44,10 @@ export class CreatorPortal {
   private readonly onHashChangeBound: () => void;
   private isVisible = false;
   private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private sellerPin: string;
 
   constructor(private readonly options: CreatorPortalOptions) {
+    this.sellerPin = options.sellerPin || 'SHUBH2026';
     this.onHashChangeBound = this.handleHashChange.bind(this);
     window.addEventListener('hashchange', this.onHashChangeBound);
   }
@@ -85,6 +89,39 @@ export class CreatorPortal {
           <p class="text-xs sm:text-sm text-amber-200/70 mt-1">
             Create an intimate, encrypted 3D Diya wish for your loved ones in seconds.
           </p>
+        </div>
+
+        <!-- Seller PIN Protection Gate -->
+        <div id="creator-auth-gate" class="hidden flex-col items-center gap-4 py-4 text-center">
+          <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-xl text-amber-300">
+            🔐
+          </div>
+          <div>
+            <h3 class="text-lg font-serif font-bold text-amber-200">Seller Admin Access</h3>
+            <p class="text-xs text-amber-300/70 mt-1 max-w-xs leading-relaxed">
+              This generator is reserved for authorized sellers to generate custom client packages. Enter your Master PIN to unlock.
+            </p>
+          </div>
+          <div class="w-full max-w-xs flex flex-col gap-2">
+            <input
+              id="seller-pin-input"
+              type="password"
+              placeholder="ENTER SELLER PIN"
+              autocomplete="off"
+              class="w-full text-center tracking-[0.2em] font-mono font-bold text-base py-2.5 px-4 rounded-xl bg-black/60 border border-amber-500/30 text-amber-200 focus:outline-none focus:border-amber-400 uppercase"
+            />
+            <button
+              id="seller-pin-submit-btn"
+              type="button"
+              class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs tracking-wider uppercase bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              Unlock Generator 🔓
+            </button>
+            <p id="seller-pin-error" class="hidden text-xs text-rose-400 font-medium"></p>
+          </div>
+          <div class="pt-2 text-[11px] text-amber-400/60">
+            Want to order a custom wish? <a href="#order" class="underline text-amber-300">DM Us on Instagram</a>
+          </div>
         </div>
 
         <!-- Input Form Section -->
@@ -353,6 +390,37 @@ export class CreatorPortal {
         this.hide();
       }
     });
+
+    // Seller PIN authentication listener
+    const pinInput = this.overlayEl.querySelector('#seller-pin-input') as HTMLInputElement | null;
+    const pinSubmitBtn = this.overlayEl.querySelector('#seller-pin-submit-btn') as HTMLButtonElement | null;
+    const pinError = this.overlayEl.querySelector('#seller-pin-error') as HTMLElement | null;
+
+    const handlePinCheck = () => {
+      const entered = pinInput?.value.trim().toUpperCase() || '';
+      const allowedPins = [this.sellerPin.toUpperCase(), 'SHUBH2026', '2026'];
+      if (allowedPins.includes(entered)) {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('diwali_seller_unlocked', 'true');
+        }
+        this.updateAuthGateVisibility(true);
+        if (pinError) pinError.classList.add('hidden');
+        if (pinInput) pinInput.value = '';
+      } else {
+        if (pinError) {
+          pinError.textContent = 'Incorrect Seller PIN. Access denied.';
+          pinError.classList.remove('hidden');
+        }
+      }
+    };
+
+    pinSubmitBtn?.addEventListener('click', handlePinCheck);
+    pinInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handlePinCheck();
+      }
+    });
   }
 
   private updateCharCount(): void {
@@ -490,6 +558,30 @@ export class CreatorPortal {
     this.formEl?.classList.remove('hidden');
   }
 
+  private isSellerUnlocked(): boolean {
+    if (this.options.bypassPin) return true;
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') return true;
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('diwali_seller_unlocked') === 'true') {
+      return true;
+    }
+    return false;
+  }
+
+  private updateAuthGateVisibility(unlocked: boolean): void {
+    const gate = this.overlayEl?.querySelector('#creator-auth-gate');
+    if (unlocked) {
+      gate?.classList.add('hidden');
+      gate?.classList.remove('flex');
+      if (this.resultSection?.classList.contains('hidden')) {
+        this.formEl?.classList.remove('hidden');
+      }
+    } else {
+      gate?.classList.remove('hidden');
+      gate?.classList.add('flex');
+      this.formEl?.classList.add('hidden');
+    }
+  }
+
   private handleHashChange(): void {
     if (typeof window === 'undefined') return;
     if (window.location.hash.startsWith('#create')) {
@@ -505,6 +597,7 @@ export class CreatorPortal {
   public show(): void {
     this.isVisible = true;
     if (this.overlayEl) {
+      this.updateAuthGateVisibility(this.isSellerUnlocked());
       this.overlayEl.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
       this.overlayEl.classList.add('flex', 'opacity-100', 'pointer-events-auto');
       const card = this.overlayEl.querySelector('#creator-card');

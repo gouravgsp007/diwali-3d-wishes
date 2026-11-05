@@ -5,6 +5,7 @@ import { PasscodeGate } from './ui/passcode-gate';
 import { SceneManager } from './graphics/scene-manager';
 import { AudioToggle } from './ui/audio-toggle';
 import { CreatorPortal } from './ui/creator-portal';
+import { OrderModal } from './ui/order-modal';
 
 /**
  * Main application bootstrap for Diwali 3D Wishes.
@@ -12,7 +13,7 @@ import { CreatorPortal } from './ui/creator-portal';
  * Initializes the finite state machine, resolves token from URL hash/query
  * with Meta link-shim sanitization, starts the 3D WebGL SceneManager,
  * mounts the PasscodeGate controller, attaches the floating AudioToggle,
- * and mounts the CreatorPortal modal generator.
+ * mounts the CreatorPortal modal generator, and attaches the OrderModal.
  */
 export function bootstrap(): {
   fsm: AppStateMachine;
@@ -20,6 +21,7 @@ export function bootstrap(): {
   sceneManager: SceneManager;
   audioToggle: AudioToggle;
   creatorPortal: CreatorPortal;
+  orderModal: OrderModal;
 } {
   const fsm = new AppStateMachine();
   const tokenInfo = resolveGreetingToken();
@@ -37,12 +39,15 @@ export function bootstrap(): {
   const creatorPortal = new CreatorPortal({ container: sceneContainer });
   creatorPortal.mount();
 
+  const orderModal = new OrderModal(sceneContainer);
+  orderModal.mount();
+
   fsm.transition({
     type: 'BOOT_COMPLETE',
     hasCiphertext: !tokenInfo.isDemo && !!tokenInfo.token,
   });
 
-  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal };
+  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, orderModal };
 }
 
 if (typeof window !== 'undefined') {

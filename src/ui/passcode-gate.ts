@@ -40,11 +40,11 @@ export class PasscodeGate {
       this.hideError();
     });
 
-    // Secondary action: "Create Your Own Wish" routes to #create hash
+    // Secondary action: "Order Your Own Wish" routes to #order hash
     if (this.createWishBtn) {
       this.createWishBtn.addEventListener('click', () => {
         if (typeof window !== 'undefined') {
-          window.location.hash = '#create';
+          window.location.hash = '#order';
         }
         this.showCreateWishNotice();
       });
