@@ -202,11 +202,36 @@ describe('GreetingModal UI Component', () => {
 
     expect(modal.getOverlayElement()).toBe(document.getElementById('greeting-modal-overlay'));
     expect(modal.getCardElement()).toBe(document.getElementById('greeting-card'));
+    expect(modal.getPillElement()).toBe(document.getElementById('greeting-pill'));
     expect(modal.getRecipientElement()).toBe(document.getElementById('greeting-recipient'));
     expect(modal.getMessageElement()).toBe(document.getElementById('greeting-message'));
     expect(modal.getSenderElement()).toBe(document.getElementById('greeting-sender'));
     expect(modal.getWhatsAppButtonElement()).toBe(document.getElementById('whatsapp-reply-btn'));
     expect(modal.getCreatorBadgeElement()).toBe(document.getElementById('creator-badge'));
+  });
+
+  it('minimizeCard() and expandCard() toggle between full greeting card and compact bottom pill', () => {
+    modal.mount(container);
+    modal.show({ recipient: 'Priya', sender: 'Aarav', message: 'Festive blessings' });
+
+    const card = modal.getCardElement()!;
+    const pill = modal.getPillElement()!;
+    const toggleBtn = container.querySelector('#card-toggle-btn') as HTMLButtonElement;
+
+    // Initial state: Card visible, pill hidden
+    expect(card.classList.contains('hidden')).toBe(false);
+    expect(pill.classList.contains('hidden')).toBe(true);
+
+    // Minimize via toggle button
+    toggleBtn.click();
+    expect(card.classList.contains('hidden')).toBe(true);
+    expect(pill.classList.contains('hidden')).toBe(false);
+    expect(pill.textContent).toContain('View Wish from Aarav');
+
+    // Expand via pill click
+    pill.click();
+    expect(card.classList.contains('hidden')).toBe(false);
+    expect(pill.classList.contains('hidden')).toBe(true);
   });
 
   it('dispose() removes overlay element from DOM and nullifies all element references per D-07, ASVS V14, and T-05-05', () => {
@@ -217,6 +242,7 @@ describe('GreetingModal UI Component', () => {
     expect(document.getElementById('greeting-modal-overlay')).toBeNull();
     expect(modal.getOverlayElement()).toBeNull();
     expect(modal.getCardElement()).toBeNull();
+    expect(modal.getPillElement()).toBeNull();
     expect(modal.getRecipientElement()).toBeNull();
     expect(modal.getMessageElement()).toBeNull();
     expect(modal.getSenderElement()).toBeNull();

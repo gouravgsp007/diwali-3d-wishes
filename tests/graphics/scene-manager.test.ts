@@ -403,7 +403,7 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'CELEBRATION_COMPLETE' });
 
     expect(fsm.getState()).toBe('GREETING_REVEAL');
-    expect(panSpy).toHaveBeenCalledWith(expect.objectContaining({ x: 0, y: 0.85, z: 0 }), 1200);
+    expect(panSpy).toHaveBeenCalledWith(expect.objectContaining({ x: 0, y: -1.0, z: 0 }), 1200);
     expect(burstSpy).toHaveBeenCalledOnce();
     expect(showSpy).toHaveBeenCalledWith(greetingPayload);
     expect(setActiveSpy).toHaveBeenCalledWith(true);

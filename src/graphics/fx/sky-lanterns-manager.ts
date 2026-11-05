@@ -38,10 +38,11 @@ export class SkyLanternsManager {
 
     const lanternGroup = this.createLanternMesh();
 
-    // Start position: lower foreground/mid-ground
-    const startX = (Math.random() - 0.5) * 2.8;
-    const startY = 0.4 + Math.random() * 0.3;
-    const startZ = 0.8 + Math.random() * 1.2;
+    // Start position: in the open celestial sky ABOVE the wish message card
+    // Spawns in clear celestial space (y = 0.50 to 0.85) so it floats into view above the message
+    const startX = (Math.random() - 0.5) * 2.2;
+    const startY = 0.5 + Math.random() * 0.35;
+    const startZ = (Math.random() - 0.5) * 0.6;
 
     lanternGroup.position.set(startX, startY, startZ);
 
@@ -50,7 +51,7 @@ export class SkyLanternsManager {
     const lantern: ActiveLantern = {
       group: lanternGroup,
       light,
-      speed: 0.55 + Math.random() * 0.35,
+      speed: 0.38 + Math.random() * 0.24,
       swayFreq: 1.2 + Math.random() * 0.8,
       swayPhase: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.4,
@@ -65,13 +66,14 @@ export class SkyLanternsManager {
   }
 
   /**
-   * Constructs an authentic polygonal Indian festive lantern with warm inner flame.
+   * Constructs an authentic, delicate polygonal Indian festive lantern with warm inner flame.
+   * Scaled down to a graceful miniature Akash Kandil.
    */
   private createLanternMesh(): THREE.Group {
     const lantern = new THREE.Group();
 
-    // 1. Tapered Paper Lantern Body (Cylinder with 8 segments)
-    const bodyGeo = new THREE.CylinderGeometry(0.18, 0.24, 0.45, 8, 1, true);
+    // 1. Delicate Tapered Paper Lantern Body (Cylinder with 8 segments)
+    const bodyGeo = new THREE.CylinderGeometry(0.09, 0.12, 0.22, 8, 1, true);
     const bodyMat = new THREE.MeshStandardMaterial({
       color: Math.random() > 0.4 ? 0xff7722 : 0xee2244,
       emissive: 0xffaa22,
@@ -83,31 +85,31 @@ export class SkyLanternsManager {
     lantern.add(body);
 
     // 2. Golden Bamboo Base & Top Rings
-    const ringGeo = new THREE.TorusGeometry(0.24, 0.015, 8, 16);
+    const ringGeo = new THREE.TorusGeometry(0.12, 0.007, 8, 16);
     const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.6, roughness: 0.3 });
     const bottomRing = new THREE.Mesh(ringGeo, ringMat);
     bottomRing.rotation.x = Math.PI / 2;
-    bottomRing.position.y = -0.22;
+    bottomRing.position.y = -0.11;
     lantern.add(bottomRing);
 
-    const topRing = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.015, 8, 16), ringMat);
+    const topRing = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.007, 8, 16), ringMat);
     topRing.rotation.x = Math.PI / 2;
-    topRing.position.y = 0.22;
+    topRing.position.y = 0.11;
     lantern.add(topRing);
 
     // 3. Floating Base Tassels (Akash Kandil frills)
     const tasselCount = 4;
     for (let i = 0; i < tasselCount; i++) {
       const angle = (i / tasselCount) * Math.PI * 2;
-      const tasselGeo = new THREE.CylinderGeometry(0.008, 0.012, 0.18, 4);
+      const tasselGeo = new THREE.CylinderGeometry(0.004, 0.006, 0.09, 4);
       const tasselMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
       const tassel = new THREE.Mesh(tasselGeo, tasselMat);
-      tassel.position.set(Math.cos(angle) * 0.20, -0.31, Math.sin(angle) * 0.20);
+      tassel.position.set(Math.cos(angle) * 0.10, -0.155, Math.sin(angle) * 0.10);
       lantern.add(tassel);
     }
 
     // 4. Warm Luminescent Inner PointLight
-    const light = new THREE.PointLight(0xffaa33, 1.2, 3.2);
+    const light = new THREE.PointLight(0xffaa33, 0.8, 2.2);
     light.name = 'lanternLight';
     lantern.add(light);
 

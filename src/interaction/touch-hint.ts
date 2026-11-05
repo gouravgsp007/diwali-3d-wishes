@@ -72,18 +72,24 @@ export class TouchHint {
   public show(): void {
     if (!this.element || this.isPromptVisible) return;
     this.isPromptVisible = true;
-    this.element.classList.remove('opacity-0', 'scale-95');
+    this.element.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
     this.element.classList.add('opacity-100', 'scale-100');
+    const btn = this.element.querySelector('#tap-to-light-btn');
+    btn?.classList.remove('pointer-events-none');
+    btn?.classList.add('pointer-events-auto');
   }
 
   /**
-   * Fades out the touch hint prompt.
+   * Fades out the touch hint prompt and disables pointer interaction.
    */
   public hide(): void {
     if (!this.element || !this.isPromptVisible) return;
     this.isPromptVisible = false;
     this.element.classList.remove('opacity-100', 'scale-100');
-    this.element.classList.add('opacity-0', 'scale-95');
+    this.element.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    const btn = this.element.querySelector('#tap-to-light-btn');
+    btn?.classList.remove('pointer-events-auto');
+    btn?.classList.add('pointer-events-none');
   }
 
   /**

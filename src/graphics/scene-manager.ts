@@ -421,8 +421,9 @@ export class SceneManager {
         this.celebrationTimeoutId = null;
       }
 
-      // Smooth camera pan target up by +0.20 units: framing diya in lower third (D-01)
-      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.85, 0), 1200);
+      // Smooth camera dolly and pan target to frame Diya in upper half so it remains gloriously visible above greeting card
+      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.5, 4.4), 1200);
+      this.cameraRig?.panTargetTo(new THREE.Vector3(0, -1.0, 0), 1200);
 
       // Launch celebratory golden confetti cannons (D-04)
       this.celebrationManager?.fireCelebrationBurst();
