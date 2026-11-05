@@ -30,7 +30,7 @@ export class GreetingModal {
     this.overlayEl = document.createElement('div');
     this.overlayEl.id = 'greeting-modal-overlay';
     this.overlayEl.className =
-      'fixed inset-0 z-10 flex items-center justify-center p-4 pointer-events-none select-none';
+      'fixed inset-0 z-10 hidden items-center justify-center p-4 pointer-events-none select-none';
 
     // Static HTML skeleton without dynamic string interpolation (ASVS V5)
     this.overlayEl.innerHTML = `
@@ -63,7 +63,7 @@ export class GreetingModal {
           href="#"
           target="_blank"
           rel="noopener noreferrer"
-          class="w-full py-3.5 px-6 rounded-xl font-semibold text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-amber-950 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer no-underline pointer-events-auto"
+          class="w-full py-3.5 px-6 rounded-xl font-semibold text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-amber-950 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer no-underline pointer-events-none"
         >
           <span>Reply Happy Diwali on WhatsApp</span>
           <span class="text-base">✨</span>
@@ -72,7 +72,7 @@ export class GreetingModal {
           <a
             id="creator-badge"
             href="#create"
-            class="text-xs font-medium text-amber-400/70 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-auto"
+            class="text-xs font-medium text-amber-400/70 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-none"
           >
             Create Your Own Wish ✨
           </a>
@@ -108,6 +108,18 @@ export class GreetingModal {
 
     if (this.whatsappBtnEl) {
       this.whatsappBtnEl.href = createWhatsAppReplyUrl(sender);
+      this.whatsappBtnEl.classList.remove('pointer-events-none');
+      this.whatsappBtnEl.classList.add('pointer-events-auto');
+    }
+
+    if (this.creatorBadgeEl) {
+      this.creatorBadgeEl.classList.remove('pointer-events-none');
+      this.creatorBadgeEl.classList.add('pointer-events-auto');
+    }
+
+    if (this.overlayEl) {
+      this.overlayEl.classList.remove('hidden', 'pointer-events-none');
+      this.overlayEl.classList.add('flex', 'pointer-events-auto');
     }
 
     if (this.cardEl) {
@@ -125,6 +137,18 @@ export class GreetingModal {
     if (this.cardEl) {
       this.cardEl.classList.remove('opacity-100', 'scale-100', 'translate-y-0', 'pointer-events-auto');
       this.cardEl.classList.add('opacity-0', 'scale-95', 'translate-y-4', 'pointer-events-none');
+    }
+    if (this.whatsappBtnEl) {
+      this.whatsappBtnEl.classList.remove('pointer-events-auto');
+      this.whatsappBtnEl.classList.add('pointer-events-none');
+    }
+    if (this.creatorBadgeEl) {
+      this.creatorBadgeEl.classList.remove('pointer-events-auto');
+      this.creatorBadgeEl.classList.add('pointer-events-none');
+    }
+    if (this.overlayEl) {
+      this.overlayEl.classList.remove('flex', 'pointer-events-auto');
+      this.overlayEl.classList.add('hidden', 'pointer-events-none');
     }
   }
 

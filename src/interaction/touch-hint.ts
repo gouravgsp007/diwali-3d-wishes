@@ -40,19 +40,18 @@ export class TouchHint {
 
     // Strictly static safe template with pulsing indicator per T-04-02
     this.element.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>Touch &amp; drag the flame to light your Diya</span>
-        <span class="text-amber-400 font-bold select-none">&rarr;</span>
-      </div>
       <button
         type="button"
         id="tap-to-light-btn"
-        class="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all pointer-events-auto cursor-pointer flex items-center gap-1.5"
+        class="w-full py-2.5 px-6 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-stone-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all pointer-events-auto cursor-pointer flex items-center justify-center gap-2"
       >
         <span>✨ Tap to Light Diya</span>
-        <span>🪔</span>
+        <span class="text-base">🪔</span>
       </button>
+      <div class="flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-200/80">
+        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span>Touch &amp; drag the flame to light your Diya</span>
+      </div>
     `;
 
     const btn = this.element.querySelector('#tap-to-light-btn');

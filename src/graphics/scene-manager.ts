@@ -212,7 +212,7 @@ export class SceneManager {
       () => {
         this.touchHint?.hide();
       },
-      new WickProximityDetector(this.diyaMesh.wickAnchor, 0.85)
+      new WickProximityDetector(this.diyaMesh.wickAnchor, 1.20)
     );
     this.touchController.setEnabled(this.fsm?.getState() === 'INTERACTIVE_UNLIT');
 

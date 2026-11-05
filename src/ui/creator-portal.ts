@@ -102,7 +102,7 @@ export class CreatorPortal {
               This generator is reserved for authorized sellers to generate custom client packages. Enter your Master PIN to unlock.
             </p>
           </div>
-          <div class="w-full max-w-xs flex flex-col gap-2">
+          <form id="seller-pin-form" class="w-full max-w-xs flex flex-col gap-2" onsubmit="return false;">
             <input
               id="seller-pin-input"
               type="password"
@@ -112,13 +112,13 @@ export class CreatorPortal {
             />
             <button
               id="seller-pin-submit-btn"
-              type="button"
+              type="submit"
               class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs tracking-wider uppercase bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
               Unlock Generator 🔓
             </button>
             <p id="seller-pin-error" class="hidden text-xs text-rose-400 font-medium"></p>
-          </div>
+          </form>
           <div class="pt-2 text-[11px] text-amber-400/60">
             Want to order a custom wish? <a href="#order" class="underline text-amber-300">DM Us on Instagram</a>
           </div>
