@@ -16,6 +16,10 @@ import { TouchHint } from '../interaction/touch-hint';
 import { AudioEngine } from '../audio/audio-engine';
 import { GreetingModal } from '../ui/greeting-modal';
 import { CelebrationManager } from '../fx/celebration-manager';
+import { Starfield } from './fx/starfield';
+import { InteractiveSparkler } from './fx/interactive-sparkler';
+import { SkyLanternsManager } from './fx/sky-lanterns-manager';
+import { FlowerShower } from './fx/flower-shower';
 
 /**
  * Resilient SceneManager foundation for the Diwali 3D WebGL engine.
@@ -60,6 +64,11 @@ export class SceneManager {
   private greetingModal: GreetingModal | null = null;
   private headerFireworksBtn: HTMLElement | null = null;
   private onHeaderFireworksClick: (() => void) | null = null;
+
+  private starfield: Starfield | null = null;
+  private sparkler: InteractiveSparkler | null = null;
+  private skyLanternsManager: SkyLanternsManager | null = null;
+  private flowerShower: FlowerShower | null = null;
 
   constructor(
     private container: HTMLElement,
@@ -231,6 +240,31 @@ export class SceneManager {
       };
       this.headerFireworksBtn.addEventListener('click', this.onHeaderFireworksClick);
     }
+
+    // 12. Celestial Twinkling Starfield with Shooting Stars
+    this.starfield = new Starfield();
+    this.scene.add(this.starfield.group);
+
+    // 13. Akash Kandil (Sky Lanterns) Ceremony Manager
+    this.skyLanternsManager = new SkyLanternsManager();
+    this.scene.add(this.skyLanternsManager.group);
+
+    // 14. Royal Flower Petal Shower (Pushpa Vrishti)
+    this.flowerShower = new FlowerShower();
+    this.scene.add(this.flowerShower.group);
+
+    // 15. Handheld Phuljhadi (Diwali Sparkler) System
+    this.sparkler = new InteractiveSparkler((pos) => {
+      if (this.fsm?.getState() === 'INTERACTIVE_UNLIT') {
+        const dist = pos.distanceTo(this.diyaMesh?.wickAnchor || new THREE.Vector3(0, 0.68, 1.38));
+        if (dist < 1.2) {
+          AudioEngine.getInstance().playMatchStrike();
+          AudioEngine.getInstance().playFlameCrackle();
+          this.fsm?.transition({ type: 'WICK_TOUCHED' });
+        }
+      }
+    });
+    this.scene.add(this.sparkler.group);
   }
 
   /**
@@ -302,6 +336,26 @@ export class SceneManager {
     // Update flame controller (shader waft, halo breathing, sparkler kinematics, light jitter) (D-12)
     if (this.flameController) {
       this.flameController.update(dt, this.elapsedTime);
+    }
+
+    // Update celestial starfield & shooting stars
+    if (this.starfield) {
+      this.starfield.update(dt, this.elapsedTime);
+    }
+
+    // Update ascending sky lanterns
+    if (this.skyLanternsManager) {
+      this.skyLanternsManager.update(dt, this.elapsedTime);
+    }
+
+    // Update flower petal shower
+    if (this.flowerShower) {
+      this.flowerShower.update(dt, this.elapsedTime);
+    }
+
+    // Update interactive sparkler
+    if (this.sparkler) {
+      this.sparkler.update(dt, this.elapsedTime);
     }
 
     // Update camera rig with breathing sway and parallax damping
@@ -450,6 +504,10 @@ export class SceneManager {
     const normalizedY = -(((clientY - rect.top) / height) * 2 - 1);
 
     this.cameraRig?.onPointerMove(normalizedX, normalizedY);
+
+    if (this.sparkler?.getActive()) {
+      this.sparkler.updatePointer(clientX, clientY, this.container, this.cameraRig);
+    }
   };
 
   private onPointerUp = (): void => {
@@ -635,6 +693,30 @@ export class SceneManager {
       this.headerFireworksBtn = null;
       this.onHeaderFireworksClick = null;
     }
+
+    if (this.starfield) {
+      this.scene.remove(this.starfield.group);
+      this.starfield.dispose();
+      this.starfield = null;
+    }
+
+    if (this.skyLanternsManager) {
+      this.scene.remove(this.skyLanternsManager.group);
+      this.skyLanternsManager.dispose();
+      this.skyLanternsManager = null;
+    }
+
+    if (this.flowerShower) {
+      this.scene.remove(this.flowerShower.group);
+      this.flowerShower.dispose();
+      this.flowerShower = null;
+    }
+
+    if (this.sparkler) {
+      this.scene.remove(this.sparkler.group);
+      this.sparkler.dispose();
+      this.sparkler = null;
+    }
   }
 
   public getPixelRatio(): number {
@@ -707,6 +789,41 @@ export class SceneManager {
 
   public getCelebrationManager(): CelebrationManager | null {
     return this.celebrationManager;
+  }
+
+  public triggerSkyLantern(): void {
+    this.skyLanternsManager?.releaseLantern();
+  }
+
+  public triggerFlowerShower(): void {
+    this.flowerShower?.triggerFlowerShower();
+  }
+
+  public toggleSparkler(): boolean {
+    if (!this.sparkler) return false;
+    const next = !this.sparkler.getActive();
+    this.sparkler.setActive(next);
+    return next;
+  }
+
+  public isSparklerActive(): boolean {
+    return !!this.sparkler?.getActive();
+  }
+
+  public getSkyLanternsManager(): SkyLanternsManager | null {
+    return this.skyLanternsManager;
+  }
+
+  public getFlowerShower(): FlowerShower | null {
+    return this.flowerShower;
+  }
+
+  public getSparkler(): InteractiveSparkler | null {
+    return this.sparkler;
+  }
+
+  public getStarfield(): Starfield | null {
+    return this.starfield;
   }
 
   /**

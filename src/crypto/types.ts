@@ -4,6 +4,8 @@ export interface GreetingPayload {
   message: string;
   templateId?: string;
   createdAt?: number;
+  musicTheme?: string;
+  customMusicUrl?: string;
 }
 
 export function isValidGreetingPayload(obj: unknown): obj is GreetingPayload {

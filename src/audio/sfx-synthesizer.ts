@@ -118,4 +118,74 @@ export class SfxSynthesizer implements SfxPlayer {
 
     crackleSource.start(t);
   }
+
+  /**
+   * Synthesizes resonant, spiritual temple bell / chime with natural harmonic decay.
+   */
+  public playTempleBell(): void {
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const t = this.audioCtx.currentTime;
+    const duration = 2.2;
+
+    // Harmonic frequencies of Indian brass temple bell (Fundamental 880Hz + overtones)
+    const freqs = [880, 1760, 2640];
+    const gains = [0.4, 0.25, 0.15];
+
+    freqs.forEach((freq, idx) => {
+      const osc = this.audioCtx.createOscillator();
+      const oscGain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+
+      oscGain.gain.setValueAtTime(gains[idx], t);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.masterGain);
+
+      osc.start(t);
+      osc.stop(t + duration);
+    });
+  }
+
+  /**
+   * Synthesizes sparkling sizzle and crackle for handheld Phuljhadi sparkler.
+   */
+  public playSparklerSizzle(): void {
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const t = this.audioCtx.currentTime;
+    const duration = 0.16;
+    const sampleRate = this.audioCtx.sampleRate;
+    const bufferSize = Math.floor(sampleRate * duration);
+    const buffer = this.audioCtx.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.4;
+    }
+
+    const source = this.audioCtx.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(3000, t);
+
+    const gain = this.audioCtx.createGain();
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    source.start(t);
+  }
 }

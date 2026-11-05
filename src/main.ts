@@ -6,6 +6,8 @@ import { SceneManager } from './graphics/scene-manager';
 import { AudioToggle } from './ui/audio-toggle';
 import { CreatorPortal } from './ui/creator-portal';
 import { OrderModal } from './ui/order-modal';
+import { MusicModal } from './ui/music-modal';
+import { FestiveActionBar } from './ui/festive-action-bar';
 
 /**
  * Main application bootstrap for Diwali 3D Wishes.
@@ -13,7 +15,8 @@ import { OrderModal } from './ui/order-modal';
  * Initializes the finite state machine, resolves token from URL hash/query
  * with Meta link-shim sanitization, starts the 3D WebGL SceneManager,
  * mounts the PasscodeGate controller, attaches the floating AudioToggle,
- * mounts the CreatorPortal modal generator, and attaches the OrderModal.
+ * mounts the CreatorPortal modal generator, attaches the OrderModal,
+ * mounts the Festive Music Jukebox (MusicModal), and attaches the FestiveActionBar.
  */
 export function bootstrap(): {
   fsm: AppStateMachine;
@@ -22,6 +25,8 @@ export function bootstrap(): {
   audioToggle: AudioToggle;
   creatorPortal: CreatorPortal;
   orderModal: OrderModal;
+  musicModal: MusicModal;
+  festiveActionBar: FestiveActionBar;
 } {
   const fsm = new AppStateMachine();
   const tokenInfo = resolveGreetingToken();
@@ -42,12 +47,25 @@ export function bootstrap(): {
   const orderModal = new OrderModal(sceneContainer, 'dreamroutes07');
   orderModal.mount();
 
+  const musicModal = new MusicModal(sceneContainer);
+  musicModal.mount();
+
+  const festiveActionBar = new FestiveActionBar(sceneContainer, sceneManager, musicModal);
+  festiveActionBar.mount();
+
+  const headerMusicBtn = document.getElementById('header-music-btn');
+  if (headerMusicBtn) {
+    headerMusicBtn.addEventListener('click', () => {
+      musicModal.show();
+    });
+  }
+
   fsm.transition({
     type: 'BOOT_COMPLETE',
     hasCiphertext: !tokenInfo.isDemo && !!tokenInfo.token,
   });
 
-  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, orderModal };
+  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, orderModal, musicModal, festiveActionBar };
 }
 
 if (typeof window !== 'undefined') {

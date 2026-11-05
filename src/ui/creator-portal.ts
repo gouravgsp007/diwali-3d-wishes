@@ -26,6 +26,7 @@ export class CreatorPortal {
   private senderInput: HTMLInputElement | null = null;
   private messageInput: HTMLTextAreaElement | null = null;
   private passcodeInput: HTMLInputElement | null = null;
+  private musicThemeSelect: HTMLSelectElement | null = null;
   private charCountEl: HTMLElement | null = null;
   private errorMsgEl: HTMLElement | null = null;
   private generateBtn: HTMLButtonElement | null = null;
@@ -196,6 +197,24 @@ export class CreatorPortal {
             </p>
           </div>
 
+          <!-- Festive Music Theme Selector -->
+          <div>
+            <label for="creator-music-theme" class="block text-xs uppercase tracking-wider font-semibold text-amber-400 mb-1">
+              Festive Music Theme 🎵
+            </label>
+            <select
+              id="creator-music-theme"
+              class="w-full px-4 py-2.5 rounded-xl bg-black/60 border border-amber-500/30 text-amber-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-sm transition-all cursor-pointer"
+            >
+              <option value="sitar">🪕 Royal Sitar & Santoor (Classical Festive Raga)</option>
+              <option value="flute">🪈 Divine Bansuri (Peaceful Indian Bamboo Flute)</option>
+              <option value="temple">🔔 Sanctum Chimes (Auspicious Temple Bronze Bells)</option>
+            </select>
+            <p class="text-[11px] text-amber-400/60 mt-1">
+              The recipient will hear this chosen instrumental raga when they unlock their Diya.
+            </p>
+          </div>
+
           <!-- Validation Error Alert -->
           <div id="creator-error-msg" class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 rounded-lg p-2.5">
           </div>
@@ -325,6 +344,7 @@ export class CreatorPortal {
     this.senderInput = this.overlayEl.querySelector('#creator-sender');
     this.messageInput = this.overlayEl.querySelector('#creator-message');
     this.passcodeInput = this.overlayEl.querySelector('#creator-passcode');
+    this.musicThemeSelect = this.overlayEl.querySelector('#creator-music-theme');
     this.charCountEl = this.overlayEl.querySelector('#creator-char-count');
     this.errorMsgEl = this.overlayEl.querySelector('#creator-error-msg');
     this.generateBtn = this.overlayEl.querySelector('#creator-generate-btn');
@@ -470,10 +490,13 @@ export class CreatorPortal {
         this.generateBtn.textContent = 'Encrypting Wish... ✨';
       }
 
+      const musicTheme = this.musicThemeSelect?.value || 'sitar';
+
       const payload: GreetingPayload = {
         recipient,
         sender,
         message,
+        musicTheme,
         createdAt: Date.now(),
       };
 
@@ -551,6 +574,7 @@ export class CreatorPortal {
     this.clearError();
     if (this.recipientInput) this.recipientInput.value = '';
     if (this.passcodeInput) this.passcodeInput.value = '';
+    if (this.musicThemeSelect) this.musicThemeSelect.value = 'sitar';
     this.updateCharCount();
 
     this.resultSection?.classList.add('hidden');

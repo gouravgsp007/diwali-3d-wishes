@@ -82,6 +82,11 @@ export class PasscodeGate {
         payload = await GreetingCodec.decrypt(this.tokenInfo.token, passcode);
       }
 
+      // Set soundtrack if specified in payload
+      if (payload && 'musicTheme' in payload && typeof payload.musicTheme === 'string') {
+        AudioEngine.getInstance().setTrack(payload.musicTheme, payload.customMusicUrl);
+      }
+
       // Success: advance FSM to UNLOCKED_INTRO
       this.stateMachine.transition({
         type: 'UNLOCK_SUCCESS',

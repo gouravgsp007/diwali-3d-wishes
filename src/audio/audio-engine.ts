@@ -16,6 +16,16 @@ import { SfxSynthesizer } from './sfx-synthesizer';
 export interface SfxPlayer {
   playMatchStrike(): void;
   playFlameCrackle(): void;
+  playTempleBell?(): void;
+  playSparklerSizzle?(): void;
+}
+
+export interface AudioTrackInfo {
+  id: string;
+  name: string;
+  subtitle: string;
+  src?: string;
+  isCustom?: boolean;
 }
 
 export class AudioEngine {
@@ -33,6 +43,15 @@ export class AudioEngine {
   private fadeInterval: ReturnType<typeof setInterval> | null = null;
   private proceduralDroneNodes: { stop: () => void } | null = null;
   private isBgmPlaying = false;
+
+  private currentTrack: AudioTrackInfo = {
+    id: 'sitar',
+    name: 'Sacred Sitar & Santoor',
+    subtitle: 'Classical meditative sitar melody',
+    src: '/audio/festive-bgm.mp3',
+  };
+  private customTrack: AudioTrackInfo | null = null;
+  private melodicMelodyInterval: ReturnType<typeof setInterval> | null = null;
 
   private constructor() {
     this.initVisibilityListener();
@@ -276,6 +295,252 @@ export class AudioEngine {
   }
 
   /**
+   * Plays resonant temple bell chime SFX.
+   */
+  public playTempleBell(): void {
+    if (!this.isMuted) {
+      this.sfxSynth?.playTempleBell?.();
+    }
+  }
+
+  /**
+   * Plays sparkling sizzle SFX for handheld sparklers.
+   */
+  public playSparklerSizzle(): void {
+    if (!this.isMuted) {
+      this.sfxSynth?.playSparklerSizzle?.();
+    }
+  }
+
+  /**
+   * Returns list of available festive soundtracks and any custom uploaded track.
+   */
+  public getAvailableTracks(): AudioTrackInfo[] {
+    const list: AudioTrackInfo[] = [
+      {
+        id: 'sitar',
+        name: 'Sacred Sitar & Santoor',
+        subtitle: 'Classical meditative Indian instrumental',
+        src: '/audio/festive-bgm.mp3',
+      },
+      {
+        id: 'flute',
+        name: 'Divine Bansuri & Morning Raga',
+        subtitle: 'Soothing bamboo flute & Tanpura harmonics',
+      },
+      {
+        id: 'temple',
+        name: 'Temple Sanctum & Aarti Chimes',
+        subtitle: 'Sacred mandir ghanti & meditative singing bowls',
+      },
+    ];
+
+    if (this.customTrack) {
+      list.push(this.customTrack);
+    }
+
+    return list;
+  }
+
+  /**
+   * Returns the currently active soundtrack.
+   */
+  public getCurrentTrack(): AudioTrackInfo {
+    return this.currentTrack;
+  }
+
+  /**
+   * Switches the active soundtrack with smooth crossfade.
+   */
+  public async setTrack(trackId: string, customUrl?: string, customTitle?: string): Promise<void> {
+    this.stopProceduralMelody();
+
+    if (trackId === 'custom' && customUrl) {
+      this.customTrack = {
+        id: 'custom',
+        name: customTitle || 'My Custom Music',
+        subtitle: 'User uploaded audio',
+        src: customUrl,
+        isCustom: true,
+      };
+      this.currentTrack = this.customTrack;
+
+      if (this.bgmAudio) {
+        this.bgmAudio.src = customUrl;
+        this.bgmAudio.load();
+        if (this.isBgmPlaying && !this.isMuted) {
+          try {
+            await this.bgmAudio.play();
+            this.fadeInBgm();
+          } catch (e) {
+            console.warn('Custom audio playback failed:', e);
+          }
+        }
+      }
+      return;
+    }
+
+    if (trackId === 'flute') {
+      this.currentTrack = {
+        id: 'flute',
+        name: 'Divine Bansuri & Morning Raga',
+        subtitle: 'Soothing bamboo flute & Tanpura harmonics',
+      };
+      if (this.bgmAudio) {
+        this.bgmAudio.pause();
+      }
+      if (this.isBgmPlaying && !this.isMuted) {
+        this.startFluteAmbient();
+      }
+      return;
+    }
+
+    if (trackId === 'temple') {
+      this.currentTrack = {
+        id: 'temple',
+        name: 'Temple Sanctum & Aarti Chimes',
+        subtitle: 'Sacred mandir ghanti & meditative singing bowls',
+      };
+      if (this.bgmAudio) {
+        this.bgmAudio.pause();
+      }
+      if (this.isBgmPlaying && !this.isMuted) {
+        this.startTempleAmbient();
+      }
+      return;
+    }
+
+    // Default: sitar
+    this.currentTrack = {
+      id: 'sitar',
+      name: 'Sacred Sitar & Santoor',
+      subtitle: 'Classical meditative Indian instrumental',
+      src: '/audio/festive-bgm.mp3',
+    };
+    if (this.bgmAudio) {
+      this.bgmAudio.src = '/audio/festive-bgm.mp3';
+      this.bgmAudio.load();
+      if (this.isBgmPlaying && !this.isMuted) {
+        try {
+          await this.bgmAudio.play();
+          this.fadeInBgm();
+        } catch {
+          this.startProceduralAmbient();
+        }
+      }
+    }
+  }
+
+  /**
+   * Accepts a user-uploaded MP3/WAV File, generates a blob stream URL, and selects it.
+   */
+  public async loadCustomAudioFile(file: File): Promise<string> {
+    const objectUrl = URL.createObjectURL(file);
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+    await this.setTrack('custom', objectUrl, fileName);
+    return objectUrl;
+  }
+
+  private stopProceduralMelody(): void {
+    if (this.melodicMelodyInterval !== null) {
+      clearInterval(this.melodicMelodyInterval);
+      this.melodicMelodyInterval = null;
+    }
+    if (this.proceduralDroneNodes) {
+      this.proceduralDroneNodes.stop();
+      this.proceduralDroneNodes = null;
+    }
+  }
+
+  /**
+   * Generates a warm, meditative Indian classical Bansuri (Bamboo Flute) pentatonic raga.
+   */
+  public startFluteAmbient(): void {
+    if (this.isMuted || !this.audioCtx) return;
+
+    this.stopProceduralMelody();
+    this.startProceduralAmbient(); // Tanpura drone base
+
+    try {
+      const pentatonicNotes = [293.66, 329.63, 369.99, 440.0, 493.88, 587.33]; // Raga Bhupali notes
+      let noteIndex = 0;
+
+      const playFluteNote = () => {
+        if (!this.audioCtx || this.isMuted || !this.isBgmPlaying) return;
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume().catch(() => {});
+        }
+
+        const t = this.audioCtx.currentTime;
+        const freq = pentatonicNotes[noteIndex % pentatonicNotes.length];
+        noteIndex = (noteIndex + Math.floor(Math.random() * 3) + 1) % pentatonicNotes.length;
+
+        const osc = this.audioCtx.createOscillator();
+        const noteGain = this.audioCtx.createGain();
+        const lfo = this.audioCtx.createOscillator();
+        const lfoGain = this.audioCtx.createGain();
+
+        // Breathy triangular/sine tone
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+
+        // Subtle vibrato (5Hz)
+        lfo.frequency.setValueAtTime(5.2, t);
+        lfoGain.gain.setValueAtTime(1.8, t);
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+
+        // Gentle flute attack and breathy release
+        const noteDuration = 1.6 + Math.random() * 0.8;
+        noteGain.gain.setValueAtTime(0.001, t);
+        noteGain.gain.linearRampToValueAtTime(0.08, t + 0.35); // Soft breath attack
+        noteGain.gain.exponentialRampToValueAtTime(0.001, t + noteDuration);
+
+        // Warm acoustic acoustic lowpass filter
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1200, t);
+
+        osc.connect(filter);
+        filter.connect(noteGain);
+        noteGain.connect(this.sfxGain || this.audioCtx.destination);
+
+        osc.start(t);
+        lfo.start(t);
+        osc.stop(t + noteDuration);
+        lfo.stop(t + noteDuration);
+      };
+
+      playFluteNote();
+      this.melodicMelodyInterval = setInterval(playFluteNote, 2400);
+    } catch (e) {
+      console.warn('Flute ambient skipped:', e);
+    }
+  }
+
+  /**
+   * Generates a temple sanctum ambiance with singing bowls and gentle bells.
+   */
+  public startTempleAmbient(): void {
+    if (this.isMuted || !this.audioCtx) return;
+
+    this.stopProceduralMelody();
+    this.startProceduralAmbient();
+
+    try {
+      const ringSanctumChime = () => {
+        if (!this.audioCtx || this.isMuted || !this.isBgmPlaying) return;
+        this.playTempleBell();
+      };
+
+      ringSanctumChime();
+      this.melodicMelodyInterval = setInterval(ringSanctumChime, 4500);
+    } catch (e) {
+      console.warn('Temple ambient skipped:', e);
+    }
+  }
+
+  /**
    * Toggles mute state across both HTML5 BGM and Web Audio SFX with a 200ms linear gain ramp per D-07.
    */
   public toggleMute(): boolean {
@@ -355,10 +620,7 @@ export class AudioEngine {
    * Cleans up audio streams, closes context, unbinds listeners, and resets singleton.
    */
   public dispose(): void {
-    if (this.proceduralDroneNodes) {
-      this.proceduralDroneNodes.stop();
-      this.proceduralDroneNodes = null;
-    }
+    this.stopProceduralMelody();
     if (this.fadeInterval !== null) {
       clearInterval(this.fadeInterval);
       this.fadeInterval = null;
