@@ -39,7 +39,7 @@ export function bootstrap(): {
   const creatorPortal = new CreatorPortal({ container: sceneContainer });
   creatorPortal.mount();
 
-  const orderModal = new OrderModal(sceneContainer);
+  const orderModal = new OrderModal(sceneContainer, 'dreamroutes07');
   orderModal.mount();
 
   fsm.transition({

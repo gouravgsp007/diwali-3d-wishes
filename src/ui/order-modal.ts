@@ -9,13 +9,12 @@ export class OrderModal {
   private overlayEl: HTMLElement | null = null;
   private isVisible = false;
   private readonly onHashChangeBound: () => void;
-  private instagramUrl = 'https://instagram.com/';
+  private instagramUrl = 'https://ig.me/m/dreamroutes07';
+  private instagramProfileUrl = 'https://www.instagram.com/dreamroutes07';
+  private instagramHandle = 'dreamroutes07';
 
-  constructor(private container: HTMLElement, instagramHandle?: string) {
-    if (instagramHandle) {
-      const cleanHandle = instagramHandle.replace('@', '');
-      this.instagramUrl = `https://ig.me/m/${cleanHandle}`;
-    }
+  constructor(private container: HTMLElement, instagramHandle: string = 'dreamroutes07') {
+    this.setInstagramHandle(instagramHandle);
     this.onHashChangeBound = this.handleHashChange.bind(this);
     window.addEventListener('hashchange', this.onHashChangeBound);
   }
@@ -97,7 +96,7 @@ export class OrderModal {
           <div class="grid grid-cols-3 gap-2 text-[11px] text-amber-200/80">
             <div class="bg-black/40 p-2.5 rounded-xl border border-amber-500/15 flex flex-col items-center">
               <span class="text-base mb-1">1️⃣</span>
-              <span>DM Us on Instagram</span>
+              <span>DM @${this.instagramHandle}</span>
             </div>
             <div class="bg-black/40 p-2.5 rounded-xl border border-amber-500/15 flex flex-col items-center">
               <span class="text-base mb-1">2️⃣</span>
@@ -118,8 +117,21 @@ export class OrderModal {
           rel="noopener noreferrer"
           class="w-full py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-stone-950 shadow-lg shadow-amber-500/30 active:scale-[0.98] hover:brightness-110 transition-all flex items-center justify-center gap-2 no-underline cursor-pointer"
         >
-          <span>💬 DM on Instagram to Order ✨</span>
+          <span>💬 DM @${this.instagramHandle} on Instagram ✨</span>
         </a>
+
+        <!-- Secondary Profile Link -->
+        <div class="text-center -mt-2">
+          <a
+            id="order-instagram-profile-link"
+            href="${this.instagramProfileUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[11px] text-amber-300/80 hover:text-amber-200 underline underline-offset-2 transition-colors cursor-pointer"
+          >
+            Or visit instagram.com/${this.instagramHandle} ↗
+          </a>
+        </div>
 
         <!-- Footer / Seller Login link -->
         <div class="text-center pt-1 border-t border-amber-500/15">
@@ -192,10 +204,21 @@ export class OrderModal {
   }
 
   public setInstagramHandle(handle: string): void {
-    const cleanHandle = handle.replace('@', '');
+    const cleanHandle = handle.replace('@', '').trim();
+    this.instagramHandle = cleanHandle;
     this.instagramUrl = `https://ig.me/m/${cleanHandle}`;
+    this.instagramProfileUrl = `https://www.instagram.com/${cleanHandle}`;
     const btn = this.overlayEl?.querySelector('#order-instagram-btn') as HTMLAnchorElement | null;
-    if (btn) btn.href = this.instagramUrl;
+    if (btn) {
+      btn.href = this.instagramUrl;
+      const textSpan = btn.querySelector('span');
+      if (textSpan) textSpan.textContent = `💬 DM @${cleanHandle} on Instagram ✨`;
+    }
+    const profileLink = this.overlayEl?.querySelector('#order-instagram-profile-link') as HTMLAnchorElement | null;
+    if (profileLink) {
+      profileLink.href = this.instagramProfileUrl;
+      profileLink.textContent = `Or visit instagram.com/${cleanHandle} ↗`;
+    }
   }
 
   private handleHashChange(): void {
