@@ -1,3 +1,36 @@
+# STRICT PROJECT RULES & PERMANENT PROTOCOLS (MANDATORY)
+
+> [!CRITICAL]
+> These rules must be strictly followed in EVERY interaction and prior to ANY code modification.
+> The assistant must NEVER bypass or ignore these protocols.
+
+### RULE 1: PRE-IMPLEMENTATION LIMITATIONS & WARNINGS PROTOCOL (MANDATORY FIRST STEP)
+Whenever the user requests a new feature, enhancement, or code modification:
+1. **Never jump directly into implementing or writing code without first presenting warnings.**
+2. **First Step**: Explicitly analyze and disclose to the user:
+   - **Technical Limitations**: Inherent constraints of the proposed architecture.
+   - **Device & Browser Constraints**: Known mobile WebView caveats (iOS Safari WebKit vs Android Chrome vs Instagram/WhatsApp in-app browser).
+   - **Cost & Hosting Realities**: Ensuring the $0/month budget on static Vercel remains intact without requiring unexpected paid backends.
+   - **Data Persistence & Security**: Risks regarding client data, passcode storage, and encryption.
+   - **Core Invariants Preservation**: Confirmation that 3D rendering, Web Audio autoplay gesture unlocking, and encrypted URL token formats (`#d=...`) will not be broken.
+3. Present these warnings clearly before or alongside the execution plan.
+
+### RULE 2: CROSS-DEVICE DATA BACKUP & PRESERVATION GUARANTEE
+1. **Device Independence**: The admin/seller creates custom wishes from different devices (mobile phone while replying to Instagram DMs, laptop, desktop). Because Vercel is a static hosting platform, client-side `localStorage` is isolated to the specific browser/device used.
+2. **Automated Cloud Backup**: Every generated wish (Passcode, Recipient, Sender, Occasion, Track, Share URL, Created Date) must be backed up across devices (via Google Sheets Cloud Webhook via Google Apps Script or cloud endpoint) so order data is never lost when switching devices or clearing browser cache.
+3. **Excel & Spreadsheet Compatibility**: Order history must always be exportable in an Excel-compatible format with UTF-8 BOM (`\uFEFF`) so Indian names (e.g. "शुभम", "दीपावली"), festive emojis, and special characters open cleanly in Microsoft Excel without garbled text.
+4. **Offline & JSON Portability**: Must provide JSON export and JSON import for manual device-to-device restoration without network dependency.
+5. **Zero Data Loss**: Any future change must be strictly backward-compatible. Never drop, wipe, or rename existing storage keys without migrating legacy data.
+
+### RULE 3: CORE 3D, AUDIO & CRYPTOGRAPHIC INVARIANTS
+1. **WebGL / 3D Performance**: Clamped DPR (`Math.min(window.devicePixelRatio, 1.75)`), no multi-pass full-screen post-processing bloom, lightweight assets (<150 KB), 60fps mobile target.
+2. **Audio Autoplay Compliance**: Audio context unlock must remain strictly bound to direct user touch gesture on passcode submission or "Tap to Light".
+3. **Cryptographic Compatibility**: Never alter the `#d=` salt (`ShubhDiwali2026Salt`), PBKDF2 iterations (100,000), or AES-GCM 256-bit parameters. Existing wish links generated in the past must remain decryptable forever.
+4. **Admin Protection**: Admin PIN is strictly `2026`.
+5. **Instagram Routing**: Any public "Create Custom Wish" button must route to Instagram DM (`https://www.instagram.com/dreamroutes07?vrfl=MWhxb282aGZoYWpoeA==`).
+
+---
+
 <!-- GSD:project-start source:PROJECT.md -->
 
 ## Project

@@ -326,6 +326,34 @@ describe('CreatorPortal UI Controller', () => {
     expect(downloadSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('supports configuring cloud backup webhook and json backup export', () => {
+    portal = new CreatorPortal({ container, bypassPin: true });
+    portal.mount();
+
+    const cloudToggleBtn = container.querySelector('#creator-cloud-toggle-btn') as HTMLButtonElement;
+    const cloudDrawer = container.querySelector('#creator-cloud-drawer') as HTMLElement;
+    const webhookInput = container.querySelector('#creator-webhook-url-input') as HTMLInputElement;
+    const saveWebhookBtn = container.querySelector('#creator-save-webhook-btn') as HTMLButtonElement;
+    const exportJsonBtn = container.querySelector('#creator-export-json-btn') as HTMLButtonElement;
+
+    expect(cloudToggleBtn).not.toBeNull();
+    expect(cloudDrawer.classList.contains('hidden')).toBe(true);
+
+    // Toggle open
+    cloudToggleBtn.click();
+    expect(cloudDrawer.classList.contains('hidden')).toBe(false);
+
+    // Enter webhook URL and save
+    webhookInput.value = 'https://script.google.com/macros/s/test-url/exec';
+    saveWebhookBtn.click();
+    expect(OrderHistoryStore.getCloudWebhookUrl()).toBe('https://script.google.com/macros/s/test-url/exec');
+
+    // JSON export
+    const jsonSpy = vi.spyOn(OrderHistoryStore, 'downloadJsonBackup').mockImplementation(() => {});
+    exportJsonBtn.click();
+    expect(jsonSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('cleans up DOM and listeners on dispose() without leaking memory per ASVS V14', () => {
     portal = new CreatorPortal({ container });
     portal.mount();

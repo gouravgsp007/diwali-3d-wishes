@@ -457,24 +457,107 @@ export class CreatorPortal {
 
         <!-- Admin Order History & Passcode Log Section (Visible to Seller) -->
         <div id="creator-history-section" class="mt-1 pt-3 border-t border-amber-500/20 flex flex-col gap-2">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-1.5">
             <button
               id="creator-history-toggle-btn"
               type="button"
               class="text-xs font-semibold text-amber-300 hover:text-amber-100 flex items-center gap-1.5 cursor-pointer py-1 select-none"
             >
               <span>📋</span>
-              <span id="creator-history-toggle-label">Order History & Passcodes (<span id="creator-history-count">0</span>)</span>
+              <span id="creator-history-toggle-label">Orders & Codes (<span id="creator-history-count">0</span>)</span>
               <span id="creator-history-toggle-arrow" class="text-[10px] transition-transform">▼</span>
             </button>
-            <button
-              id="creator-export-csv-btn"
-              type="button"
-              class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-200 flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
-              title="Download spreadsheet of all client orders and secret passcodes"
-            >
-              <span>📥 Export CSV</span>
-            </button>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button
+                id="creator-cloud-toggle-btn"
+                type="button"
+                class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-200 flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                title="Configure Google Sheets Cloud Backup Webhook"
+              >
+                <span>☁️ Cloud Backup</span>
+              </button>
+              <button
+                id="creator-export-csv-btn"
+                type="button"
+                class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-200 flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                title="Download spreadsheet of all client orders and secret passcodes (Excel compatible)"
+              >
+                <span>📥 Export Excel</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cloud Backup Settings Drawer (Collapsible) -->
+          <div id="creator-cloud-drawer" class="hidden flex-col gap-2.5 p-3 rounded-2xl bg-black/70 border border-sky-500/30 text-xs text-sky-100">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-sky-300 flex items-center gap-1">
+                <span>☁️</span> Google Sheets Cloud Backup
+              </span>
+              <span id="creator-cloud-status" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                Local Only
+              </span>
+            </div>
+            <p class="text-[11px] text-sky-200/70 leading-relaxed">
+              Auto-saves every wish to your Google Sheet in real-time so your orders & passcodes are accessible on phone, laptop, or desktop without a paid database.
+            </p>
+            <div class="flex flex-col gap-1.5">
+              <input
+                id="creator-webhook-url-input"
+                type="url"
+                placeholder="https://script.google.com/macros/s/.../exec"
+                class="w-full px-2.5 py-1.5 rounded-lg bg-black/80 border border-sky-500/30 text-sky-200 text-xs font-mono focus:outline-none focus:border-sky-400"
+              />
+              <div class="flex gap-1.5 flex-wrap">
+                <button
+                  id="creator-save-webhook-btn"
+                  type="button"
+                  class="flex-1 py-1.5 px-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors text-center"
+                >
+                  Save Webhook
+                </button>
+                <button
+                  id="creator-copy-script-btn"
+                  type="button"
+                  class="py-1.5 px-2 bg-white/10 hover:bg-white/15 text-sky-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                  title="Copy ready-to-paste Google Apps Script code"
+                >
+                  📋 Copy Apps Script
+                </button>
+                <button
+                  id="creator-sync-all-btn"
+                  type="button"
+                  class="py-1.5 px-2 bg-white/10 hover:bg-white/15 text-sky-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                  title="Push all saved local orders to Google Sheet"
+                >
+                  🔄 Sync All Orders
+                </button>
+              </div>
+            </div>
+            <!-- Backup JSON & Restore -->
+            <div class="pt-2 border-t border-sky-500/20 flex items-center justify-between">
+              <span class="text-[10px] text-neutral-400">Manual Device Transfer:</span>
+              <div class="flex items-center gap-2">
+                <button
+                  id="creator-export-json-btn"
+                  type="button"
+                  class="text-[10px] text-sky-300 hover:text-sky-100 underline cursor-pointer"
+                >
+                  Download JSON
+                </button>
+                <label
+                  for="creator-import-file-input"
+                  class="text-[10px] text-sky-300 hover:text-sky-100 underline cursor-pointer"
+                >
+                  Restore JSON
+                </label>
+                <input
+                  id="creator-import-file-input"
+                  type="file"
+                  accept=".json,application/json"
+                  class="hidden"
+                />
+              </div>
+            </div>
           </div>
 
           <div id="creator-history-drawer" class="hidden flex-col gap-2 max-h-56 overflow-y-auto pr-1">
@@ -705,7 +788,7 @@ export class CreatorPortal {
 
     exportCsvBtn?.addEventListener('click', () => {
       OrderHistoryStore.downloadCsv();
-      this.showFeedback('Orders CSV Exported! 📥');
+      this.showFeedback('Excel Spreadsheet Exported! 📥');
     });
 
     clearHistoryBtn?.addEventListener('click', () => {
@@ -713,6 +796,104 @@ export class CreatorPortal {
       this.renderOrderHistory();
       this.showFeedback('Order history cleared');
     });
+
+    // Cloud Backup & Device Sync listeners
+    const cloudToggleBtn = this.overlayEl.querySelector('#creator-cloud-toggle-btn');
+    const cloudDrawer = this.overlayEl.querySelector('#creator-cloud-drawer');
+    const webhookInput = this.overlayEl.querySelector('#creator-webhook-url-input') as HTMLInputElement | null;
+    const saveWebhookBtn = this.overlayEl.querySelector('#creator-save-webhook-btn');
+    const copyScriptBtn = this.overlayEl.querySelector('#creator-copy-script-btn');
+    const syncAllBtn = this.overlayEl.querySelector('#creator-sync-all-btn');
+    const exportJsonBtn = this.overlayEl.querySelector('#creator-export-json-btn');
+    const importFileInput = this.overlayEl.querySelector('#creator-import-file-input') as HTMLInputElement | null;
+
+    cloudToggleBtn?.addEventListener('click', () => {
+      const isHidden = cloudDrawer?.classList.contains('hidden');
+      if (isHidden) {
+        cloudDrawer?.classList.remove('hidden');
+        cloudDrawer?.classList.add('flex');
+        this.updateCloudStatus();
+      } else {
+        cloudDrawer?.classList.add('hidden');
+        cloudDrawer?.classList.remove('flex');
+      }
+    });
+
+    saveWebhookBtn?.addEventListener('click', () => {
+      const val = webhookInput?.value.trim() || '';
+      OrderHistoryStore.setCloudWebhookUrl(val);
+      this.updateCloudStatus();
+      this.showFeedback(val ? 'Cloud Webhook Saved! ☁️' : 'Cloud Webhook Cleared');
+    });
+
+    copyScriptBtn?.addEventListener('click', async () => {
+      const script = OrderHistoryStore.getGoogleAppsScriptTemplate();
+      const success = await copyToClipboard(script);
+      if (success) {
+        this.showFeedback('Google Apps Script Copied! 📋');
+      }
+    });
+
+    syncAllBtn?.addEventListener('click', async () => {
+      const webhook = OrderHistoryStore.getCloudWebhookUrl();
+      if (!webhook) {
+        this.showFeedback('Please enter Webhook URL first! ⚠️');
+        return;
+      }
+      this.showFeedback('Syncing to Google Sheets... ⏳');
+      const res = await OrderHistoryStore.syncAllOrdersToCloud(webhook);
+      if (res.success) {
+        this.showFeedback(`Synced ${res.count} orders to Sheets! ☁️`);
+      } else {
+        this.showFeedback('Sync failed. Check Webhook URL.');
+      }
+    });
+
+    exportJsonBtn?.addEventListener('click', () => {
+      OrderHistoryStore.downloadJsonBackup();
+      this.showFeedback('JSON Backup Exported! 💾');
+    });
+
+    importFileInput?.addEventListener('change', () => {
+      const file = importFileInput.files?.[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        this.showFeedback('File too large (max 5MB) ❌');
+        importFileInput.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = String(reader.result || '');
+        const res = OrderHistoryStore.importFromJson(text);
+        this.renderOrderHistory();
+        this.showFeedback(`Imported ${res.importedCount} new orders! ✅`);
+        importFileInput.value = '';
+      };
+      reader.onerror = () => {
+        this.showFeedback('Failed to read backup file ❌');
+        importFileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  private updateCloudStatus(): void {
+    const statusEl = this.overlayEl?.querySelector('#creator-cloud-status');
+    const inputEl = this.overlayEl?.querySelector('#creator-webhook-url-input') as HTMLInputElement | null;
+    const url = OrderHistoryStore.getCloudWebhookUrl();
+    if (inputEl && !inputEl.value) {
+      inputEl.value = url;
+    }
+    if (statusEl) {
+      if (url) {
+        statusEl.textContent = 'Active ☁️';
+        statusEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+      } else {
+        statusEl.textContent = 'Local Only';
+        statusEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30';
+      }
+    }
   }
 
   private updateCharCount(): void {
@@ -1236,7 +1417,7 @@ export class CreatorPortal {
 
     historyList.innerHTML = orders
       .map((o) => {
-        const occLabel = occasionEmojis[o.occasion] || o.occasion;
+        const occLabel = escapeHtml(occasionEmojis[o.occasion] || o.occasion);
         const dateStr = new Date(o.createdAt).toLocaleDateString(undefined, {
           month: 'short',
           day: 'numeric',

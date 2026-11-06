@@ -23,6 +23,7 @@ export interface SavedOrderRecord {
 
 export class OrderHistoryStore {
   private static readonly STORAGE_KEY = 'diwali_admin_saved_orders';
+  private static readonly WEBHOOK_KEY = 'diwali_admin_cloud_webhook';
 
   public static getOrders(): SavedOrderRecord[] {
     if (typeof localStorage === 'undefined') return [];
@@ -53,6 +54,13 @@ export class OrderHistoryStore {
         console.warn('Failed to save order to localStorage', err);
       }
     }
+
+    // Background cloud sync to Google Sheets webhook if configured
+    const webhook = this.getCloudWebhookUrl();
+    if (webhook) {
+      this.syncOrderToCloud(newRecord, webhook).catch(() => {});
+    }
+
     return newRecord;
   }
 
@@ -78,7 +86,10 @@ export class OrderHistoryStore {
     }
   }
 
-  public static exportToCsv(orders: SavedOrderRecord[] = this.getOrders()): string {
+  public static exportToCsv(
+    orders: SavedOrderRecord[] = this.getOrders(),
+    includeBom: boolean = true
+  ): string {
     const headers = [
       'Order ID',
       'Created Date (ISO)',
@@ -101,7 +112,7 @@ export class OrderHistoryStore {
     const rows = orders.map((o) => {
       const dateStr = new Date(o.createdAt).toISOString();
       return [
-        o.id,
+        sanitizeCell(o.id),
         dateStr,
         sanitizeCell(o.recipient),
         sanitizeCell(o.sender),
@@ -111,23 +122,180 @@ export class OrderHistoryStore {
         sanitizeCell(o.shareUrl),
       ].join(',');
     });
-    return [headers.join(','), ...rows].join('\n');
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    return includeBom ? '\uFEFF' + csvContent : csvContent;
   }
 
-  public static downloadCsv(): void {
+  public static downloadCsv(filename?: string): void {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
-    const csvContent = this.exportToCsv();
+    const csvContent = this.exportToCsv(this.getOrders(), true);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute(
       'download',
-      `wishes_orders_${new Date().toISOString().slice(0, 10)}.csv`
+      filename || `wishes_orders_${new Date().toISOString().slice(0, 10)}.csv`
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  public static exportToJson(): string {
+    return JSON.stringify(this.getOrders(), null, 2);
+  }
+
+  public static downloadJsonBackup(): void {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    const jsonContent = this.exportToJson();
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `wishes_backup_${new Date().toISOString().slice(0, 10)}.json`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  public static importFromJson(jsonString: string): { importedCount: number; newTotal: number } {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!Array.isArray(parsed)) return { importedCount: 0, newTotal: this.getOrders().length };
+      const current = this.getOrders();
+      const currentIds = new Set(current.map((o) => o.id));
+      const validNewRecords: SavedOrderRecord[] = [];
+      for (const item of parsed) {
+        if (item && typeof item === 'object' && item.recipient && item.passcode) {
+          const id = item.id || `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+          if (!currentIds.has(id)) {
+            validNewRecords.push({
+              id,
+              recipient: String(item.recipient || ''),
+              sender: String(item.sender || ''),
+              occasion: String(item.occasion || 'diwali'),
+              passcode: String(item.passcode || ''),
+              shareUrl: String(item.shareUrl || ''),
+              musicChoice: String(item.musicChoice || 'track1'),
+              createdAt: Number(item.createdAt) || Date.now(),
+            });
+            currentIds.add(id);
+          }
+        }
+      }
+      const merged = [...validNewRecords, ...current].sort((a, b) => b.createdAt - a.createdAt);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(merged));
+      }
+      return { importedCount: validNewRecords.length, newTotal: merged.length };
+    } catch {
+      return { importedCount: 0, newTotal: this.getOrders().length };
+    }
+  }
+
+  public static getCloudWebhookUrl(): string {
+    if (typeof localStorage === 'undefined') return '';
+    return localStorage.getItem(this.WEBHOOK_KEY) || '';
+  }
+
+  public static setCloudWebhookUrl(url: string): void {
+    if (typeof localStorage === 'undefined') return;
+    const trimmed = url.trim();
+    if (trimmed) {
+      localStorage.setItem(this.WEBHOOK_KEY, trimmed);
+    } else {
+      localStorage.removeItem(this.WEBHOOK_KEY);
+    }
+  }
+
+  public static async syncOrderToCloud(
+    order: SavedOrderRecord,
+    webhookUrl: string = this.getCloudWebhookUrl()
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!webhookUrl) {
+      return { success: false, error: 'No webhook URL configured' };
+    }
+    try {
+      if (typeof fetch === 'undefined') {
+        return { success: false, error: 'Fetch API unavailable' };
+      }
+      await fetch(webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(order),
+      });
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
+    }
+  }
+
+  public static async syncAllOrdersToCloud(
+    webhookUrl: string = this.getCloudWebhookUrl()
+  ): Promise<{ success: boolean; count: number; error?: string }> {
+    const orders = this.getOrders();
+    if (!webhookUrl) {
+      return { success: false, count: 0, error: 'No webhook URL configured' };
+    }
+    if (orders.length === 0) {
+      return { success: true, count: 0 };
+    }
+    let synced = 0;
+    for (const order of orders) {
+      const res = await this.syncOrderToCloud(order, webhookUrl);
+      if (res.success) synced++;
+    }
+    return { success: true, count: synced };
+  }
+
+  public static getGoogleAppsScriptTemplate(): string {
+    return `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Order ID",
+        "Timestamp (ISO)",
+        "Occasion",
+        "Recipient Name",
+        "Sender Name",
+        "Secret Passcode",
+        "Sound Choice",
+        "Delivery URL"
+      ]);
+      sheet.getRange(1, 1, 1, 8).setFontWeight("bold").setBackground("#FFF3CD");
+    }
+    var data = JSON.parse(e.postData.contents);
+    function sanitizeCell(val) {
+      var s = String(val || '');
+      return /^[=+\\-@\\t\\r]/.test(s) ? ("'" + s) : s;
+    }
+    sheet.appendRow([
+      sanitizeCell(data.id || ("ord_" + new Date().getTime())),
+      new Date(data.createdAt || Date.now()).toISOString(),
+      sanitizeCell(data.occasion),
+      sanitizeCell(data.recipient),
+      sanitizeCell(data.sender),
+      sanitizeCell(data.passcode),
+      sanitizeCell(data.musicChoice),
+      sanitizeCell(data.shareUrl)
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
   }
 }

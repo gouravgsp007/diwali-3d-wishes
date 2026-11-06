@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OrderHistoryStore } from '../../src/storage/order-history-store';
 
 describe('OrderHistoryStore Local Passcode and Order Tracker', () => {
@@ -106,5 +106,71 @@ describe('OrderHistoryStore Local Passcode and Order Tracker', () => {
     expect(csv).toContain('"Simran ""Sim"" Kaur"');
     expect(csv).toContain('"DIYA88"');
     expect(csv).toContain('"https://diwali.app/#d=abc"');
+    expect(csv.startsWith('\uFEFF')).toBe(true);
+  });
+
+  it('exports and restores orders via JSON backup without duplicates', () => {
+    OrderHistoryStore.saveOrder({
+      recipient: 'Rohit',
+      sender: 'Neha',
+      occasion: 'diwali',
+      passcode: 'ROHIT26',
+      shareUrl: 'https://diwali.app/#d=test1',
+      musicChoice: 'track1',
+    });
+
+    const json = OrderHistoryStore.exportToJson();
+    expect(json).toContain('ROHIT26');
+
+    // Clear local storage to simulate new device
+    localStorage.clear();
+    expect(OrderHistoryStore.getOrders().length).toBe(0);
+
+    const importRes = OrderHistoryStore.importFromJson(json);
+    expect(importRes.importedCount).toBe(1);
+    expect(OrderHistoryStore.getOrders().length).toBe(1);
+    expect(OrderHistoryStore.getOrders()[0].recipient).toBe('Rohit');
+
+    // Re-importing same data ignores duplicates
+    const duplicateImport = OrderHistoryStore.importFromJson(json);
+    expect(duplicateImport.importedCount).toBe(0);
+    expect(duplicateImport.newTotal).toBe(1);
+  });
+
+  it('configures Google Sheets cloud webhook URL and syncs orders', async () => {
+    expect(OrderHistoryStore.getCloudWebhookUrl()).toBe('');
+
+    OrderHistoryStore.setCloudWebhookUrl('https://script.google.com/macros/s/test-webhook/exec');
+    expect(OrderHistoryStore.getCloudWebhookUrl()).toBe('https://script.google.com/macros/s/test-webhook/exec');
+
+    const template = OrderHistoryStore.getGoogleAppsScriptTemplate();
+    expect(template).toContain('SpreadsheetApp.getActiveSpreadsheet()');
+    expect(template).toContain('doPost(e)');
+
+    // Mock fetch for sync test
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{"status":"success"}'));
+    globalThis.fetch = fetchMock;
+
+    try {
+      const order = OrderHistoryStore.saveOrder({
+        recipient: 'Kavita',
+        sender: 'Aman',
+        occasion: 'birthday',
+        passcode: 'AMAN123',
+        shareUrl: 'https://diwali.app/?theme=birthday#d=test2',
+        musicChoice: 'track2',
+      });
+
+      expect(fetchMock).toHaveBeenCalled();
+      const syncRes = await OrderHistoryStore.syncOrderToCloud(order);
+      expect(syncRes.success).toBe(true);
+
+      const syncAllRes = await OrderHistoryStore.syncAllOrdersToCloud();
+      expect(syncAllRes.success).toBe(true);
+      expect(syncAllRes.count).toBe(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
