@@ -65,7 +65,18 @@ export class FestiveActionBar {
         <span class="action-text hidden xs:inline sm:inline">Flowers</span>
       </button>
 
-      <!-- 4. Fireworks Burst -->
+      <!-- 4. Royal Mithai & Sweets Box -->
+      <button
+        id="action-sweets-btn"
+        type="button"
+        title="Open Royal Mithai & Sweets Box"
+        class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-400/30 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer"
+      >
+        <span class="action-icon">🎁</span>
+        <span class="action-text hidden xs:inline sm:inline">Sweets</span>
+      </button>
+
+      <!-- 5. Fireworks Burst -->
       <button
         id="action-fireworks-btn"
         type="button"
@@ -202,6 +213,11 @@ export class FestiveActionBar {
       this.updateSparklerButtonUI(active);
     });
 
+    // Synchronize sweet box opening toast from 3D direct tap
+    this.sceneManager.setOnSweetBoxToggled?.((isOpen) => {
+      this.showSweetBoxToast(isOpen);
+    });
+
     let pointerStarted = false;
     let lastPointerReleaseTime = 0;
 
@@ -299,7 +315,15 @@ export class FestiveActionBar {
       }
     });
 
-    // 4. Fireworks
+    // 4. Royal Mithai / Sweets Box Trigger
+    const sweetsBtn = this.element.querySelector('#action-sweets-btn');
+    sweetsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = this.sceneManager.triggerSweetBox();
+      this.showSweetBoxToast(isOpen);
+    });
+
+    // 5. Fireworks
     const fireworksBtn = this.element.querySelector('#action-fireworks-btn');
     fireworksBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -357,8 +381,26 @@ export class FestiveActionBar {
     }
   }
 
+  public showSweetBoxToast(isOpen: boolean): void {
+    if (isOpen) {
+      const themeId = this.sceneManager.getTheme?.()?.id;
+      if (themeId === 'birthday') {
+        this.showToast('🎂 Festive birthday treats revealed! Wishing you sweet moments and joy! 🎉');
+      } else if (themeId === 'wedding') {
+        this.showToast('💍 Royal sweet treats presented! Wishing eternal sweetness to the couple! 🌹');
+      } else if (themeId === 'newyear') {
+        this.showToast('🍫 Celebration chocolates & sweets! Welcoming 2026 with joy! 🥂');
+      } else {
+        this.showToast('🍬 Boondi Laddus & Kaju Katli revealed! May your life be filled with sweetness & prosperity! ✨');
+      }
+    } else {
+      this.showToast('Mithai box closed 🎁');
+    }
+  }
+
   public dispose(): void {
     this.sceneManager.setOnSparklerStateChange?.(() => {});
+    this.sceneManager.setOnSweetBoxToggled?.(() => {});
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
       this.toastTimeout = null;
