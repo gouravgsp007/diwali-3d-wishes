@@ -426,6 +426,9 @@ export class SceneManager {
 
     if (state === 'UNLOCKED_INTRO') {
       this.touchController?.setEnabled(false);
+      this.greetingModal?.hide();
+      this.celebrationManager?.stopAutoFireworks();
+      this.celebrationManager?.setActive(false);
 
       // Check if greeting payload dictates theme switch
       const templateId = this.fsm?.getGreeting()?.templateId;
@@ -818,8 +821,8 @@ export class SceneManager {
     return this.theme;
   }
 
-  public switchTheme(newTheme: ExperienceTheme): void {
-    if (this.theme?.id === newTheme.id) return;
+  public switchTheme(newTheme: ExperienceTheme, force = false): void {
+    if (!force && this.theme?.id === newTheme.id) return;
     this.disposeSceneComponents();
     this.theme = newTheme;
     this.buildSceneComponents();

@@ -19,6 +19,9 @@ describe('PasscodeGate UI Controller', () => {
     document.body.innerHTML = `
       <div id="app">
         <div id="passcode-card" class="card-base">
+          <div class="text-3xl">🪔</div>
+          <p class="uppercase">✨ Shubh Deepavali ✨</p>
+          <h1>Unlock Your Diwali Surprise</h1>
           <form id="passcode-form">
             <input id="passcode-input" type="text" />
             <button id="unlock-btn" type="submit">Open Festive Wish 🪔</button>
@@ -225,5 +228,54 @@ describe('PasscodeGate UI Controller', () => {
     expect(encryptedFsm.state).toBe('LOCKED');
     expect(encryptedFsm.getGreeting()).toBeNull();
     expect(errorEl.classList.contains('hidden')).toBe(false);
+  });
+
+  it('automatically hides passcode modal when AppStateMachine transitions to UNLOCKED_INTRO', () => {
+    const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
+    gate.mount();
+
+    expect(cardEl.classList.contains('opacity-0')).toBe(false);
+
+    fsm.transition({
+      type: 'UNLOCK_SUCCESS',
+      payload: {
+        recipient: 'You',
+        sender: 'Bestie',
+        message: 'Happy Birthday!',
+        templateId: 'birthday',
+      },
+    });
+
+    expect(cardEl.classList.contains('opacity-0')).toBe(true);
+    expect(cardEl.classList.contains('pointer-events-none')).toBe(true);
+  });
+
+  it('updates title, badge, emoji, submit button, and placeholder for each theme and restores Diwali', () => {
+    const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
+    gate.mount();
+
+    // 1. Birthday
+    gate.updateThemeContent('birthday');
+    expect(cardEl.textContent).toContain('HAPPY BIRTHDAY');
+    expect(cardEl.textContent).toContain('Unlock Your Birthday Surprise');
+    expect(inputEl.placeholder).toBe('ENTER BDAY');
+
+    // 2. Wedding
+    gate.updateThemeContent('wedding');
+    expect(cardEl.textContent).toContain('WEDDING & ENGAGEMENT');
+    expect(cardEl.textContent).toContain('Unlock Your Sacred Blessings');
+    expect(inputEl.placeholder).toBe('ENTER LOVE');
+
+    // 3. New Year
+    gate.updateThemeContent('newyear');
+    expect(cardEl.textContent).toContain('HAPPY NEW YEAR 2026');
+    expect(cardEl.textContent).toContain('Unlock Your New Year Surprise');
+    expect(inputEl.placeholder).toBe('ENTER NY2026');
+
+    // 4. Diwali restore
+    gate.updateThemeContent('diwali');
+    expect(cardEl.textContent).toContain('SHUBH DEEPAVALI');
+    expect(cardEl.textContent).toContain('Unlock Your Diwali Surprise');
+    expect(inputEl.placeholder).toBe('ENTER PASSCODE');
   });
 });

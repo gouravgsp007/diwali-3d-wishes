@@ -55,6 +55,27 @@ describe('AppStateMachine', () => {
     expect(fsm.getState()).toBe('INTERACTIVE_UNLIT');
   });
 
+  it('seamlessly transitions to UNLOCKED_INTRO on UNLOCK_SUCCESS when already in INTERACTIVE_UNLIT or GREETING_REVEAL', () => {
+    const fsm = new AppStateMachine();
+    fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
+    fsm.transition({ type: 'UNLOCK_SUCCESS', payload: mockPayload });
+    fsm.transition({ type: 'INTRO_COMPLETE' });
+    expect(fsm.getState()).toBe('INTERACTIVE_UNLIT');
+
+    const birthdayPayload: GreetingPayload = {
+      recipient: 'Birthday Star',
+      sender: 'Friends',
+      message: 'Happy Birthday!',
+      templateId: 'birthday',
+      createdAt: Date.now(),
+    };
+
+    const next = fsm.transition({ type: 'UNLOCK_SUCCESS', payload: birthdayPayload });
+    expect(next).toBe('UNLOCKED_INTRO');
+    expect(fsm.getState()).toBe('UNLOCKED_INTRO');
+    expect(fsm.getGreeting()?.templateId).toBe('birthday');
+  });
+
   it('rejects invalid transitions and remains in current state without notification', () => {
     const fsm = new AppStateMachine();
     const listener = vi.fn();

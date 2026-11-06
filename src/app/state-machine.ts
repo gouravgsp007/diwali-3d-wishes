@@ -42,6 +42,13 @@ export class AppStateMachine {
   }
 
   public transition(event: AppEvent): AppState {
+    if (event.type === 'UNLOCK_SUCCESS' && this.currentState !== 'BOOT') {
+      this.greetingData = event.payload;
+      this.currentState = 'UNLOCKED_INTRO';
+      this.notify(this.currentState, this.greetingData ?? undefined);
+      return this.currentState;
+    }
+
     const prev = this.currentState;
 
     switch (this.currentState) {
@@ -51,10 +58,7 @@ export class AppStateMachine {
         }
         break;
       case 'LOCKED':
-        if (event.type === 'UNLOCK_SUCCESS') {
-          this.greetingData = event.payload;
-          this.currentState = 'UNLOCKED_INTRO';
-        }
+        // UNLOCK_SUCCESS is handled globally above
         break;
       case 'UNLOCKED_INTRO':
         if (event.type === 'INTRO_COMPLETE') {

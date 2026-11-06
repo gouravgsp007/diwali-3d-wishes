@@ -48,7 +48,17 @@ describe('Application Bootstrap', () => {
     const showcaseOverlay = document.querySelector('#showcase-modal-overlay');
     expect(showcaseOverlay).not.toBeNull();
 
+    // Selecting Birthday from ShowcaseModal switches theme and hides passcode gate
+    const birthdayBtn = document.querySelector('[data-preview-occasion="birthday"]') as HTMLElement;
+    birthdayBtn?.click();
+
+    expect(sceneManager.getActiveTheme()?.id).toBe('birthday');
+    expect(fsm.getState()).toBe('UNLOCKED_INTRO');
+    const passcodeCard = document.querySelector('#passcode-card');
+    expect(passcodeCard?.classList.contains('opacity-0')).toBe(true);
+
     showcaseModal.dispose();
+    passcodeGate.dispose();
     festiveActionBar.dispose();
     creatorPortal.dispose();
     audioToggle.dispose();

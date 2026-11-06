@@ -57,20 +57,28 @@ export function bootstrap(): {
     onSelectOccasion: (occasion) => {
       const theme = ThemeRegistry.getInstance().get(occasion);
       if (theme) {
-        sceneManager.switchTheme(theme);
-        festiveActionBar.updateForTheme(theme);
-        if (tokenInfo.isDemo) {
-          fsm.transition({
-            type: 'UNLOCK_SUCCESS',
-            payload: {
-              recipient: 'You',
-              sender: 'dreamroutes07',
-              message: theme.subtitle,
-              templateId: occasion,
-              createdAt: Date.now(),
-            },
-          });
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('theme', occasion);
+          url.hash = '';
+          history.replaceState(null, '', url.toString());
         }
+
+        sceneManager.switchTheme(theme, true);
+        festiveActionBar.updateForTheme(theme);
+        passcodeGate.updateThemeContent(occasion);
+        passcodeGate.hideModal();
+
+        fsm.transition({
+          type: 'UNLOCK_SUCCESS',
+          payload: {
+            recipient: 'You',
+            sender: 'dreamroutes07',
+            message: theme.subtitle,
+            templateId: occasion,
+            createdAt: Date.now(),
+          },
+        });
       }
     },
   });

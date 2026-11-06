@@ -45,10 +45,11 @@ describe('Festive 3D Features (Stars, Lanterns, Flowers, Sparkler)', () => {
     // Initial petal above 2.0
     const firstPetal = shower.group.children[0];
     expect(firstPetal.position.y).toBeGreaterThan(2.0);
+    const initialY = firstPetal.position.y;
 
     // Update with delta time
     shower.update(0.5, 0.5);
-    expect(firstPetal.position.y).toBeLessThan(5.0);
+    expect(firstPetal.position.y).toBeLessThan(initialY);
 
     // Fast-forward to floor level
     for (let i = 0; i < 20; i++) {

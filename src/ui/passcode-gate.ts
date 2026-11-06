@@ -17,6 +17,8 @@ export class PasscodeGate {
   private cardEl: HTMLElement | null = null;
   private errorEl: HTMLElement | null = null;
   private createWishBtn: HTMLElement | null = null;
+  private unsubscribeFsm: (() => void) | null = null;
+  private hideTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private stateMachine: AppStateMachine,
@@ -35,6 +37,15 @@ export class PasscodeGate {
     // Adapt gate content to query theme if present
     const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
     this.updateThemeContent(queryTheme);
+
+    // Automatically hide gate on unlock or show when locked
+    this.unsubscribeFsm = this.stateMachine.subscribe((state) => {
+      if (state !== 'LOCKED' && state !== 'BOOT') {
+        this.hideModal();
+      } else if (state === 'LOCKED') {
+        this.showModal();
+      }
+    });
 
     // Real-time uppercase normalization and error clearing
     this.inputEl.addEventListener('input', () => {
@@ -77,16 +88,25 @@ export class PasscodeGate {
       if (badgeEl) badgeEl.textContent = '✨ HAPPY BIRTHDAY ✨';
       if (titleEl) titleEl.textContent = 'Unlock Your Birthday Surprise';
       if (submitBtn) submitBtn.innerHTML = 'Open Birthday Wish 🎂';
+      if (this.inputEl) this.inputEl.placeholder = 'ENTER BDAY';
     } else if (raw === 'wedding' || raw === 'marriage' || raw === 'engagement') {
       if (emojiEl) emojiEl.textContent = '💍';
       if (badgeEl) badgeEl.textContent = '✨ WEDDING & ENGAGEMENT ✨';
       if (titleEl) titleEl.textContent = 'Unlock Your Sacred Blessings';
       if (submitBtn) submitBtn.innerHTML = 'Open Royal Box 💍';
+      if (this.inputEl) this.inputEl.placeholder = 'ENTER LOVE';
     } else if (raw === 'newyear' || raw === 'ny') {
       if (emojiEl) emojiEl.textContent = '🥂';
       if (badgeEl) badgeEl.textContent = '✨ HAPPY NEW YEAR 2026 ✨';
       if (titleEl) titleEl.textContent = 'Unlock Your New Year Surprise';
       if (submitBtn) submitBtn.innerHTML = 'Pop the Champagne 🍾';
+      if (this.inputEl) this.inputEl.placeholder = 'ENTER NY2026';
+    } else {
+      if (emojiEl) emojiEl.textContent = '🪔';
+      if (badgeEl) badgeEl.textContent = '✨ SHUBH DEEPAVALI ✨';
+      if (titleEl) titleEl.textContent = 'Unlock Your Diwali Surprise';
+      if (submitBtn) submitBtn.innerHTML = 'Open Festive Wish 🪔';
+      if (this.inputEl) this.inputEl.placeholder = 'ENTER PASSCODE';
     }
   }
 
@@ -157,7 +177,24 @@ export class PasscodeGate {
     }
   }
 
-  private hideModal(): void {
+  public showModal(): void {
+    if (this.hideTimeoutId) {
+      clearTimeout(this.hideTimeoutId);
+      this.hideTimeoutId = null;
+    }
+    if (this.cardEl) {
+      this.cardEl.classList.remove('hidden', 'opacity-0', 'scale-95', 'pointer-events-none');
+      this.cardEl.classList.add('pointer-events-auto', 'opacity-100', 'scale-100');
+      this.cardEl.style.pointerEvents = 'auto';
+      if (this.inputEl) {
+        this.inputEl.style.pointerEvents = 'auto';
+        this.inputEl.classList.remove('pointer-events-none');
+        this.inputEl.classList.add('pointer-events-auto');
+      }
+    }
+  }
+
+  public hideModal(): void {
     if (this.cardEl) {
       this.cardEl.style.pointerEvents = 'none';
       this.cardEl.classList.remove('pointer-events-auto');
@@ -167,9 +204,24 @@ export class PasscodeGate {
         this.inputEl.classList.remove('pointer-events-auto');
         this.inputEl.classList.add('pointer-events-none');
       }
-      setTimeout(() => {
+      if (this.hideTimeoutId) {
+        clearTimeout(this.hideTimeoutId);
+      }
+      this.hideTimeoutId = setTimeout(() => {
         this.cardEl?.classList.add('hidden');
+        this.hideTimeoutId = null;
       }, 300);
+    }
+  }
+
+  public dispose(): void {
+    if (this.hideTimeoutId) {
+      clearTimeout(this.hideTimeoutId);
+      this.hideTimeoutId = null;
+    }
+    if (this.unsubscribeFsm) {
+      this.unsubscribeFsm();
+      this.unsubscribeFsm = null;
     }
   }
 
