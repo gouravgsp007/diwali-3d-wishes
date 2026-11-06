@@ -932,6 +932,10 @@ export class SceneManager {
     return this.starfield;
   }
 
+  public getTheme(): ExperienceTheme | null {
+    return this.theme;
+  }
+
   /**
    * Cleans up event listeners, stops animation loops, and disposes GPU resources.
    */

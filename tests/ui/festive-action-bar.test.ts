@@ -113,4 +113,46 @@ describe('FestiveActionBar UI', () => {
     expect(container.querySelector('#festive-action-bar')).toBeNull();
     expect(container.querySelector('#festive-toast')).toBeNull();
   });
+
+  it('updates buttons and toasts dynamically for Birthday theme', () => {
+    actionBar.mount();
+    actionBar.updateForTheme({ id: 'birthday' } as any);
+
+    const lanternText = container.querySelector('#action-lantern-btn .action-text');
+    const flowersText = container.querySelector('#action-flowers-btn .action-text');
+    expect(lanternText?.textContent).toBe('Balloons');
+    expect(flowersText?.textContent).toBe('Confetti');
+
+    (mockSceneManager.getTheme as any) = vi.fn().mockReturnValue({ id: 'birthday' });
+
+    const lanternBtn = container.querySelector('#action-lantern-btn') as HTMLButtonElement;
+    lanternBtn.click();
+    const toast = container.querySelector('#festive-toast');
+    expect(toast?.textContent).toContain('balloons');
+
+    const fireworksBtn = container.querySelector('#action-fireworks-btn') as HTMLButtonElement;
+    fireworksBtn.click();
+    expect(toast?.textContent).toContain('Happy Birthday');
+  });
+
+  it('updates buttons and toasts dynamically for Wedding and New Year themes', () => {
+    actionBar.mount();
+    actionBar.updateForTheme({ id: 'wedding' } as any);
+
+    const flowersText = container.querySelector('#action-flowers-btn .action-text');
+    expect(flowersText?.textContent).toBe('Rose Petals');
+
+    (mockSceneManager.getTheme as any) = vi.fn().mockReturnValue({ id: 'wedding' });
+    const flowersBtn = container.querySelector('#action-flowers-btn') as HTMLButtonElement;
+    flowersBtn.click();
+    const toast = container.querySelector('#festive-toast');
+    expect(toast?.textContent).toContain('rose petals');
+
+    // New Year
+    actionBar.updateForTheme({ id: 'newyear' } as any);
+    (mockSceneManager.getTheme as any) = vi.fn().mockReturnValue({ id: 'newyear' });
+    const fireworksBtn = container.querySelector('#action-fireworks-btn') as HTMLButtonElement;
+    fireworksBtn.click();
+    expect(toast?.textContent).toContain('2026');
+  });
 });

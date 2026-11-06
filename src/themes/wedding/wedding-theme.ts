@@ -32,6 +32,12 @@ export class WeddingTheme implements ExperienceTheme {
     this.box = createJewelryBox();
     this.group.add(this.box.group);
 
+    // Warm golden spotlight highlighting the velvet ring box
+    const spot = new THREE.SpotLight(0xffedd5, 1.8, 10, Math.PI / 4, 0.4, 1.0);
+    spot.position.set(0, 3.5, 1.5);
+    spot.target = this.box.group;
+    this.group.add(spot);
+
     // 2. Cascading 3D Rose Petal Shower
     this.petalShower = new RosePetalShower();
     this.group.add(this.petalShower.group);

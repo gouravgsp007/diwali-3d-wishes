@@ -58,6 +58,7 @@ export function bootstrap(): {
       const theme = ThemeRegistry.getInstance().get(occasion);
       if (theme) {
         sceneManager.switchTheme(theme);
+        festiveActionBar.updateForTheme(theme);
         if (tokenInfo.isDemo) {
           fsm.transition({
             type: 'UNLOCK_SUCCESS',

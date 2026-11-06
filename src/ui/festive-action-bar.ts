@@ -1,13 +1,14 @@
 import type { SceneManager } from '../graphics/scene-manager';
 import type { MusicModal } from './music-modal';
+import type { ExperienceTheme } from '../themes/experience-theme.interface';
 
 /**
  * Opulent festive action bar floating dock.
- * Grants immediate 1-tap access to Diwali festive celebrations:
- * - ✨ Interactive Phuljhadi (Sparkler)
- * - 🏮 Akash Kandil (Sky Lantern Release)
- * - 🌸 Pushpa Vrishti (Flower Petal Shower)
- * - 🎆 Aatishbaazi (Diwali Fireworks)
+ * Grants immediate 1-tap access to festive celebrations:
+ * - ✨ Interactive Sparkler (Phuljhadi)
+ * - 🏮 Sky Lantern / Wish Release
+ * - 🌸 Flower / Petal / Confetti Shower
+ * - 🎆 Festive Fireworks
  */
 export class FestiveActionBar {
   private element: HTMLElement | null = null;
@@ -38,8 +39,8 @@ export class FestiveActionBar {
         title="Light Handheld Sparkler (Touch to Draw Sparks)"
         class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-400/30 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer"
       >
-        <span>✨</span>
-        <span class="hidden xs:inline sm:inline">Sparkler</span>
+        <span class="action-icon">✨</span>
+        <span class="action-text hidden xs:inline sm:inline">Sparkler</span>
       </button>
 
       <!-- 2. Sky Lantern Release (Akash Kandil) -->
@@ -49,8 +50,8 @@ export class FestiveActionBar {
         title="Release Akash Kandil (Sky Lantern) with a Wish"
         class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-400/30 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer"
       >
-        <span>🏮</span>
-        <span class="hidden xs:inline sm:inline">Sky Lantern</span>
+        <span class="action-icon">🏮</span>
+        <span class="action-text hidden xs:inline sm:inline">Sky Lantern</span>
       </button>
 
       <!-- 3. Royal Flower Shower (Pushpa Vrishti) -->
@@ -60,8 +61,8 @@ export class FestiveActionBar {
         title="Shower Marigold and Rose Petals"
         class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-400/30 text-amber-200 text-xs font-semibold tracking-wide transition-all cursor-pointer"
       >
-        <span>🌸</span>
-        <span class="hidden xs:inline sm:inline">Flowers</span>
+        <span class="action-icon">🌸</span>
+        <span class="action-text hidden xs:inline sm:inline">Flowers</span>
       </button>
 
       <!-- 4. Fireworks Burst -->
@@ -71,8 +72,8 @@ export class FestiveActionBar {
         title="Burst Golden Diwali Fireworks"
         class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 to-yellow-500/30 hover:from-amber-500/35 hover:to-yellow-500/40 active:scale-95 border border-amber-400/40 text-amber-100 text-xs font-bold tracking-wide transition-all cursor-pointer shadow-sm"
       >
-        <span>🎆</span>
-        <span class="hidden xs:inline sm:inline">Fireworks</span>
+        <span class="action-icon">🎆</span>
+        <span class="action-text hidden xs:inline sm:inline">Fireworks</span>
       </button>
     `;
 
@@ -86,6 +87,108 @@ export class FestiveActionBar {
     this.container.appendChild(this.toastEl);
 
     this.attachEvents();
+
+    const currentTheme = this.sceneManager.getTheme?.();
+    if (currentTheme) {
+      this.updateForTheme(currentTheme);
+    }
+  }
+
+  public updateForTheme(theme: ExperienceTheme): void {
+    if (!this.element) return;
+    const lanternBtn = this.element.querySelector('#action-lantern-btn') as HTMLButtonElement | null;
+    const flowersBtn = this.element.querySelector('#action-flowers-btn') as HTMLButtonElement | null;
+    const fireworksBtn = this.element.querySelector('#action-fireworks-btn') as HTMLButtonElement | null;
+
+    if (theme.id === 'birthday') {
+      if (lanternBtn) {
+        lanternBtn.title = 'Release Helium Birthday Balloons';
+        const icon = lanternBtn.querySelector('.action-icon');
+        const text = lanternBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎈';
+        if (text) text.textContent = 'Balloons';
+      }
+      if (flowersBtn) {
+        flowersBtn.title = 'Shower Confetti & Party Ribbons';
+        const icon = flowersBtn.querySelector('.action-icon');
+        const text = flowersBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎉';
+        if (text) text.textContent = 'Confetti';
+      }
+      if (fireworksBtn) {
+        fireworksBtn.title = 'Burst Birthday Party Fireworks';
+        const icon = fireworksBtn.querySelector('.action-icon');
+        const text = fireworksBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎆';
+        if (text) text.textContent = 'Celebration';
+      }
+    } else if (theme.id === 'wedding') {
+      if (lanternBtn) {
+        lanternBtn.title = 'Release Auspicious Wish Lanterns';
+        const icon = lanternBtn.querySelector('.action-icon');
+        const text = lanternBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🕊️';
+        if (text) text.textContent = 'Wishes';
+      }
+      if (flowersBtn) {
+        flowersBtn.title = 'Shower Royal Crimson Rose Petals';
+        const icon = flowersBtn.querySelector('.action-icon');
+        const text = flowersBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🌹';
+        if (text) text.textContent = 'Rose Petals';
+      }
+      if (fireworksBtn) {
+        fireworksBtn.title = 'Celebrate Union with Fireworks';
+        const icon = fireworksBtn.querySelector('.action-icon');
+        const text = fireworksBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎆';
+        if (text) text.textContent = 'Celebration';
+      }
+    } else if (theme.id === 'newyear') {
+      if (lanternBtn) {
+        lanternBtn.title = 'Release Midnight New Year Lanterns';
+        const icon = lanternBtn.querySelector('.action-icon');
+        const text = lanternBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🏮';
+        if (text) text.textContent = 'Lantern';
+      }
+      if (flowersBtn) {
+        flowersBtn.title = 'Shower Golden Sparkles';
+        const icon = flowersBtn.querySelector('.action-icon');
+        const text = flowersBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '✨';
+        if (text) text.textContent = 'Gold Shower';
+      }
+      if (fireworksBtn) {
+        fireworksBtn.title = 'Burst Grand 2026 Midnight Fireworks';
+        const icon = fireworksBtn.querySelector('.action-icon');
+        const text = fireworksBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎆';
+        if (text) text.textContent = '2026 Fireworks';
+      }
+    } else {
+      if (lanternBtn) {
+        lanternBtn.title = 'Release Akash Kandil (Sky Lantern) with a Wish';
+        const icon = lanternBtn.querySelector('.action-icon');
+        const text = lanternBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🏮';
+        if (text) text.textContent = 'Sky Lantern';
+      }
+      if (flowersBtn) {
+        flowersBtn.title = 'Shower Marigold and Rose Petals';
+        const icon = flowersBtn.querySelector('.action-icon');
+        const text = flowersBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🌸';
+        if (text) text.textContent = 'Flowers';
+      }
+      if (fireworksBtn) {
+        fireworksBtn.title = 'Burst Golden Diwali Fireworks';
+        const icon = fireworksBtn.querySelector('.action-icon');
+        const text = fireworksBtn.querySelector('.action-text');
+        if (icon) icon.textContent = '🎆';
+        if (text) text.textContent = 'Fireworks';
+      }
+    }
   }
 
   private attachEvents(): void {
@@ -99,7 +202,16 @@ export class FestiveActionBar {
       if (isActive) {
         this.sparklerBtn?.classList.add('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
         this.sparklerBtn?.classList.remove('bg-amber-500/15', 'text-amber-200');
-        this.showToast('✨ Sparkler lit! Touch & drag anywhere to draw golden sparks!');
+        const themeId = this.sceneManager.getTheme?.()?.id;
+        if (themeId === 'birthday') {
+          this.showToast('✨ Sparkler lit! Draw magic birthday sparkles in the air!');
+        } else if (themeId === 'wedding') {
+          this.showToast('✨ Golden sparkler lit! Draw love sparkles for the couple!');
+        } else if (themeId === 'newyear') {
+          this.showToast('✨ 2026 Celebration sparkler lit! Draw fireworks in the air!');
+        } else {
+          this.showToast('✨ Sparkler lit! Touch & drag anywhere to draw golden sparks!');
+        }
       } else {
         this.sparklerBtn?.classList.remove('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
         this.sparklerBtn?.classList.add('bg-amber-500/15', 'text-amber-200');
@@ -107,28 +219,55 @@ export class FestiveActionBar {
       }
     });
 
-    // 3. Sky Lantern
+    // 2. Sky Lantern / Wish
     const lanternBtn = this.element.querySelector('#action-lantern-btn');
     lanternBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.sceneManager.triggerSkyLantern();
-      this.showToast('🏮 Akash Kandil released! May your wishes illuminate the sky ✨');
+      const themeId = this.sceneManager.getTheme?.()?.id;
+      if (themeId === 'birthday') {
+        this.showToast('🎈 Colorful party balloons floating to the sky! Happy Birthday! ✨');
+      } else if (themeId === 'wedding') {
+        this.showToast('🕊️ Golden wish lanterns released for the lovely couple! 🏮');
+      } else if (themeId === 'newyear') {
+        this.showToast('🏮 Midnight lanterns rising to welcome a prosperous 2026! ✨');
+      } else {
+        this.showToast('🏮 Akash Kandil released! May your wishes illuminate the sky ✨');
+      }
     });
 
-    // 4. Flowers
+    // 3. Flowers / Petals / Confetti
     const flowersBtn = this.element.querySelector('#action-flowers-btn');
     flowersBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.sceneManager.triggerFlowerShower();
-      this.showToast('🌸 Sacred Pushpa Vrishti offered upon the Diya thali!');
+      const themeId = this.sceneManager.getTheme?.()?.id;
+      if (themeId === 'birthday') {
+        this.showToast('🎉 Birthday confetti & festive flowers showered! 🌸');
+      } else if (themeId === 'wedding') {
+        this.showToast('🌹 Royal crimson rose petals blessed upon the couple! 🌹');
+      } else if (themeId === 'newyear') {
+        this.showToast('✨ Golden celebration sparkle shower welcoming 2026! 🥂');
+      } else {
+        this.showToast('🌸 Sacred Pushpa Vrishti offered upon the Diya thali!');
+      }
     });
 
-    // 5. Fireworks
+    // 4. Fireworks
     const fireworksBtn = this.element.querySelector('#action-fireworks-btn');
     fireworksBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.sceneManager.getCelebrationManager()?.fireCelebrationBurst();
-      this.showToast('🎆 Happy Diwali! Celebrating with golden fireworks!');
+      const themeId = this.sceneManager.getTheme?.()?.id;
+      if (themeId === 'birthday') {
+        this.showToast('🎂 Happy Birthday! Celebrating with bright fireworks! 🎆');
+      } else if (themeId === 'wedding') {
+        this.showToast('💍 Congratulations! Celebrating eternal love with fireworks! 🎆');
+      } else if (themeId === 'newyear') {
+        this.showToast('🥂 Happy New Year 2026! Grand fireworks celebration! 🎆');
+      } else {
+        this.showToast('🎆 Happy Diwali! Celebrating with golden fireworks!');
+      }
     });
   }
 
