@@ -142,13 +142,13 @@ describe('GreetingModal UI Component', () => {
     expect(decoded).toContain('Thank you Dev so much');
   });
 
-  it('card includes creator footer badge (#creator-badge) linking to #create per D-03 and WISH-03', () => {
+  it('card includes creator footer badge (#creator-badge) linking to Instagram DM per seller requirements', () => {
     modal.mount(container);
 
     const badge = document.getElementById('creator-badge') as HTMLAnchorElement | null;
     expect(badge).not.toBeNull();
-    expect(badge?.getAttribute('href')).toBe('#create');
-    expect(badge?.textContent).toContain('Create Your Own Wish');
+    expect(badge?.getAttribute('href')).toContain('instagram.com/dreamroutes07');
+    expect(badge?.textContent).toContain('Order Your Custom 3D Wish');
   });
 
   it('show() toggles card classes removing opacity-0, scale-95, translate-y-4, pointer-events-none and adding opacity-100, scale-100, translate-y-0, pointer-events-auto per D-01', () => {

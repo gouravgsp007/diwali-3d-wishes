@@ -182,9 +182,9 @@ export class ShowcaseModal {
           </a>
         </div>
 
-        <!-- Footer Admin Link -->
-        <div class="text-center text-[11px] text-amber-400/60">
-          Already a seller or creator? <a href="#create" class="underline text-amber-300 hover:text-amber-100">Open Generator Portal</a>
+        <!-- Footer Direct Order Link -->
+        <div class="text-center text-[11px] text-amber-400/70">
+          Want your own custom personalized celebration? <a href="${this.instagramUrl}" target="_blank" rel="noopener noreferrer" class="underline text-amber-300 hover:text-amber-100">DM @dreamroutes07 on Instagram</a>
         </div>
       </div>
     `;

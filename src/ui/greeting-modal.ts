@@ -96,10 +96,12 @@ export class GreetingModal {
         <div class="mt-3">
           <a
             id="creator-badge"
-            href="#create"
-            class="text-[11px] font-medium text-amber-400/70 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-none"
+            href="https://www.instagram.com/dreamroutes07?vrfl=MWhxb282aGZoYWpoeA=="
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[11px] font-medium text-amber-400/80 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-none"
           >
-            Create Your Own Wish ✨
+            Order Your Custom 3D Wish via Instagram DM 🎁✨
           </a>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CreatorPortal } from '../../src/ui/creator-portal';
 import { GreetingCodec } from '../../src/crypto/greeting-codec';
 import * as clipboardModule from '../../src/utils/clipboard';
+import { OrderHistoryStore } from '../../src/storage/order-history-store';
 
 describe('CreatorPortal UI Controller', () => {
   let container: HTMLElement;
@@ -240,6 +241,89 @@ describe('CreatorPortal UI Controller', () => {
     // Pause preview
     previewBtn?.click();
     expect(previewText?.textContent).toBe('Preview Sound');
+  });
+
+  it('enforces Admin PIN strictly as 2026 and rejects previous codes like SHUBH2026 or 7777', () => {
+    sessionStorage.clear();
+    portal = new CreatorPortal({ container, enforcePin: true });
+    portal.mount();
+    portal.show();
+
+    const authGate = container.querySelector('#creator-auth-gate');
+    const form = container.querySelector('#creator-form');
+    const pinInput = container.querySelector('#seller-pin-input') as HTMLInputElement;
+    const submitBtn = container.querySelector('#seller-pin-submit-btn') as HTMLButtonElement;
+    const pinError = container.querySelector('#seller-pin-error') as HTMLElement;
+
+    expect(authGate?.classList.contains('hidden')).toBe(false);
+    expect(form?.classList.contains('hidden')).toBe(true);
+
+    // Try old passcodes (SHUBH2026, 7777)
+    pinInput.value = 'SHUBH2026';
+    submitBtn.click();
+    expect(pinError.classList.contains('hidden')).toBe(false);
+    expect(pinError.textContent).toContain('Incorrect Admin PIN');
+    expect(form?.classList.contains('hidden')).toBe(true);
+
+    pinInput.value = '7777';
+    submitBtn.click();
+    expect(pinError.classList.contains('hidden')).toBe(false);
+    expect(form?.classList.contains('hidden')).toBe(true);
+
+    // Enter strictly valid PIN: 2026
+    pinInput.value = '2026';
+    submitBtn.click();
+    expect(pinError.classList.contains('hidden')).toBe(true);
+    expect(authGate?.classList.contains('hidden')).toBe(true);
+    expect(form?.classList.contains('hidden')).toBe(false);
+    expect(sessionStorage.getItem('diwali_seller_unlocked')).toBe('true');
+  });
+
+  it('automatically logs generated wish with secret passcode into OrderHistoryStore and renders it in Admin history', async () => {
+    localStorage.clear();
+    portal = new CreatorPortal({ container, bypassPin: true });
+    portal.mount();
+    portal.show();
+
+    const recipient = container.querySelector('#creator-recipient') as HTMLInputElement;
+    const sender = container.querySelector('#creator-sender') as HTMLInputElement;
+    const message = container.querySelector('#creator-message') as HTMLTextAreaElement;
+    const passcode = container.querySelector('#creator-passcode') as HTMLInputElement;
+    const form = container.querySelector('#creator-form') as HTMLFormElement;
+
+    recipient.value = 'Meera';
+    sender.value = 'Vikram';
+    message.value = 'Wishing you joy and light!';
+    passcode.value = 'DIVINE';
+
+    vi.spyOn(GreetingCodec, 'encrypt').mockResolvedValue('encrypted-token-xyz');
+    await form.dispatchEvent(new Event('submit'));
+
+    const orders = OrderHistoryStore.getOrders();
+    expect(orders.length).toBe(1);
+    expect(orders[0].recipient).toBe('Meera');
+    expect(orders[0].passcode).toBe('DIVINE');
+
+    const historySection = container.querySelector('#creator-history-section');
+    expect(historySection).not.toBeNull();
+    const countEl = container.querySelector('#creator-history-count');
+    expect(countEl?.textContent).toBe('1');
+
+    const historyList = container.querySelector('#creator-history-list');
+    expect(historyList?.innerHTML).toContain('Meera');
+    expect(historyList?.innerHTML).toContain('DIVINE');
+  });
+
+  it('supports exporting orders and passcodes to CSV', () => {
+    portal = new CreatorPortal({ container, bypassPin: true });
+    portal.mount();
+
+    const downloadSpy = vi.spyOn(OrderHistoryStore, 'downloadCsv').mockImplementation(() => {});
+    const exportBtn = container.querySelector('#creator-export-csv-btn') as HTMLButtonElement;
+    expect(exportBtn).not.toBeNull();
+
+    exportBtn.click();
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
   });
 
   it('cleans up DOM and listeners on dispose() without leaking memory per ASVS V14', () => {

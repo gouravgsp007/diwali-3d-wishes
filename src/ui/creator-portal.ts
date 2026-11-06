@@ -3,11 +3,13 @@ import type { GreetingPayload } from '../crypto/types';
 import type { OccasionId } from '../themes/experience-theme.interface';
 import { copyToClipboard } from '../utils/clipboard';
 import { formatDeliveryMessage, createDeliveryWhatsAppUrl } from './delivery-message';
+import { OrderHistoryStore } from '../storage/order-history-store';
 
 export interface CreatorPortalOptions {
   container: HTMLElement;
   sellerPin?: string;
   bypassPin?: boolean;
+  enforcePin?: boolean;
   onWishCreated?: (url: string, passcode: string) => void;
   onClose?: () => void;
 }
@@ -59,7 +61,7 @@ export class CreatorPortal {
   private sellerPin: string;
 
   constructor(private readonly options: CreatorPortalOptions) {
-    this.sellerPin = options.sellerPin || 'SHUBH2026';
+    this.sellerPin = options.sellerPin || '2026';
     this.onHashChangeBound = this.handleHashChange.bind(this);
     window.addEventListener('hashchange', this.onHashChangeBound);
   }
@@ -453,6 +455,44 @@ export class CreatorPortal {
           </div>
         </div>
 
+        <!-- Admin Order History & Passcode Log Section (Visible to Seller) -->
+        <div id="creator-history-section" class="mt-1 pt-3 border-t border-amber-500/20 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <button
+              id="creator-history-toggle-btn"
+              type="button"
+              class="text-xs font-semibold text-amber-300 hover:text-amber-100 flex items-center gap-1.5 cursor-pointer py-1 select-none"
+            >
+              <span>📋</span>
+              <span id="creator-history-toggle-label">Order History & Passcodes (<span id="creator-history-count">0</span>)</span>
+              <span id="creator-history-toggle-arrow" class="text-[10px] transition-transform">▼</span>
+            </button>
+            <button
+              id="creator-export-csv-btn"
+              type="button"
+              class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-200 flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+              title="Download spreadsheet of all client orders and secret passcodes"
+            >
+              <span>📥 Export CSV</span>
+            </button>
+          </div>
+
+          <div id="creator-history-drawer" class="hidden flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+            <div id="creator-history-list" class="flex flex-col gap-2">
+              <!-- Dynamically populated order records -->
+            </div>
+            <div class="flex justify-end pt-1">
+              <button
+                id="creator-clear-history-btn"
+                type="button"
+                class="text-[10px] text-rose-400/80 hover:text-rose-300 underline cursor-pointer"
+              >
+                Clear All Orders
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Temporary Feedback Toast -->
         <div
           id="creator-feedback-badge"
@@ -468,7 +508,7 @@ export class CreatorPortal {
     this.initListeners();
 
     // Check initial hash
-    if (typeof window !== 'undefined' && window.location.hash.startsWith('#create')) {
+    if (typeof window !== 'undefined' && (window.location.hash.startsWith('#create') || window.location.hash.startsWith('#admin'))) {
       this.show();
     }
   }
@@ -610,24 +650,25 @@ export class CreatorPortal {
       }
     });
 
-    // Seller PIN authentication listener
+    // Seller PIN authentication listener (Admin Passcode strictly 2026)
     const pinInput = this.overlayEl.querySelector('#seller-pin-input') as HTMLInputElement | null;
     const pinSubmitBtn = this.overlayEl.querySelector('#seller-pin-submit-btn') as HTMLButtonElement | null;
     const pinError = this.overlayEl.querySelector('#seller-pin-error') as HTMLElement | null;
 
     const handlePinCheck = () => {
-      const entered = pinInput?.value.trim().toUpperCase() || '';
-      const allowedPins = [this.sellerPin.toUpperCase(), 'SHUBH2026', '2026'];
-      if (allowedPins.includes(entered)) {
+      const entered = pinInput?.value.trim() || '';
+      const expected = (this.sellerPin || '2026').trim();
+      if (entered === expected || entered === '2026') {
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.setItem('diwali_seller_unlocked', 'true');
         }
         this.updateAuthGateVisibility(true);
+        this.renderOrderHistory();
         if (pinError) pinError.classList.add('hidden');
         if (pinInput) pinInput.value = '';
       } else {
         if (pinError) {
-          pinError.textContent = 'Incorrect Seller PIN. Access denied.';
+          pinError.textContent = 'Incorrect Admin PIN. Access denied.';
           pinError.classList.remove('hidden');
         }
       }
@@ -639,6 +680,38 @@ export class CreatorPortal {
         e.preventDefault();
         handlePinCheck();
       }
+    });
+
+    // Order History & Passcodes Drawer listeners
+    const historyToggleBtn = this.overlayEl.querySelector('#creator-history-toggle-btn');
+    const historyDrawer = this.overlayEl.querySelector('#creator-history-drawer');
+    const historyArrow = this.overlayEl.querySelector('#creator-history-toggle-arrow');
+    const exportCsvBtn = this.overlayEl.querySelector('#creator-export-csv-btn');
+    const clearHistoryBtn = this.overlayEl.querySelector('#creator-clear-history-btn');
+
+    historyToggleBtn?.addEventListener('click', () => {
+      const isHidden = historyDrawer?.classList.contains('hidden');
+      if (isHidden) {
+        historyDrawer?.classList.remove('hidden');
+        historyDrawer?.classList.add('flex');
+        if (historyArrow) historyArrow.textContent = '▲';
+        this.renderOrderHistory();
+      } else {
+        historyDrawer?.classList.add('hidden');
+        historyDrawer?.classList.remove('flex');
+        if (historyArrow) historyArrow.textContent = '▼';
+      }
+    });
+
+    exportCsvBtn?.addEventListener('click', () => {
+      OrderHistoryStore.downloadCsv();
+      this.showFeedback('Orders CSV Exported! 📥');
+    });
+
+    clearHistoryBtn?.addEventListener('click', () => {
+      OrderHistoryStore.clearAll();
+      this.renderOrderHistory();
+      this.showFeedback('Order history cleared');
     });
   }
 
@@ -740,6 +813,18 @@ export class CreatorPortal {
       this.formEl?.classList.add('hidden');
       this.resultSection?.classList.remove('hidden');
       this.resultSection?.classList.add('flex');
+
+      // Persist in OrderHistoryStore for Admin tracking
+      OrderHistoryStore.saveOrder({
+        recipient,
+        sender,
+        occasion: this.selectedOccasion,
+        passcode,
+        shareUrl,
+        musicChoice: this.selectedMusicChoice,
+        createdAt: Date.now(),
+      });
+      this.renderOrderHistory();
 
       this.options.onWishCreated?.(shareUrl, passcode);
       return shareUrl;
@@ -878,6 +963,12 @@ export class CreatorPortal {
 
   private isSellerUnlocked(): boolean {
     if (this.options.bypassPin) return true;
+    if (this.options.enforcePin) {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('diwali_seller_unlocked') === 'true') {
+        return true;
+      }
+      return false;
+    }
     if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') return true;
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('diwali_seller_unlocked') === 'true') {
       return true;
@@ -887,22 +978,26 @@ export class CreatorPortal {
 
   private updateAuthGateVisibility(unlocked: boolean): void {
     const gate = this.overlayEl?.querySelector('#creator-auth-gate');
+    const historySection = this.overlayEl?.querySelector('#creator-history-section');
     if (unlocked) {
       gate?.classList.add('hidden');
       gate?.classList.remove('flex');
+      historySection?.classList.remove('hidden');
       if (this.resultSection?.classList.contains('hidden')) {
         this.formEl?.classList.remove('hidden');
       }
+      this.renderOrderHistory();
     } else {
       gate?.classList.remove('hidden');
       gate?.classList.add('flex');
+      historySection?.classList.add('hidden');
       this.formEl?.classList.add('hidden');
     }
   }
 
   private handleHashChange(): void {
     if (typeof window === 'undefined') return;
-    if (window.location.hash.startsWith('#create')) {
+    if (window.location.hash.startsWith('#create') || window.location.hash.startsWith('#admin')) {
       this.show();
     } else if (this.isVisible) {
       this.hide(false);
@@ -1009,7 +1104,7 @@ export class CreatorPortal {
       card?.classList.add('scale-95', 'pointer-events-none');
     }
 
-    if (updateHash && typeof window !== 'undefined' && window.location.hash.startsWith('#create')) {
+    if (updateHash && typeof window !== 'undefined' && (window.location.hash.startsWith('#create') || window.location.hash.startsWith('#admin'))) {
       if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       } else {
@@ -1098,6 +1193,136 @@ export class CreatorPortal {
 
   public getPreviewButton(): HTMLButtonElement | null {
     return this.previewSoundBtn;
+  }
+
+  /**
+   * Renders saved order history and secret passcodes from OrderHistoryStore.
+   */
+  public renderOrderHistory(): void {
+    const historyList = this.overlayEl?.querySelector('#creator-history-list');
+    const historyCount = this.overlayEl?.querySelector('#creator-history-count');
+    if (!historyList) return;
+
+    const orders = OrderHistoryStore.getOrders();
+    if (historyCount) historyCount.textContent = String(orders.length);
+
+    if (orders.length === 0) {
+      historyList.innerHTML = `
+        <div class="p-3 rounded-xl bg-black/40 border border-amber-500/15 text-center text-xs text-amber-300/60 italic">
+          No generated orders saved yet. Create your first wish above!
+        </div>
+      `;
+      return;
+    }
+
+    const occasionEmojis: Record<string, string> = {
+      diwali: '🪔 Diwali',
+      birthday: '🎂 Birthday',
+      wedding: '💍 Wedding',
+      newyear: '🥂 New Year',
+    };
+
+    const escapeHtml = (str: string): string =>
+      str.replace(/[&<>"']/g, (m) => {
+        switch (m) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#39;';
+          default: return m;
+        }
+      });
+
+    historyList.innerHTML = orders
+      .map((o) => {
+        const occLabel = occasionEmojis[o.occasion] || o.occasion;
+        const dateStr = new Date(o.createdAt).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const recipientSafe = escapeHtml(o.recipient);
+        const senderSafe = escapeHtml(o.sender);
+        const passcodeSafe = escapeHtml(o.passcode);
+        const urlSafe = escapeHtml(o.shareUrl);
+        const idSafe = escapeHtml(o.id);
+
+        return `
+          <div class="p-3 rounded-xl bg-black/50 border border-amber-500/20 text-xs flex flex-col gap-2 hover:border-amber-400/40 transition-colors" data-order-id="${idSafe}">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-200">To: ${recipientSafe} <span class="font-normal text-amber-300/70">(from ${senderSafe})</span></span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold border border-amber-400/20">${occLabel}</span>
+            </div>
+            <div class="flex items-center justify-between bg-black/40 px-2 py-1.5 rounded-lg border border-amber-500/10">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] uppercase text-amber-400/80 font-semibold tracking-wider">Passcode:</span>
+                <span class="font-mono font-bold text-amber-300 tracking-wider text-xs">${passcodeSafe}</span>
+              </div>
+              <button
+                type="button"
+                class="copy-passcode-btn text-[10px] text-amber-300 hover:text-amber-100 underline cursor-pointer"
+                data-passcode="${passcodeSafe}"
+              >
+                Copy Code 📋
+              </button>
+            </div>
+            <div class="flex items-center justify-between pt-1 border-t border-amber-500/10 text-[10px] text-amber-400/60">
+              <span>${dateStr}</span>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="copy-order-link-btn text-amber-300 hover:text-amber-100 underline cursor-pointer"
+                  data-url="${urlSafe}"
+                >
+                  Copy Link 🔗
+                </button>
+                <button
+                  type="button"
+                  class="delete-order-btn text-rose-400/80 hover:text-rose-300 underline cursor-pointer"
+                  data-order-id="${idSafe}"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    // Attach listeners to copy / delete buttons in the history list
+    historyList.querySelectorAll('.copy-passcode-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const code = (e.currentTarget as HTMLElement).getAttribute('data-passcode') || '';
+        if (code) {
+          copyToClipboard(code);
+          this.showFeedback('Passcode Copied: ' + code);
+        }
+      });
+    });
+
+    historyList.querySelectorAll('.copy-order-link-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const url = (e.currentTarget as HTMLElement).getAttribute('data-url') || '';
+        if (url) {
+          copyToClipboard(url);
+          this.showFeedback('Delivery Link Copied! 🔗');
+        }
+      });
+    });
+
+    historyList.querySelectorAll('.delete-order-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-order-id') || '';
+        if (id) {
+          OrderHistoryStore.deleteOrder(id);
+          this.renderOrderHistory();
+          this.showFeedback('Order Deleted');
+        }
+      });
+    });
   }
 
   /**
