@@ -21,6 +21,8 @@ import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
 import { FirecrackerWindow } from '../fx/firecrackers/firecracker-window';
+import { Fireworks3D } from './fx/fireworks-3d';
+import { RocketStandManager } from './meshes/rocket-mesh';
 import type { ExperienceTheme } from '../themes/experience-theme.interface';
 import { ThemeRegistry } from '../themes/theme-registry';
 
@@ -74,6 +76,10 @@ export class SceneManager {
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
   private firecrackerWindow: FirecrackerWindow | null = null;
+  private fireworks3D: Fireworks3D | null = null;
+  private rocketStandManager: RocketStandManager | null = null;
+  private raycaster = new THREE.Raycaster();
+  private pointerNdc = new THREE.Vector2();
   private theme: ExperienceTheme | null = null;
 
   constructor(
@@ -311,6 +317,10 @@ export class SceneManager {
       };
       this.headerFireworksBtn.addEventListener('click', this.onHeaderFireworksClick);
     }
+
+    // 12. 3D Particle Fireworks System in WebGL
+    this.fireworks3D = new Fireworks3D();
+    this.scene.add(this.fireworks3D.group);
   }
 
   /**
@@ -409,6 +419,16 @@ export class SceneManager {
       this.theme.update(dt, this.elapsedTime);
     }
 
+    // Update 3D particle fireworks
+    if (this.fireworks3D) {
+      this.fireworks3D.update(dt);
+    }
+
+    // Update 3D in-scene rocket launchpad
+    if (this.rocketStandManager) {
+      this.rocketStandManager.update(dt);
+    }
+
     // Update camera rig with breathing sway and parallax damping
     if (this.cameraRig) {
       this.cameraRig.update(dt);
@@ -500,16 +520,34 @@ export class SceneManager {
         this.fsm?.transition({ type: 'CELEBRATION_COMPLETE' });
       }, 3000);
     } else if (state === 'FIRECRACKER_CEREMONY') {
-      // Dedicated fullscreen Firecracker Launch Ritual (Wish is strictly separate and hidden)
+      // 1. Mount 3D Rocket Stands into Scene
+      if (!this.rocketStandManager) {
+        this.rocketStandManager = new RocketStandManager();
+        this.rocketStandManager.setOnTrailEmit((pos, colorHex) => {
+          this.fireworks3D?.emitTrail(pos, colorHex, 5);
+        });
+        this.scene.add(this.rocketStandManager.group);
+      }
+
+      // 2. Camera perspective to frame launchpad & night sky
+      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.3, 4.3), 1000);
+      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 1.2, 0), 1000);
+
+      // 3. Mount Minimalist, Card-Less Ceremony HUD
       this.firecrackerWindow = new FirecrackerWindow({
         container: this.container,
         audioEngine: AudioEngine.getInstance(),
+        onRocketTriggered: (id: number) => {
+          this.rocketStandManager?.launch(id, (detonatePos, typeId) => {
+            this.fireworks3D?.triggerBurst(detonatePos, typeId, 220);
+          });
+        },
         onComplete: () => {
-          this.firecrackerWindow = null;
+          this.cleanupFirecrackerCeremony();
           this.fsm?.transition({ type: 'FIRECRACKERS_COMPLETE' });
         },
         onSkip: () => {
-          this.firecrackerWindow = null;
+          this.cleanupFirecrackerCeremony();
           this.fsm?.transition({ type: 'SKIP_FIRECRACKERS' });
         },
       });
@@ -519,6 +557,7 @@ export class SceneManager {
         clearTimeout(this.celebrationTimeoutId);
         this.celebrationTimeoutId = null;
       }
+      this.cleanupFirecrackerCeremony();
 
       // Smooth camera dolly and pan target to frame centerpiece in upper half so it remains gloriously visible above greeting card
       const revPos = this.theme ? this.theme.visualConfig.revealedCameraPos : new THREE.Vector3(0, 2.5, 4.4);
@@ -604,6 +643,43 @@ export class SceneManager {
 
   private onPointerDown = (event: PointerEvent | MouseEvent | TouchEvent): void => {
     this.onPointerMove(event);
+
+    // Direct 3D Raycast Touch on In-Scene Rockets during FIRECRACKER_CEREMONY
+    if (
+      this.fsm?.getState() === 'FIRECRACKER_CEREMONY' &&
+      this.rocketStandManager &&
+      this.cameraRig
+    ) {
+      let clientX = 0;
+      let clientY = 0;
+      if ('touches' in event && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+      } else if ('clientX' in event) {
+        clientX = (event as MouseEvent).clientX;
+        clientY = (event as MouseEvent).clientY;
+      }
+
+      const rect = this.container.getBoundingClientRect();
+      const width = rect.width || window.innerWidth || 1;
+      const height = rect.height || window.innerHeight || 1;
+      this.pointerNdc.x = ((clientX - rect.left) / width) * 2 - 1;
+      this.pointerNdc.y = -(((clientY - rect.top) / height) * 2 - 1);
+
+      this.raycaster.setFromCamera(this.pointerNdc, this.cameraRig.camera);
+      const intersects = this.raycaster.intersectObjects(
+        this.rocketStandManager.getInteractiveMeshes(),
+        false
+      );
+
+      if (intersects.length > 0) {
+        const hit = intersects[0];
+        const rocketId = hit.object.userData?.rocketId;
+        if (typeof rocketId === 'number') {
+          this.firecrackerWindow?.launchRocket(rocketId);
+        }
+      }
+    }
   };
 
   private onWindowPointerMove = (event: PointerEvent | MouseEvent | TouchEvent): void => {
@@ -718,6 +794,13 @@ export class SceneManager {
       this.flameController?.ignite().then(() => {
         this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
       });
+    } else if (currentState === 'FIRECRACKER_CEREMONY') {
+      this.flameController?.ignite();
+      this.touchHint?.hide();
+      if (this.matchFollower) {
+        this.matchFollower.visible = false;
+      }
+      this.handleStateChange('FIRECRACKER_CEREMONY');
     }
 
     try {
@@ -872,6 +955,26 @@ export class SceneManager {
       this.scene.remove(this.theme.group);
       this.theme.dispose();
     }
+
+    if (this.fireworks3D) {
+      this.scene.remove(this.fireworks3D.group);
+      this.fireworks3D.dispose();
+      this.fireworks3D = null;
+    }
+
+    this.cleanupFirecrackerCeremony();
+  }
+
+  private cleanupFirecrackerCeremony(): void {
+    if (this.rocketStandManager) {
+      this.scene.remove(this.rocketStandManager.group);
+      this.rocketStandManager.dispose();
+      this.rocketStandManager = null;
+    }
+    if (this.firecrackerWindow) {
+      this.firecrackerWindow.dispose();
+      this.firecrackerWindow = null;
+    }
   }
 
   public getActiveTheme(): ExperienceTheme | null {
@@ -1012,6 +1115,14 @@ export class SceneManager {
 
   public getTheme(): ExperienceTheme | null {
     return this.theme;
+  }
+
+  public getFireworks3D(): Fireworks3D | null {
+    return this.fireworks3D;
+  }
+
+  public getRocketStandManager(): RocketStandManager | null {
+    return this.rocketStandManager;
   }
 
   /**

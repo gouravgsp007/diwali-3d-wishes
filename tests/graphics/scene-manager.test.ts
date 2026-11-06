@@ -362,6 +362,17 @@ describe('SceneManager Foundation', () => {
     vi.advanceTimersByTime(1);
     expect(fsm.getState()).toBe('FIRECRACKER_CEREMONY');
 
+    // Verify 3D Rocket Stands and 3D Fireworks are active
+    expect(sceneManager.getRocketStandManager()).not.toBeNull();
+    expect(sceneManager.getFireworks3D()).not.toBeNull();
+    expect(sceneManager.getFirecrackerWindow()).not.toBeNull();
+
+    // Advancing through completion cleans up rocket stands
+    fsm.transition({ type: 'FIRECRACKERS_COMPLETE' });
+    expect(fsm.getState()).toBe('GREETING_REVEAL');
+    expect(sceneManager.getRocketStandManager()).toBeNull();
+    expect(sceneManager.getFirecrackerWindow()).toBeNull();
+
     vi.useRealTimers();
   });
 

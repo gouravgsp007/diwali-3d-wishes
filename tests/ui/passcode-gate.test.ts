@@ -107,9 +107,8 @@ describe('PasscodeGate UI Controller', () => {
     inputEl.dispatchEvent(new Event('input'));
     formEl.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await vi.waitFor(() => expect(encryptedFsm.state).toBe('UNLOCKED_INTRO'), { timeout: 3000 });
 
-    expect(encryptedFsm.state).toBe('UNLOCKED_INTRO');
     expect(encryptedFsm.payload?.recipient).toBe('Ananya');
     expect(encryptedFsm.payload?.sender).toBe('Karan');
   });
