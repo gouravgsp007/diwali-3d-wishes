@@ -7,6 +7,8 @@ import { AudioToggle } from './ui/audio-toggle';
 import { CreatorPortal } from './ui/creator-portal';
 import { OrderModal } from './ui/order-modal';
 import { FestiveActionBar } from './ui/festive-action-bar';
+import { ShowcaseModal } from './ui/showcase-modal';
+import { ThemeRegistry } from './themes/theme-registry';
 
 /**
  * Main application bootstrap for Diwali 3D Wishes.
@@ -15,7 +17,7 @@ import { FestiveActionBar } from './ui/festive-action-bar';
  * with Meta link-shim sanitization, starts the 3D WebGL SceneManager,
  * mounts the PasscodeGate controller, attaches the floating AudioToggle,
  * mounts the CreatorPortal modal generator (with Admin exclusive soundtrack selector),
- * attaches the OrderModal, and mounts the FestiveActionBar.
+ * attaches the OrderModal, mounts the FestiveActionBar, and mounts the ShowcaseModal.
  */
 export function bootstrap(): {
   fsm: AppStateMachine;
@@ -25,6 +27,7 @@ export function bootstrap(): {
   creatorPortal: CreatorPortal;
   orderModal: OrderModal;
   festiveActionBar: FestiveActionBar;
+  showcaseModal: ShowcaseModal;
 } {
   const fsm = new AppStateMachine();
   const tokenInfo = resolveGreetingToken();
@@ -48,12 +51,36 @@ export function bootstrap(): {
   const festiveActionBar = new FestiveActionBar(sceneContainer, sceneManager);
   festiveActionBar.mount();
 
+  const showcaseModal = new ShowcaseModal({
+    container: sceneContainer,
+    instagramHandle: 'dreamroutes07',
+    onSelectOccasion: (occasion) => {
+      const theme = ThemeRegistry.getInstance().get(occasion);
+      if (theme) {
+        sceneManager.switchTheme(theme);
+        if (tokenInfo.isDemo) {
+          fsm.transition({
+            type: 'UNLOCK_SUCCESS',
+            payload: {
+              recipient: 'You',
+              sender: 'dreamroutes07',
+              message: theme.subtitle,
+              templateId: occasion,
+              createdAt: Date.now(),
+            },
+          });
+        }
+      }
+    },
+  });
+  showcaseModal.mount();
+
   fsm.transition({
     type: 'BOOT_COMPLETE',
     hasCiphertext: !tokenInfo.isDemo && !!tokenInfo.token,
   });
 
-  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, orderModal, festiveActionBar };
+  return { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, orderModal, festiveActionBar, showcaseModal };
 }
 
 if (typeof window !== 'undefined') {

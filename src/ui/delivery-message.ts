@@ -6,13 +6,14 @@ export interface DeliveryMessageParams {
   sender?: string;
   passcode: string;
   url: string;
+  occasion?: string;
 }
 
 /**
  * Formats an emoji-rich, markdown-bolded delivery copy optimized for
  * WhatsApp, Instagram DMs, Telegram, and SMS.
  *
- * @param params Details containing recipient, sender, URL, and secret passcode
+ * @param params Details containing recipient, sender, URL, secret passcode, and occasion
  * @returns Formatted multi-line text string with festive styling
  */
 export function formatDeliveryMessage(params: DeliveryMessageParams): string {
@@ -24,7 +25,57 @@ export function formatDeliveryMessage(params: DeliveryMessageParams): string {
       : 'Someone special';
   const passcode = params.passcode?.trim().toUpperCase() || 'DIWALI';
   const url = params.url?.trim() || '';
+  const occ = (params.occasion || 'diwali').toLowerCase();
 
+  if (occ === 'birthday') {
+    return [
+      `🎂🎉 *A Special Birthday Surprise for you, ${recipient}!* 🎉🎂`,
+      '',
+      `${senderText} has sent you a magical interactive 3D Birthday Cake wish!`,
+      '',
+      'Make a wish, blow out the candles on your 3D cake, and unlock your special greeting here:',
+      `👉 ${url}`,
+      '',
+      `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
+      '',
+      'Wishing you a fantastic year filled with happiness and success! 🎂✨',
+      '— Handcrafted with love via @dreamroutes07',
+    ].join('\n');
+  }
+
+  if (occ === 'wedding') {
+    return [
+      `💍🌹 *A Royal Wedding & Engagement Greeting for ${recipient}!* 🌹💍`,
+      '',
+      `${senderText} has sent you an auspicious royal 3D celebration greeting!`,
+      '',
+      'Tap the royal golden clasp to reveal your sacred blessings and eternal love:',
+      `👉 ${url}`,
+      '',
+      `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
+      '',
+      'Wishing the lovely couple a lifetime of joy and togetherness! 💍✨',
+      '— Handcrafted with love via @dreamroutes07',
+    ].join('\n');
+  }
+
+  if (occ === 'newyear') {
+    return [
+      `🥂🍾 *Happy New Year 2026 Surprise for ${recipient}!* 🍾🥂`,
+      '',
+      `${senderText} has sent you a festive interactive 3D New Year celebration!`,
+      '',
+      'Pop the midnight champagne cork and celebrate into the New Year here:',
+      `👉 ${url}`,
+      '',
+      `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
+      '',
+      'Cheers to new beginnings, sparkling dreams, and endless joy! 🥂🎆',
+      '— Handcrafted with love via @dreamroutes07',
+    ].join('\n');
+  }
+
+  // Default: Diwali
   return [
     `🪔✨ *A Special Diwali Surprise for you, ${recipient}!* ✨🪔`,
     '',

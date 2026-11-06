@@ -32,6 +32,10 @@ export class PasscodeGate {
 
     if (!this.formEl || !this.inputEl) return;
 
+    // Adapt gate content to query theme if present
+    const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
+    this.updateThemeContent(queryTheme);
+
     // Real-time uppercase normalization and error clearing
     this.inputEl.addEventListener('input', () => {
       if (this.inputEl) {
@@ -55,6 +59,35 @@ export class PasscodeGate {
       e.preventDefault();
       await this.handleUnlock();
     });
+  }
+
+  /**
+   * Adapts passcode card title, emoji, and button to the active theme.
+   */
+  public updateThemeContent(themeId: string | null): void {
+    if (!this.cardEl) return;
+    const raw = (themeId || '').trim().toLowerCase();
+    const titleEl = this.cardEl.querySelector('h1');
+    const badgeEl = this.cardEl.querySelector('p.uppercase');
+    const emojiEl = this.cardEl.querySelector('.text-3xl');
+    const submitBtn = document.getElementById('unlock-btn');
+
+    if (raw === 'birthday' || raw === 'bday') {
+      if (emojiEl) emojiEl.textContent = '🎂';
+      if (badgeEl) badgeEl.textContent = '✨ HAPPY BIRTHDAY ✨';
+      if (titleEl) titleEl.textContent = 'Unlock Your Birthday Surprise';
+      if (submitBtn) submitBtn.innerHTML = 'Open Birthday Wish 🎂';
+    } else if (raw === 'wedding' || raw === 'marriage' || raw === 'engagement') {
+      if (emojiEl) emojiEl.textContent = '💍';
+      if (badgeEl) badgeEl.textContent = '✨ WEDDING & ENGAGEMENT ✨';
+      if (titleEl) titleEl.textContent = 'Unlock Your Sacred Blessings';
+      if (submitBtn) submitBtn.innerHTML = 'Open Royal Box 💍';
+    } else if (raw === 'newyear' || raw === 'ny') {
+      if (emojiEl) emojiEl.textContent = '🥂';
+      if (badgeEl) badgeEl.textContent = '✨ HAPPY NEW YEAR 2026 ✨';
+      if (titleEl) titleEl.textContent = 'Unlock Your New Year Surprise';
+      if (submitBtn) submitBtn.innerHTML = 'Pop the Champagne 🍾';
+    }
   }
 
   private async handleUnlock(): Promise<void> {

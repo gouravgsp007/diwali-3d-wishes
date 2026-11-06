@@ -45,12 +45,12 @@ export class TouchHint {
         id="tap-to-light-btn"
         class="w-full py-2.5 px-6 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-stone-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all pointer-events-auto cursor-pointer flex items-center justify-center gap-2"
       >
-        <span>✨ Tap to Light Diya</span>
-        <span class="text-base">🪔</span>
+        <span id="tap-btn-label">✨ Tap to Light Diya</span>
+        <span id="tap-btn-emoji" class="text-base">🪔</span>
       </button>
       <div class="flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-200/80">
         <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>Touch &amp; drag the flame to light your Diya</span>
+        <span id="touch-hint-text">Touch &amp; drag the flame to light your Diya</span>
       </div>
     `;
 
@@ -64,6 +64,19 @@ export class TouchHint {
     }
 
     parentContainer.appendChild(this.element);
+  }
+
+  /**
+   * Updates prompt instruction text and button label dynamically according to active theme.
+   */
+  public updatePrompt(actionText: string, promptText: string, emoji?: string): void {
+    if (!this.element) return;
+    const labelEl = this.element.querySelector('#tap-btn-label');
+    if (labelEl) labelEl.textContent = actionText;
+    const emojiEl = this.element.querySelector('#tap-btn-emoji');
+    if (emojiEl && emoji) emojiEl.textContent = emoji;
+    const promptEl = this.element.querySelector('#touch-hint-text');
+    if (promptEl) promptEl.textContent = promptText;
   }
 
   /**

@@ -1,5 +1,6 @@
 import { GreetingCodec } from '../crypto/greeting-codec';
 import type { GreetingPayload } from '../crypto/types';
+import type { OccasionId } from '../themes/experience-theme.interface';
 import { copyToClipboard } from '../utils/clipboard';
 import { formatDeliveryMessage, createDeliveryWhatsAppUrl } from './delivery-message';
 
@@ -26,6 +27,7 @@ export class CreatorPortal {
   private senderInput: HTMLInputElement | null = null;
   private messageInput: HTMLTextAreaElement | null = null;
   private passcodeInput: HTMLInputElement | null = null;
+  private selectedOccasion: OccasionId = 'diwali';
   private selectedMusicChoice = 'track1';
   private customAudioFile: File | null = null;
   private customAudioObjectUrl: string | null = null;
@@ -92,13 +94,45 @@ export class CreatorPortal {
 
         <!-- Header -->
         <div class="text-center">
-          <div class="text-2xl mb-1">🪔</div>
-          <h2 class="text-2xl sm:text-3xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+          <div id="creator-header-emoji" class="text-2xl mb-1">🪔</div>
+          <h2 id="creator-header-title" class="text-2xl sm:text-3xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
             Diwali Wish Generator
           </h2>
-          <p class="text-xs sm:text-sm text-amber-200/70 mt-1">
+          <p id="creator-header-desc" class="text-xs sm:text-sm text-amber-200/70 mt-1">
             Create an intimate, encrypted 3D Diya wish for your loved ones in seconds.
           </p>
+        </div>
+
+        <!-- Occasion Selector Tabs -->
+        <div class="flex flex-wrap gap-2 justify-center items-center py-1">
+          <button
+            type="button"
+            data-occasion="diwali"
+            class="occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-amber-500/25 text-amber-200 border-amber-400 shadow-sm shadow-amber-500/30"
+          >
+            🪔 Diwali
+          </button>
+          <button
+            type="button"
+            data-occasion="birthday"
+            class="occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-black/40 text-neutral-400 border-neutral-700 hover:border-pink-500/40 hover:text-pink-300"
+          >
+            🎂 Birthday
+          </button>
+          <button
+            type="button"
+            data-occasion="wedding"
+            class="occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-black/40 text-neutral-400 border-neutral-700 hover:border-rose-500/40 hover:text-rose-300"
+          >
+            💍 Wedding
+          </button>
+          <button
+            type="button"
+            data-occasion="newyear"
+            class="occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-black/40 text-neutral-400 border-neutral-700 hover:border-purple-500/40 hover:text-purple-300"
+          >
+            🥂 New Year
+          </button>
         </div>
 
         <!-- Seller PIN Protection Gate -->
@@ -473,6 +507,17 @@ export class CreatorPortal {
   private initListeners(): void {
     if (!this.overlayEl) return;
 
+    // Occasion tab selection listener
+    const occasionTabs = this.overlayEl.querySelectorAll('.occasion-tab');
+    occasionTabs.forEach((tab) => {
+      tab.addEventListener('click', (e) => {
+        const occ = (e.currentTarget as HTMLElement).getAttribute('data-occasion') as OccasionId;
+        if (occ) {
+          this.selectOccasion(occ);
+        }
+      });
+    });
+
     // Character counter listener
     this.messageInput?.addEventListener('input', () => this.updateCharCount());
 
@@ -659,19 +704,22 @@ export class CreatorPortal {
         message,
         musicTheme,
         customMusicUrl,
+        templateId: this.selectedOccasion,
         createdAt: Date.now(),
       };
 
       const ciphertext = await GreetingCodec.encrypt(payload, passcode);
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://diwali.app';
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
-      const shareUrl = `${origin}${pathname}#d=${ciphertext}`;
+      const themeQuery = this.selectedOccasion !== 'diwali' ? `?theme=${this.selectedOccasion}` : '';
+      const shareUrl = `${origin}${pathname}${themeQuery}#d=${ciphertext}`;
 
       const deliveryCopy = formatDeliveryMessage({
         recipient,
         sender,
         passcode,
         url: shareUrl,
+        occasion: this.selectedOccasion,
       });
 
       const whatsappUrl = createDeliveryWhatsAppUrl({
@@ -679,6 +727,7 @@ export class CreatorPortal {
         sender,
         passcode,
         url: shareUrl,
+        occasion: this.selectedOccasion,
       });
 
       // Update Result Elements
@@ -858,6 +907,77 @@ export class CreatorPortal {
     } else if (this.isVisible) {
       this.hide(false);
     }
+  }
+
+  public getSelectedOccasion(): OccasionId {
+    return this.selectedOccasion;
+  }
+
+  public selectOccasion(occasion: OccasionId): void {
+    this.selectedOccasion = occasion;
+    this.updateOccasionTabsUI();
+    this.updateOccasionPrefills();
+  }
+
+  private updateOccasionTabsUI(): void {
+    if (!this.overlayEl) return;
+    const tabs = this.overlayEl.querySelectorAll('.occasion-tab');
+    tabs.forEach((tab) => {
+      const occ = tab.getAttribute('data-occasion');
+      if (occ === this.selectedOccasion) {
+        tab.className =
+          'occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-amber-500/25 text-amber-200 border-amber-400 shadow-sm shadow-amber-500/30';
+      } else {
+        tab.className =
+          'occasion-tab px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer bg-black/40 text-neutral-400 border-neutral-700 hover:border-amber-400/40 hover:text-amber-300';
+      }
+    });
+  }
+
+  private updateOccasionPrefills(): void {
+    if (!this.overlayEl) return;
+    const emojiEl = this.overlayEl.querySelector('#creator-header-emoji');
+    const titleEl = this.overlayEl.querySelector('#creator-header-title');
+    const descEl = this.overlayEl.querySelector('#creator-header-desc');
+
+    if (this.selectedOccasion === 'birthday') {
+      if (emojiEl) emojiEl.textContent = '🎂';
+      if (titleEl) titleEl.textContent = 'Birthday Wish Generator';
+      if (descEl) descEl.textContent = 'Create a magical 3D Cake & Candle blowout experience for someone special.';
+      if (this.messageInput) {
+        this.messageInput.value =
+          'Happy Birthday! May your day be filled with endless laughter, sweet surprises, and all the love in the world. Blow out your candles and make a magical wish! 🎂🎉✨';
+      }
+      if (this.passcodeInput) this.passcodeInput.placeholder = 'e.g. BDAY or PRIYA';
+    } else if (this.selectedOccasion === 'wedding') {
+      if (emojiEl) emojiEl.textContent = '💍';
+      if (titleEl) titleEl.textContent = 'Wedding & Engagement Generator';
+      if (descEl) descEl.textContent = 'Create an auspicious royal 3D jewelry box reveal with rose petals.';
+      if (this.messageInput) {
+        this.messageInput.value =
+          'Wishing you both a lifetime of eternal love, unwavering friendship, and boundless joy! May this sacred union bring endless prosperity and harmony to your lives. 💍🌹✨';
+      }
+      if (this.passcodeInput) this.passcodeInput.placeholder = 'e.g. LOVE or WED26';
+    } else if (this.selectedOccasion === 'newyear') {
+      if (emojiEl) emojiEl.textContent = '🥂';
+      if (titleEl) titleEl.textContent = 'New Year 2026 Generator';
+      if (descEl) descEl.textContent = 'Create a festive 3D midnight champagne celebration with fireworks.';
+      if (this.messageInput) {
+        this.messageInput.value =
+          'Happy New Year 2026! May this coming year bring new adventures, grand milestones, peace, and abundance to you and your family. Cheers to 2026! 🥂🍾🎆';
+      }
+      if (this.passcodeInput) this.passcodeInput.placeholder = 'e.g. NY2026 or CHEERS';
+    } else {
+      if (emojiEl) emojiEl.textContent = '🪔';
+      if (titleEl) titleEl.textContent = 'Diwali Wish Generator';
+      if (descEl) descEl.textContent = 'Create an intimate, encrypted 3D Diya wish for your loved ones in seconds.';
+      if (this.messageInput) {
+        this.messageInput.value =
+          'Wishing you and your loved ones a joyous, prosperous, and luminous Diwali! May this festival of lights illuminate your path with boundless happiness and success. 🪔✨';
+      }
+      if (this.passcodeInput) this.passcodeInput.placeholder = 'e.g. 2026 or SHUBH';
+    }
+    this.updateCharCount();
   }
 
   /**

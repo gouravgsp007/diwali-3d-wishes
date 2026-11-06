@@ -20,6 +20,8 @@ import { Starfield } from './fx/starfield';
 import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
+import type { ExperienceTheme } from '../themes/experience-theme.interface';
+import { ThemeRegistry } from '../themes/theme-registry';
 
 /**
  * Resilient SceneManager foundation for the Diwali 3D WebGL engine.
@@ -69,10 +71,12 @@ export class SceneManager {
   private sparkler: InteractiveSparkler | null = null;
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
+  private theme: ExperienceTheme | null = null;
 
   constructor(
     private container: HTMLElement,
-    private fsm?: AppStateMachine
+    private fsm?: AppStateMachine,
+    private activeTheme?: ExperienceTheme
   ) {}
 
   /**
@@ -80,6 +84,11 @@ export class SceneManager {
    */
   public start(): void {
     this.scene = new THREE.Scene();
+
+    // 0. Resolve active theme (from constructor, URL query, or greeting payload)
+    const greeting = this.fsm?.getGreeting();
+    const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
+    this.theme = this.activeTheme || ThemeRegistry.getInstance().resolve(greeting?.templateId, queryTheme);
 
     // 1. Mount canvas into container behind UI
     this.canvas = document.createElement('canvas');
@@ -163,47 +172,104 @@ export class SceneManager {
    * Instantiates and adds DiyaMesh, brass thali, dual-tier lighting, and bokeh motes to scene graph.
    */
   private buildSceneComponents(): void {
-    // 1. Procedural Diya Mesh (D-01, D-02, D-04)
-    this.diyaMesh = new DiyaMesh();
-    this.scene.add(this.diyaMesh.group);
+    if (!this.theme || this.theme.id === 'diwali') {
+      // 1. Procedural Diya Mesh (D-01, D-02, D-04)
+      this.diyaMesh = new DiyaMesh();
+      this.scene.add(this.diyaMesh.group);
 
-    // 2. Antique Brass Thali Platter (D-09, D-12)
-    this.thaliMesh = createBrassThaliMesh();
-    this.scene.add(this.thaliMesh);
+      // 2. Antique Brass Thali Platter (D-09, D-12)
+      this.thaliMesh = createBrassThaliMesh();
+      this.scene.add(this.thaliMesh);
 
-    // 2b. Sacred Golden & Crimson Rangoli Floor Mandala
-    this.rangoliMesh = createRangoliMesh();
-    this.scene.add(this.rangoliMesh);
+      // 2b. Sacred Golden & Crimson Rangoli Floor Mandala
+      this.rangoliMesh = createRangoliMesh();
+      this.scene.add(this.rangoliMesh);
 
-    // 2c. Fresh 3D Marigold Garland (Genda Phool) Ring
-    this.marigoldMesh = createMarigoldRingMesh();
-    this.scene.add(this.marigoldMesh);
+      // 2c. Fresh 3D Marigold Garland (Genda Phool) Ring
+      this.marigoldMesh = createMarigoldRingMesh();
+      this.scene.add(this.marigoldMesh);
 
-    // 2d. Floating Indian Festive Lanterns (Akash Kandil)
-    this.lanterns = createFestiveLanterns();
-    this.scene.add(this.lanterns.group);
+      // 2d. Floating Indian Festive Lanterns (Akash Kandil)
+      this.lanterns = createFestiveLanterns();
+      this.scene.add(this.lanterns.group);
 
-    // 3. Dual-Tier Lighting Rig with pre-warmed PointLight (D-10, T-02-04)
-    this.lightingRig = createLightingRig(this.diyaMesh.wickAnchor);
-    this.scene.add(this.lightingRig.ambientLight);
-    this.scene.add(this.lightingRig.rimLight);
-    this.scene.add(this.lightingRig.flamePointLight);
+      // 3. Dual-Tier Lighting Rig with pre-warmed PointLight (D-10, T-02-04)
+      this.lightingRig = createLightingRig(this.diyaMesh.wickAnchor);
+      this.scene.add(this.lightingRig.ambientLight);
+      this.scene.add(this.lightingRig.rimLight);
+      this.scene.add(this.lightingRig.flamePointLight);
 
-    // 4. Drifting Golden Bokeh Motes (D-11)
-    this.bokehMotes = new BokehMotes();
-    this.scene.add(this.bokehMotes.points);
+      // 4. Drifting Golden Bokeh Motes (D-11)
+      this.bokehMotes = new BokehMotes();
+      this.scene.add(this.bokehMotes.points);
 
-    // 5. Procedural GLSL Flame Controller & Particle Systems (D-12)
-    this.flameController = new FlameController(this.diyaMesh.wickAnchor, this.lightingRig.flamePointLight);
-    this.scene.add(this.flameController.group);
+      // 5. Procedural GLSL Flame Controller & Particle Systems (D-12)
+      this.flameController = new FlameController(this.diyaMesh.wickAnchor, this.lightingRig.flamePointLight);
+      this.scene.add(this.flameController.group);
 
-    // 6. Interactive Touch Hint Prompt with 1-Tap Light Fallback (D-03)
+      // 12. Celestial Twinkling Starfield with Shooting Stars
+      this.starfield = new Starfield();
+      this.scene.add(this.starfield.group);
+
+      // 13. Akash Kandil (Sky Lanterns) Ceremony Manager
+      this.skyLanternsManager = new SkyLanternsManager();
+      this.scene.add(this.skyLanternsManager.group);
+
+      // 14. Royal Flower Petal Shower (Pushpa Vrishti)
+      this.flowerShower = new FlowerShower();
+      this.scene.add(this.flowerShower.group);
+
+      // 15. Handheld Phuljhadi (Diwali Sparkler) System
+      this.sparkler = new InteractiveSparkler((pos) => {
+        if (this.fsm?.getState() === 'INTERACTIVE_UNLIT') {
+          const dist = pos.distanceTo(this.diyaMesh?.wickAnchor || new THREE.Vector3(0, 0.68, 1.38));
+          if (dist < 1.2) {
+            AudioEngine.getInstance().playMatchStrike();
+            AudioEngine.getInstance().playFlameCrackle();
+            this.fsm?.transition({ type: 'WICK_TOUCHED' });
+          }
+        }
+      });
+      this.scene.add(this.sparkler.group);
+    } else {
+      // Non-Diwali Theme: Mount procedural 3D centerpiece & theme components
+      this.theme.init(this.scene, this.cameraRig);
+
+      const target = this.theme.getInteractionTarget();
+      const anchor = target?.hintPosition || new THREE.Vector3(0, 0.5, 0);
+
+      this.lightingRig = createLightingRig(anchor);
+      this.scene.add(this.lightingRig.ambientLight);
+      this.scene.add(this.lightingRig.rimLight);
+      this.scene.add(this.lightingRig.flamePointLight);
+
+      this.bokehMotes = new BokehMotes();
+      this.scene.add(this.bokehMotes.points);
+
+      this.starfield = new Starfield();
+      this.scene.add(this.starfield.group);
+    }
+
+    const proximityAnchor = (this.theme && this.theme.id !== 'diwali')
+      ? (this.theme.getInteractionTarget()?.hintPosition || new THREE.Vector3(0, 0.6, 0))
+      : (this.diyaMesh?.wickAnchor || new THREE.Vector3(0, 0.68, 1.38));
+
+    // 6. Interactive Touch Hint Prompt with 1-Tap Action Fallback (D-03)
     this.touchHint = new TouchHint(() => {
-      AudioEngine.getInstance().playMatchStrike();
-      AudioEngine.getInstance().playFlameCrackle();
+      if (!this.theme || this.theme.id === 'diwali') {
+        AudioEngine.getInstance().playMatchStrike();
+        AudioEngine.getInstance().playFlameCrackle();
+      }
       this.fsm?.transition({ type: 'WICK_TOUCHED' });
     });
     this.touchHint.mount(this.container);
+    if (this.theme) {
+      this.touchHint.updatePrompt(
+        this.theme.getActionButtonText(),
+        this.theme.getPromptText(),
+        this.theme.emoji
+      );
+    }
 
     // 7. Virtual Match Follower 3D Mesh (D-01)
     this.matchFollower = this.createMatchFollower();
@@ -214,14 +280,16 @@ export class SceneManager {
       this.cameraRig,
       this.matchFollower,
       () => {
-        AudioEngine.getInstance().playMatchStrike();
-        AudioEngine.getInstance().playFlameCrackle();
+        if (!this.theme || this.theme.id === 'diwali') {
+          AudioEngine.getInstance().playMatchStrike();
+          AudioEngine.getInstance().playFlameCrackle();
+        }
         this.fsm?.transition({ type: 'WICK_TOUCHED' });
       },
       () => {
         this.touchHint?.hide();
       },
-      new WickProximityDetector(this.diyaMesh.wickAnchor, 1.20)
+      new WickProximityDetector(proximityAnchor, 1.20)
     );
     this.touchController.setEnabled(this.fsm?.getState() === 'INTERACTIVE_UNLIT');
 
@@ -240,31 +308,6 @@ export class SceneManager {
       };
       this.headerFireworksBtn.addEventListener('click', this.onHeaderFireworksClick);
     }
-
-    // 12. Celestial Twinkling Starfield with Shooting Stars
-    this.starfield = new Starfield();
-    this.scene.add(this.starfield.group);
-
-    // 13. Akash Kandil (Sky Lanterns) Ceremony Manager
-    this.skyLanternsManager = new SkyLanternsManager();
-    this.scene.add(this.skyLanternsManager.group);
-
-    // 14. Royal Flower Petal Shower (Pushpa Vrishti)
-    this.flowerShower = new FlowerShower();
-    this.scene.add(this.flowerShower.group);
-
-    // 15. Handheld Phuljhadi (Diwali Sparkler) System
-    this.sparkler = new InteractiveSparkler((pos) => {
-      if (this.fsm?.getState() === 'INTERACTIVE_UNLIT') {
-        const dist = pos.distanceTo(this.diyaMesh?.wickAnchor || new THREE.Vector3(0, 0.68, 1.38));
-        if (dist < 1.2) {
-          AudioEngine.getInstance().playMatchStrike();
-          AudioEngine.getInstance().playFlameCrackle();
-          this.fsm?.transition({ type: 'WICK_TOUCHED' });
-        }
-      }
-    });
-    this.scene.add(this.sparkler.group);
   }
 
   /**
@@ -358,6 +401,11 @@ export class SceneManager {
       this.sparkler.update(dt, this.elapsedTime);
     }
 
+    // Update active theme if non-Diwali
+    if (this.theme && this.theme.id !== 'diwali') {
+      this.theme.update(dt, this.elapsedTime);
+    }
+
     // Update camera rig with breathing sway and parallax damping
     if (this.cameraRig) {
       this.cameraRig.update(dt);
@@ -378,17 +426,35 @@ export class SceneManager {
 
     if (state === 'UNLOCKED_INTRO') {
       this.touchController?.setEnabled(false);
+
+      // Check if greeting payload dictates theme switch
+      const templateId = this.fsm?.getGreeting()?.templateId;
+      if (templateId) {
+        const resolved = ThemeRegistry.getInstance().resolve(templateId);
+        if (resolved.id !== this.theme?.id) {
+          this.switchTheme(resolved);
+        }
+      }
+
       // Start BGM playback with 2-second volume fade-in (D-05)
       AudioEngine.getInstance().startBgm();
 
       // Cinematic dolly forward upon passcode unlock (D-15)
-      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.0, 3.2), 1200)?.then(() => {
+      const targetPos = this.theme ? this.theme.visualConfig.cameraBasePos : new THREE.Vector3(0, 2.0, 3.2);
+      this.cameraRig?.dollyTo(targetPos, 1200)?.then(() => {
         this.fsm?.transition({ type: 'INTRO_COMPLETE' });
       });
     } else if (state === 'INTERACTIVE_UNLIT') {
       // Enable touch drag and show touch hint prompt (D-01, D-03)
       this.touchController?.reset();
       this.touchController?.setEnabled(true);
+      if (this.theme) {
+        this.touchHint?.updatePrompt(
+          this.theme.getActionButtonText(),
+          this.theme.getPromptText(),
+          this.theme.emoji
+        );
+      }
       this.touchHint?.show();
     } else if (state === 'IGNITING') {
       this.touchController?.setEnabled(false);
@@ -399,13 +465,21 @@ export class SceneManager {
       }
 
       // Smooth upward target pan to frame flame + greeting card (D-07)
-      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 0.65, 0), 1000);
-      this.flameController?.ignite().then(() => {
+      const panTarget = this.theme ? this.theme.visualConfig.cameraLookAt : new THREE.Vector3(0, 0.65, 0);
+      this.cameraRig?.panTargetTo(panTarget, 1000);
+
+      const actionPromise = (!this.theme || this.theme.id === 'diwali')
+        ? this.flameController?.ignite()
+        : this.theme.triggerAction();
+
+      actionPromise?.then(() => {
         this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
       });
     } else if (state === 'LIT_CELEBRATION') {
       // Automatically burst fireworks every 2-3 seconds continuously once the diya lights up!
       this.celebrationManager?.startAutoFireworks(2500);
+
+      this.theme?.onCelebrationStart();
 
       // 1500ms celebratory pause before transitioning to GREETING_REVEAL per D-01
       if (this.celebrationTimeoutId) {
@@ -421,9 +495,11 @@ export class SceneManager {
         this.celebrationTimeoutId = null;
       }
 
-      // Smooth camera dolly and pan target to frame Diya in upper half so it remains gloriously visible above greeting card
-      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.5, 4.4), 1200);
-      this.cameraRig?.panTargetTo(new THREE.Vector3(0, -1.0, 0), 1200);
+      // Smooth camera dolly and pan target to frame centerpiece in upper half so it remains gloriously visible above greeting card
+      const revPos = this.theme ? this.theme.visualConfig.revealedCameraPos : new THREE.Vector3(0, 2.5, 4.4);
+      const revLook = this.theme ? this.theme.visualConfig.revealedCameraLookAt : new THREE.Vector3(0, -1.0, 0);
+      this.cameraRig?.dollyTo(revPos, 1200);
+      this.cameraRig?.panTargetTo(revLook, 1200);
 
       // Launch celebratory golden confetti cannons (D-04)
       this.celebrationManager?.fireCelebrationBurst();
@@ -731,6 +807,22 @@ export class SceneManager {
       this.sparkler.dispose();
       this.sparkler = null;
     }
+
+    if (this.theme && this.theme.id !== 'diwali') {
+      this.scene.remove(this.theme.group);
+      this.theme.dispose();
+    }
+  }
+
+  public getActiveTheme(): ExperienceTheme | null {
+    return this.theme;
+  }
+
+  public switchTheme(newTheme: ExperienceTheme): void {
+    if (this.theme?.id === newTheme.id) return;
+    this.disposeSceneComponents();
+    this.theme = newTheme;
+    this.buildSceneComponents();
   }
 
   public getPixelRatio(): number {

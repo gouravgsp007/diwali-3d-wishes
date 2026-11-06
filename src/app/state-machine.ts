@@ -14,7 +14,9 @@ export type AppEvent =
   | { type: 'UNLOCK_SUCCESS'; payload: GreetingPayload }
   | { type: 'INTRO_COMPLETE' }
   | { type: 'WICK_TOUCHED' }
+  | { type: 'ACTION_TRIGGERED' }
   | { type: 'IGNITION_COMPLETE' }
+  | { type: 'ACTION_COMPLETE' }
   | { type: 'CELEBRATION_COMPLETE' }
   | { type: 'REPLAY' };
 
@@ -60,12 +62,12 @@ export class AppStateMachine {
         }
         break;
       case 'INTERACTIVE_UNLIT':
-        if (event.type === 'WICK_TOUCHED') {
+        if (event.type === 'WICK_TOUCHED' || event.type === 'ACTION_TRIGGERED') {
           this.currentState = 'IGNITING';
         }
         break;
       case 'IGNITING':
-        if (event.type === 'IGNITION_COMPLETE') {
+        if (event.type === 'IGNITION_COMPLETE' || event.type === 'ACTION_COMPLETE') {
           this.currentState = 'LIT_CELEBRATION';
         }
         break;

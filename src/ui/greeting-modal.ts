@@ -53,21 +53,21 @@ export class GreetingModal {
         class="w-full max-w-sm sm:max-w-md rounded-3xl p-4 sm:p-6 bg-black/40 backdrop-blur-xl border border-amber-500/40 shadow-2xl shadow-amber-950/50 text-center transition-all duration-500 ease-out opacity-0 scale-95 translate-y-4 pointer-events-none"
       >
         <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-amber-500/20">
-          <p class="text-[11px] font-semibold tracking-widest uppercase text-amber-400/90">
+          <p id="greeting-badge" class="text-[11px] font-semibold tracking-widest uppercase text-amber-400/90">
             ✨ Shubh Deepavali ✨
           </p>
           <button
             id="card-toggle-btn"
             type="button"
             class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer"
-            title="Minimize wish to view full 3D Diya"
+            title="Minimize wish to view full 3D scene"
           >
-            <span>View Diya</span>
-            <span>🪔</span>
+            <span id="card-toggle-label">View Diya</span>
+            <span id="card-toggle-icon">🪔</span>
           </button>
         </div>
 
-        <h2 class="text-xl sm:text-2xl font-serif font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent mb-1">
+        <h2 id="greeting-title" class="text-xl sm:text-2xl font-serif font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent mb-1">
           Happy Diwali
         </h2>
         <div class="flex items-center justify-center my-2 text-amber-400/50">
@@ -90,7 +90,7 @@ export class GreetingModal {
           rel="noopener noreferrer"
           class="w-full py-2.5 px-5 rounded-xl font-semibold text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-amber-950 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer no-underline pointer-events-none"
         >
-          <span>Reply Happy Diwali on WhatsApp</span>
+          <span id="whatsapp-reply-label">Reply Happy Diwali on WhatsApp</span>
           <span class="text-base">✨</span>
         </a>
         <div class="mt-3">
@@ -160,6 +160,40 @@ export class GreetingModal {
       'Wishing you and your loved ones a joyous, prosperous, and luminous Diwali! May this festival of lights illuminate your path with happiness and success.';
     const sender = payload?.sender?.trim() || 'A Well-Wisher';
 
+    const rawTemplate = (payload?.templateId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : 'diwali') || '').toLowerCase();
+
+    const badgeEl = this.cardEl?.querySelector('#greeting-badge');
+    const titleEl = this.cardEl?.querySelector('#greeting-title');
+    const toggleLabel = this.cardEl?.querySelector('#card-toggle-label');
+    const toggleIcon = this.cardEl?.querySelector('#card-toggle-icon');
+    const replyLabel = this.whatsappBtnEl?.querySelector('#whatsapp-reply-label');
+
+    if (rawTemplate === 'birthday' || rawTemplate === 'bday') {
+      if (badgeEl) badgeEl.textContent = '✨ HAPPY BIRTHDAY ✨';
+      if (titleEl) titleEl.textContent = 'Happy Birthday! 🎂';
+      if (toggleLabel) toggleLabel.textContent = 'View Cake';
+      if (toggleIcon) toggleIcon.textContent = '🎂';
+      if (replyLabel) replyLabel.textContent = 'Reply Happy Birthday on WhatsApp';
+    } else if (rawTemplate === 'wedding' || rawTemplate === 'love' || rawTemplate === 'marriage') {
+      if (badgeEl) badgeEl.textContent = '✨ WEDDING & ENGAGEMENT ✨';
+      if (titleEl) titleEl.textContent = 'Eternal Blessings 💍';
+      if (toggleLabel) toggleLabel.textContent = 'View Box';
+      if (toggleIcon) toggleIcon.textContent = '💍';
+      if (replyLabel) replyLabel.textContent = 'Reply Congratulations on WhatsApp';
+    } else if (rawTemplate === 'newyear' || rawTemplate === 'ny' || rawTemplate === 'ny2026') {
+      if (badgeEl) badgeEl.textContent = '✨ HAPPY NEW YEAR 2026 ✨';
+      if (titleEl) titleEl.textContent = 'Happy New Year! 🥂';
+      if (toggleLabel) toggleLabel.textContent = 'View Champagne';
+      if (toggleIcon) toggleIcon.textContent = '🍾';
+      if (replyLabel) replyLabel.textContent = 'Reply Happy New Year on WhatsApp';
+    } else {
+      if (badgeEl) badgeEl.textContent = '✨ Shubh Deepavali ✨';
+      if (titleEl) titleEl.textContent = 'Happy Diwali';
+      if (toggleLabel) toggleLabel.textContent = 'View Diya';
+      if (toggleIcon) toggleIcon.textContent = '🪔';
+      if (replyLabel) replyLabel.textContent = 'Reply Happy Diwali on WhatsApp';
+    }
+
     // Strict textContent assignment guarantees mathematical immunity to XSS (ASVS V5)
     if (this.recipientEl) this.recipientEl.textContent = `To: ${recipient}`;
     if (this.messageEl) this.messageEl.textContent = `“${message}”`;
@@ -175,7 +209,7 @@ export class GreetingModal {
     }
 
     if (this.whatsappBtnEl) {
-      this.whatsappBtnEl.href = createWhatsAppReplyUrl(sender);
+      this.whatsappBtnEl.href = createWhatsAppReplyUrl(sender, rawTemplate);
       this.whatsappBtnEl.classList.remove('pointer-events-none');
       this.whatsappBtnEl.classList.add('pointer-events-auto');
     }

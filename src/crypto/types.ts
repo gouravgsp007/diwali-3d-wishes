@@ -1,8 +1,10 @@
+import type { OccasionId } from '../themes/experience-theme.interface';
+
 export interface GreetingPayload {
   recipient: string;
   sender: string;
   message: string;
-  templateId?: string;
+  templateId?: OccasionId | string;
   createdAt?: number;
   musicTheme?: string;
   customMusicUrl?: string;

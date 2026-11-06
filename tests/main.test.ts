@@ -7,8 +7,8 @@ describe('Application Bootstrap', () => {
       '<div id="app"><div id="passcode-card"><form id="passcode-form"><input id="passcode-input" /><button id="unlock-btn"></button><p id="error-feedback"></p></form></div></div>';
   });
 
-  it('initializes FSM, SceneManager, PasscodeGate, AudioToggle, CreatorPortal, and FestiveActionBar', () => {
-    const { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, festiveActionBar } = bootstrap();
+  it('initializes FSM, SceneManager, PasscodeGate, AudioToggle, CreatorPortal, FestiveActionBar, and ShowcaseModal', () => {
+    const { fsm, passcodeGate, sceneManager, audioToggle, creatorPortal, festiveActionBar, showcaseModal } = bootstrap();
 
     expect(fsm).toBeDefined();
     expect(passcodeGate).toBeDefined();
@@ -16,6 +16,7 @@ describe('Application Bootstrap', () => {
     expect(audioToggle).toBeDefined();
     expect(creatorPortal).toBeDefined();
     expect(festiveActionBar).toBeDefined();
+    expect(showcaseModal).toBeDefined();
 
     expect(fsm.getState()).toBe('LOCKED');
 
@@ -43,6 +44,11 @@ describe('Application Bootstrap', () => {
     const actionBar = document.querySelector('#festive-action-bar');
     expect(actionBar).not.toBeNull();
 
+    // ShowcaseModal overlay mounted into DOM container
+    const showcaseOverlay = document.querySelector('#showcase-modal-overlay');
+    expect(showcaseOverlay).not.toBeNull();
+
+    showcaseModal.dispose();
     festiveActionBar.dispose();
     creatorPortal.dispose();
     audioToggle.dispose();
