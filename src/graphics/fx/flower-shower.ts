@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { AudioEngine } from '../../audio/audio-engine';
 
 interface Petal {
   mesh: THREE.Mesh;
@@ -126,8 +125,6 @@ export class FlowerShower {
    * Triggers a royal cascade of fresh festive petals.
    */
   public triggerFlowerShower(count = 75): void {
-    AudioEngine.getInstance().playTempleBell();
-
     const materials = [this.marigoldYellowMat, this.marigoldOrangeMat, this.roseCrimsonMat];
 
     for (let i = 0; i < count; i++) {

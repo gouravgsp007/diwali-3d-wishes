@@ -18,7 +18,6 @@ export interface SfxPlayer {
   playFlameCrackle(): void;
   playTempleBell?(): void;
   playSparklerSizzle?(): void;
-  playSweetBoxOpen?(): void;
 }
 
 export interface AudioTrackInfo {
@@ -326,15 +325,6 @@ export class AudioEngine {
   public playSparklerSizzle(): void {
     if (!this.isMuted) {
       this.sfxSynth?.playSparklerSizzle?.();
-    }
-  }
-
-  /**
-   * Plays celebratory sweet box opening chime and festive reveal SFX.
-   */
-  public playSweetBoxOpen(): void {
-    if (!this.isMuted) {
-      this.sfxSynth?.playSweetBoxOpen?.();
     }
   }
 

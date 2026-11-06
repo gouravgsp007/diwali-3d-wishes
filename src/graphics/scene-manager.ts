@@ -20,7 +20,6 @@ import { Starfield } from './fx/starfield';
 import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
-import { SweetBox } from './meshes/sweet-box';
 import type { ExperienceTheme } from '../themes/experience-theme.interface';
 import { ThemeRegistry } from '../themes/theme-registry';
 
@@ -73,11 +72,6 @@ export class SceneManager {
   private onSparklerStateChange?: (active: boolean) => void;
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
-  private sweetBox: SweetBox | null = null;
-  private onSweetBoxToggled?: (isOpen: boolean) => void;
-  private tapRaycaster = new THREE.Raycaster();
-  private tapPointerNdc = new THREE.Vector2();
-  private tapStartPos = { x: 0, y: 0, time: 0 };
   private theme: ExperienceTheme | null = null;
 
   constructor(
@@ -238,10 +232,6 @@ export class SceneManager {
         }
       });
       this.scene.add(this.sparkler.group);
-
-      // 16. Royal Mithai / Gift Sweet Box
-      this.sweetBox = new SweetBox();
-      this.scene.add(this.sweetBox.group);
     } else {
       // Non-Diwali Theme: Mount procedural 3D centerpiece & theme components
       this.theme.init(this.scene, this.cameraRig);
@@ -259,9 +249,6 @@ export class SceneManager {
 
       this.starfield = new Starfield();
       this.scene.add(this.starfield.group);
-
-      this.sweetBox = new SweetBox();
-      this.scene.add(this.sweetBox.group);
     }
 
     const proximityAnchor = (this.theme && this.theme.id !== 'diwali')
@@ -595,16 +582,6 @@ export class SceneManager {
   };
 
   private onPointerDown = (event: PointerEvent | MouseEvent | TouchEvent): void => {
-    let clientX = 0;
-    let clientY = 0;
-    if ('touches' in event && event.touches.length > 0) {
-      clientX = event.touches[0].clientX;
-      clientY = event.touches[0].clientY;
-    } else if ('clientX' in event) {
-      clientX = (event as MouseEvent).clientX;
-      clientY = (event as MouseEvent).clientY;
-    }
-    this.tapStartPos = { x: clientX, y: clientY, time: Date.now() };
     this.onPointerMove(event);
   };
 
@@ -650,53 +627,12 @@ export class SceneManager {
     if (this.sparkler?.getActive()) {
       this.setSparklerActive(false);
     }
-    this.tapStartPos = { x: 0, y: 0, time: 0 };
   };
 
-  private onPointerUp = (event?: PointerEvent | MouseEvent | TouchEvent): void => {
+  private onPointerUp = (): void => {
     this.cameraRig?.onPointerUp();
     if (this.sparkler?.getActive()) {
       this.setSparklerActive(false);
-    }
-
-    // Direct 3D tap interaction on the sweet box
-    if (event && this.sweetBox && this.cameraRig?.camera) {
-      // Disregard tap if event originated from a UI element overlaying the canvas
-      if (event.target && event.target !== this.canvas && event.target !== this.container) {
-        this.tapStartPos = { x: 0, y: 0, time: 0 };
-        return;
-      }
-
-      let clientX = 0;
-      let clientY = 0;
-      if ('changedTouches' in event && event.changedTouches.length > 0) {
-        clientX = event.changedTouches[0].clientX;
-        clientY = event.changedTouches[0].clientY;
-      } else if ('clientX' in event) {
-        clientX = (event as MouseEvent).clientX;
-        clientY = (event as MouseEvent).clientY;
-      }
-
-      const elapsed = this.tapStartPos.time > 0 ? Date.now() - this.tapStartPos.time : 999999;
-      const dist = Math.hypot(clientX - this.tapStartPos.x, clientY - this.tapStartPos.y);
-
-      // Immediately clear tap tracking to prevent duplicate bubbling invocations
-      this.tapStartPos = { x: 0, y: 0, time: 0 };
-
-      if (elapsed < 400 && dist < 16) {
-        const rect = this.container.getBoundingClientRect();
-        const width = rect.width || window.innerWidth || 1;
-        const height = rect.height || window.innerHeight || 1;
-        this.tapPointerNdc.x = ((clientX - rect.left) / width) * 2 - 1;
-        this.tapPointerNdc.y = -(((clientY - rect.top) / height) * 2 - 1);
-
-        this.tapRaycaster.setFromCamera(this.tapPointerNdc, this.cameraRig.camera);
-        const hits = this.tapRaycaster.intersectObjects(this.sweetBox.getRaycastTargets(), true);
-        if (hits.length > 0) {
-          const isOpen = this.triggerSweetBox();
-          this.onSweetBoxToggled?.(isOpen);
-        }
-      }
     }
   };
 
@@ -911,12 +847,6 @@ export class SceneManager {
       this.sparkler = null;
     }
 
-    if (this.sweetBox) {
-      this.scene.remove(this.sweetBox.group);
-      this.sweetBox.dispose();
-      this.sweetBox = null;
-    }
-
     if (this.theme && this.theme.id !== 'diwali') {
       this.scene.remove(this.theme.group);
       this.theme.dispose();
@@ -1012,23 +942,6 @@ export class SceneManager {
 
   public triggerFlowerShower(): void {
     this.flowerShower?.triggerFlowerShower();
-  }
-
-  public setOnSweetBoxToggled(cb: (isOpen: boolean) => void): void {
-    this.onSweetBoxToggled = cb;
-  }
-
-  public triggerSweetBox(): boolean {
-    if (!this.sweetBox) return false;
-    const isOpen = this.sweetBox.toggle();
-    if (isOpen) {
-      this.celebrationManager?.fireCelebrationBurst();
-    }
-    return isOpen;
-  }
-
-  public getSweetBox(): SweetBox | null {
-    return this.sweetBox;
   }
 
   public setOnSparklerStateChange(cb: (active: boolean) => void): void {

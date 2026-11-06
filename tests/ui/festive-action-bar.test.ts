@@ -26,8 +26,6 @@ describe('FestiveActionBar UI', () => {
       handlePointerMove: vi.fn(),
       triggerSkyLantern: vi.fn(),
       triggerFlowerShower: vi.fn(),
-      triggerSweetBox: vi.fn().mockReturnValue(true),
-      setOnSweetBoxToggled: vi.fn(),
       getCelebrationManager: vi.fn().mockReturnValue(mockCelebrationManager as unknown),
     };
 
@@ -48,7 +46,7 @@ describe('FestiveActionBar UI', () => {
     vi.restoreAllMocks();
   });
 
-  it('mounts toolbar and toast into container with 5 celebration action triggers', () => {
+  it('mounts toolbar and toast into container with 4 celebration action triggers', () => {
     actionBar.mount();
     const bar = container.querySelector('#festive-action-bar');
     expect(bar).not.toBeNull();
@@ -59,7 +57,6 @@ describe('FestiveActionBar UI', () => {
     expect(container.querySelector('#action-sparkler-btn')).not.toBeNull();
     expect(container.querySelector('#action-lantern-btn')).not.toBeNull();
     expect(container.querySelector('#action-flowers-btn')).not.toBeNull();
-    expect(container.querySelector('#action-sweets-btn')).not.toBeNull();
     expect(container.querySelector('#action-fireworks-btn')).not.toBeNull();
   });
 
@@ -122,21 +119,6 @@ describe('FestiveActionBar UI', () => {
     expect(mockSceneManager.triggerFlowerShower).toHaveBeenCalledTimes(1);
     const toast = container.querySelector('#festive-toast');
     expect(toast?.textContent).toContain('Pushpa Vrishti');
-  });
-
-  it('triggers royal sweet box reveal and shows celebratory blessing toast', () => {
-    actionBar.mount();
-    const sweetsBtn = container.querySelector('#action-sweets-btn') as HTMLButtonElement;
-    sweetsBtn.click();
-
-    expect(mockSceneManager.triggerSweetBox).toHaveBeenCalledTimes(1);
-    const toast = container.querySelector('#festive-toast');
-    expect(toast?.textContent).toContain('Boondi Laddus & Kaju Katli');
-
-    // Close sweet box
-    (mockSceneManager.triggerSweetBox as ReturnType<typeof vi.fn>).mockReturnValue(false);
-    sweetsBtn.click();
-    expect(toast?.textContent).toContain('closed');
   });
 
   it('triggers fireworks burst and shows celebration toast', () => {
