@@ -74,4 +74,14 @@ describe('ShowcaseModal UI Controller', () => {
     expect(orderBtn).not.toBeNull();
     expect(orderBtn.href).toContain('instagram.com/dreamroutes07');
   });
+
+  it('displays the festive offer pricing of ₹49 with original ₹99 struck through', () => {
+    modal = new ShowcaseModal({ container });
+    modal.mount();
+
+    const overlay = modal.getOverlayElement();
+    expect(overlay?.textContent).toContain('₹49');
+    expect(overlay?.textContent).toContain('₹99');
+    expect(overlay?.innerHTML).toContain('line-through');
+  });
 });

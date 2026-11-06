@@ -5,6 +5,10 @@ import { SceneManager } from '../../src/graphics/scene-manager';
 import { AppStateMachine } from '../../src/app/state-machine';
 import { AudioEngine } from '../../src/audio/audio-engine';
 
+vi.mock('canvas-confetti', () => ({
+  default: vi.fn(),
+}));
+
 describe('SceneManager Foundation', () => {
   let container: HTMLElement;
   let fsm: AppStateMachine;
@@ -295,11 +299,11 @@ describe('SceneManager Foundation', () => {
     TWEEN.update(performance.now() + 850);
 
     await vi.waitFor(() => {
-      expect(fsm.getState()).toBe('RANGOLI_CEREMONY');
+      expect(fsm.getState()).toBe('LIT_CELEBRATION');
     });
 
-    fsm.transition({ type: 'RANGOLI_COMPLETE' });
-    expect(fsm.getState()).toBe('LIT_CELEBRATION');
+    fsm.transition({ type: 'CELEBRATION_COMPLETE' });
+    expect(fsm.getState()).toBe('FIRECRACKER_CEREMONY');
   });
 
   it('disposes and cleans up TouchController, TouchHint, and match follower on dispose() per D-09, ASVS V14', () => {
@@ -332,7 +336,7 @@ describe('SceneManager Foundation', () => {
     expect(container.querySelector('#greeting-modal-overlay')).not.toBeNull();
   });
 
-  it('automatically advances LIT_CELEBRATION to GREETING_REVEAL after 1500ms delay per D-01', () => {
+  it('automatically advances LIT_CELEBRATION to FIRECRACKER_CEREMONY after 3000ms delay per user request', () => {
     vi.useFakeTimers();
 
     sceneManager = new SceneManager(container, fsm);
@@ -347,17 +351,16 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
-    fsm.transition({ type: 'RANGOLI_COMPLETE' });
 
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
-    // 1499ms: Still in LIT_CELEBRATION
-    vi.advanceTimersByTime(1499);
+    // 2999ms: Still in LIT_CELEBRATION (3s reverence pause)
+    vi.advanceTimersByTime(2999);
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
-    // 1500ms: Advances to GREETING_REVEAL
+    // 3000ms: Advances to FIRECRACKER_CEREMONY
     vi.advanceTimersByTime(1);
-    expect(fsm.getState()).toBe('GREETING_REVEAL');
+    expect(fsm.getState()).toBe('FIRECRACKER_CEREMONY');
 
     vi.useRealTimers();
   });
@@ -376,7 +379,6 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
-    fsm.transition({ type: 'RANGOLI_COMPLETE' });
 
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
@@ -405,8 +407,8 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
-    fsm.transition({ type: 'RANGOLI_COMPLETE' });
     fsm.transition({ type: 'CELEBRATION_COMPLETE' });
+    fsm.transition({ type: 'FIRECRACKERS_COMPLETE' });
 
     expect(fsm.getState()).toBe('GREETING_REVEAL');
     expect(panSpy).toHaveBeenCalledWith(expect.objectContaining({ x: 0, y: -1.0, z: 0 }), 1200);
@@ -462,8 +464,8 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
-    fsm.transition({ type: 'RANGOLI_COMPLETE' });
     fsm.transition({ type: 'CELEBRATION_COMPLETE' });
+    fsm.transition({ type: 'FIRECRACKERS_COMPLETE' });
 
     expect(fsm.getState()).toBe('GREETING_REVEAL');
 

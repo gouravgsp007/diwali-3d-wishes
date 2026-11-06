@@ -20,7 +20,7 @@ import { Starfield } from './fx/starfield';
 import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
-import { RangoliCeremonyOverlay } from '../fx/rangoli/rangoli-ceremony-overlay';
+import { FirecrackerWindow } from '../fx/firecrackers/firecracker-window';
 import type { ExperienceTheme } from '../themes/experience-theme.interface';
 import { ThemeRegistry } from '../themes/theme-registry';
 
@@ -73,7 +73,7 @@ export class SceneManager {
   private onSparklerStateChange?: (active: boolean) => void;
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
-  private rangoliCeremony: RangoliCeremonyOverlay | null = null;
+  private firecrackerWindow: FirecrackerWindow | null = null;
   private theme: ExperienceTheme | null = null;
 
   constructor(
@@ -485,34 +485,35 @@ export class SceneManager {
           this.fsm?.transition({ type: 'ACTION_COMPLETE' });
         }
       });
-    } else if (state === 'RANGOLI_CEREMONY') {
-      // Launch dedicated fullscreen Rangoli creation ritual (Wish is strictly separate and hidden)
-      this.rangoliCeremony = new RangoliCeremonyOverlay({
-        container: this.container,
-        onComplete: () => {
-          this.rangoliCeremony = null;
-          this.fsm?.transition({ type: 'RANGOLI_COMPLETE' });
-        },
-        onSkip: () => {
-          this.rangoliCeremony = null;
-          this.fsm?.transition({ type: 'SKIP_RANGOLI' });
-        },
-      });
-      this.rangoliCeremony.mount();
     } else if (state === 'LIT_CELEBRATION') {
       // Automatically burst fireworks every 2-3 seconds continuously once the diya lights up!
       this.celebrationManager?.startAutoFireworks(2500);
 
       this.theme?.onCelebrationStart();
 
-      // 1500ms celebratory pause before transitioning to GREETING_REVEAL per D-01
+      // 3000ms (3-second) reverence pause before transitioning to firecracker celebration
       if (this.celebrationTimeoutId) {
         clearTimeout(this.celebrationTimeoutId);
       }
       this.celebrationTimeoutId = setTimeout(() => {
         this.celebrationTimeoutId = null;
         this.fsm?.transition({ type: 'CELEBRATION_COMPLETE' });
-      }, 1500);
+      }, 3000);
+    } else if (state === 'FIRECRACKER_CEREMONY') {
+      // Dedicated fullscreen Firecracker Launch Ritual (Wish is strictly separate and hidden)
+      this.firecrackerWindow = new FirecrackerWindow({
+        container: this.container,
+        audioEngine: AudioEngine.getInstance(),
+        onComplete: () => {
+          this.firecrackerWindow = null;
+          this.fsm?.transition({ type: 'FIRECRACKERS_COMPLETE' });
+        },
+        onSkip: () => {
+          this.firecrackerWindow = null;
+          this.fsm?.transition({ type: 'SKIP_FIRECRACKERS' });
+        },
+      });
+      this.firecrackerWindow.mount();
     } else if (state === 'GREETING_REVEAL') {
       if (this.celebrationTimeoutId) {
         clearTimeout(this.celebrationTimeoutId);
@@ -985,8 +986,12 @@ export class SceneManager {
     return !!this.sparkler?.getActive();
   }
 
-  public getRangoliCeremony(): RangoliCeremonyOverlay | null {
-    return this.rangoliCeremony;
+  public getFirecrackerWindow(): FirecrackerWindow | null {
+    return this.firecrackerWindow;
+  }
+
+  public getRangoliCeremony(): null {
+    return null;
   }
 
   public getSkyLanternsManager(): SkyLanternsManager | null {
@@ -1040,9 +1045,9 @@ export class SceneManager {
 
     this.disposeSceneComponents();
 
-    if (this.rangoliCeremony) {
-      this.rangoliCeremony.dispose();
-      this.rangoliCeremony = null;
+    if (this.firecrackerWindow) {
+      this.firecrackerWindow.dispose();
+      this.firecrackerWindow = null;
     }
 
     if (this.renderer) {

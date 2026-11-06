@@ -229,4 +229,114 @@ export class SfxSynthesizer implements SfxPlayer {
       osc.stop(noteTime + 1.0);
     });
   }
+
+  /**
+   * Synthesizes festive rocket ignition & upward whoosh ascent.
+   */
+  public playRocketLaunch(): void {
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const t = this.audioCtx.currentTime;
+    const duration = 0.7;
+
+    // 1. Rising whistle / whistle tone (400Hz -> 1800Hz)
+    const osc = this.audioCtx.createOscillator();
+    const oscGain = this.audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(350, t);
+    osc.frequency.exponentialRampToValueAtTime(1750, t + duration * 0.85);
+
+    oscGain.gain.setValueAtTime(0.001, t);
+    oscGain.gain.linearRampToValueAtTime(0.22, t + 0.1);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+    // 2. Air friction / rushing noise
+    const sampleRate = this.audioCtx.sampleRate;
+    const bufferSize = Math.floor(sampleRate * duration);
+    const buffer = this.audioCtx.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+    }
+    const noise = this.audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const noiseFilter = this.audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.setValueAtTime(500, t);
+    noiseFilter.frequency.exponentialRampToValueAtTime(2400, t + duration * 0.9);
+    noiseFilter.Q.setValueAtTime(3.0, t);
+
+    const noiseGain = this.audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.01, t);
+    noiseGain.gain.linearRampToValueAtTime(0.3, t + 0.15);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+    osc.connect(oscGain);
+    oscGain.connect(this.masterGain);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+
+    osc.start(t);
+    osc.stop(t + duration);
+    noise.start(t);
+  }
+
+  /**
+   * Synthesizes booming aerial fireworks burst with golden crackle.
+   */
+  public playFireworksBurst(): void {
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const t = this.audioCtx.currentTime;
+
+    // 1. Low bass thud (85Hz -> 30Hz)
+    const boomOsc = this.audioCtx.createOscillator();
+    const boomGain = this.audioCtx.createGain();
+    boomOsc.type = 'sine';
+    boomOsc.frequency.setValueAtTime(85, t);
+    boomOsc.frequency.exponentialRampToValueAtTime(30, t + 0.4);
+
+    boomGain.gain.setValueAtTime(0.65, t);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+    boomOsc.connect(boomGain);
+    boomGain.connect(this.masterGain);
+    boomOsc.start(t);
+    boomOsc.stop(t + 0.5);
+
+    // 2. High sparkle crackle burst
+    const crackleDuration = 0.5;
+    const sampleRate = this.audioCtx.sampleRate;
+    const bufferSize = Math.floor(sampleRate * crackleDuration);
+    const buffer = this.audioCtx.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      if (Math.random() < 0.03) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp((-i / bufferSize) * 2.5);
+      }
+    }
+    const noise = this.audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(2000, t);
+
+    const noiseGain = this.audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.4, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + crackleDuration);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+
+    noise.start(t);
+  }
 }

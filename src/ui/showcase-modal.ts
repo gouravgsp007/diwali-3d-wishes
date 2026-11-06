@@ -10,10 +10,10 @@ export interface ShowcaseModalOptions {
 /**
  * ShowcaseModal UI Controller
  *
- * Provides an Instagram Bio link showcase allowing prospective buyers
+ * provides an Instagram Bio link showcase allowing prospective buyers
  * to preview all 4 festive experiences (Diwali, Birthday, Wedding, New Year)
  * in real-time 3D, and directly order their custom personalized package
- * via Instagram DM (@dreamroutes07) for ₹300–₹400.
+ * via Instagram DM (@dreamroutes07) for festive offer of ₹49 (original ₹99).
  */
 export class ShowcaseModal {
   private overlayEl: HTMLElement | null = null;
@@ -62,7 +62,7 @@ export class ShowcaseModal {
             Choose Your Occasion
           </h2>
           <p class="text-xs sm:text-sm text-amber-200/70 mt-1 max-w-md mx-auto">
-            Tap any celebration to test the 3D interaction. Order a personalized surprise for your loved one for ₹300 - ₹400!
+            Tap any celebration to test the 3D interaction. Order a personalized surprise for your loved one for special festive offer ₹49 (Original ₹99 - 50% OFF)!
           </p>
         </div>
 
@@ -168,7 +168,12 @@ export class ShowcaseModal {
         <!-- Order Call to Action -->
         <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-yellow-500/15 to-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div>
-            <div class="text-xs font-bold text-amber-200">Personalized Packages for ₹300 - ₹400</div>
+            <div class="text-xs font-bold text-amber-200 flex items-center gap-1.5 flex-wrap justify-center sm:justify-start">
+              <span>Special Festive Offer:</span>
+              <span class="text-yellow-300 font-extrabold text-sm">₹49</span>
+              <span class="line-through text-neutral-400 font-normal">₹99</span>
+              <span class="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold">50% OFF</span>
+            </div>
             <div class="text-[11px] text-amber-300/70">Custom passcode, intimate personal message & custom music.</div>
           </div>
           <a

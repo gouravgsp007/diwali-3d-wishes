@@ -19,6 +19,8 @@ export interface SfxPlayer {
   playTempleBell?(): void;
   playSparklerSizzle?(): void;
   playRangoliChime?(): void;
+  playRocketLaunch?(): void;
+  playFireworksBurst?(): void;
 }
 
 export interface AudioTrackInfo {
@@ -335,6 +337,32 @@ export class AudioEngine {
   public playRangoliChime(): void {
     if (!this.isMuted) {
       this.sfxSynth?.playRangoliChime?.();
+    }
+  }
+
+  /**
+   * Plays festive rocket launch whoosh sound.
+   */
+  public playRocketLaunch(): void {
+    if (!this.isMuted) {
+      try {
+        this.sfxSynth?.playRocketLaunch?.();
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
+  /**
+   * Plays aerial fireworks explosion boom.
+   */
+  public playFireworksBurst(): void {
+    if (!this.isMuted) {
+      try {
+        this.sfxSynth?.playFireworksBurst?.();
+      } catch {
+        // Safe fallback
+      }
     }
   }
 

@@ -238,6 +238,25 @@ describe('AudioEngine Dual-Tier Foundation', () => {
     expect(mockSfx.playFlameCrackle).toHaveBeenCalledTimes(1);
   });
 
+  it('forwards playRocketLaunch and playFireworksBurst to synthesizer when unmuted', () => {
+    const engine = AudioEngine.getInstance();
+    engine.unlock();
+
+    const mockSfx = {
+      playMatchStrike: vi.fn(),
+      playFlameCrackle: vi.fn(),
+      playRocketLaunch: vi.fn(),
+      playFireworksBurst: vi.fn(),
+    };
+    engine.setSfxSynthesizer(mockSfx);
+
+    engine.playRocketLaunch();
+    expect(mockSfx.playRocketLaunch).toHaveBeenCalledTimes(1);
+
+    engine.playFireworksBurst();
+    expect(mockSfx.playFireworksBurst).toHaveBeenCalledTimes(1);
+  });
+
   it('dispose() closes AudioContext, removes BGM element, removes visibility listener, and resets singleton per D-09, ASVS V14', () => {
     const engine = AudioEngine.getInstance();
     engine.unlock();

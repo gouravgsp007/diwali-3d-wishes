@@ -53,6 +53,12 @@ export class OrderModal {
           <h2 class="text-xl sm:text-2xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
             Get Your Custom 3D Diwali Wish
           </h2>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-xs font-bold text-amber-200 my-1.5">
+            <span>🔥 Special Offer:</span>
+            <span class="text-yellow-300 text-sm font-extrabold">₹49</span>
+            <span class="line-through text-neutral-400 font-normal">₹99</span>
+            <span class="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold">50% OFF</span>
+          </div>
           <p class="text-xs text-amber-200/70 mt-1 leading-relaxed">
             Send an unforgettable ceremonial 3D Diya that your loved one unlocks with a secret passcode!
           </p>

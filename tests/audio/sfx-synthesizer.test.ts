@@ -247,4 +247,33 @@ describe('SfxSynthesizer Procedural Audio Synthesis', () => {
       }
     }
   });
+
+  it('synthesizes festive rocket launch with rising frequency whistle and rushing noise', () => {
+    const synth = new SfxSynthesizer(mockAudioContext as unknown as AudioContext, mockMasterGain as unknown as GainNode);
+    synth.playRocketLaunch();
+
+    expect(mockOscillators.length).toBe(1);
+    const osc = mockOscillators[0];
+    expect(osc.type).toBe('sawtooth');
+    expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(350, 10.0);
+    expect(osc.frequency.exponentialRampToValueAtTime).toHaveBeenCalled();
+
+    expect(mockBufferSources.length).toBe(1);
+    expect(mockFilters.length).toBe(1);
+    expect(mockFilters[0].type).toBe('bandpass');
+  });
+
+  it('synthesizes aerial fireworks burst with low frequency thud and high sparkle noise', () => {
+    const synth = new SfxSynthesizer(mockAudioContext as unknown as AudioContext, mockMasterGain as unknown as GainNode);
+    synth.playFireworksBurst();
+
+    expect(mockOscillators.length).toBe(1);
+    const osc = mockOscillators[0];
+    expect(osc.type).toBe('sine');
+    expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(85, 10.0);
+
+    expect(mockBufferSources.length).toBe(1);
+    expect(mockFilters.length).toBe(1);
+    expect(mockFilters[0].type).toBe('highpass');
+  });
 });

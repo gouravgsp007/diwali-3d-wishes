@@ -6,8 +6,8 @@ export type AppState =
   | 'UNLOCKED_INTRO'
   | 'INTERACTIVE_UNLIT'
   | 'IGNITING'
-  | 'RANGOLI_CEREMONY'
   | 'LIT_CELEBRATION'
+  | 'FIRECRACKER_CEREMONY'
   | 'GREETING_REVEAL';
 
 export type AppEvent =
@@ -18,10 +18,14 @@ export type AppEvent =
   | { type: 'ACTION_TRIGGERED' }
   | { type: 'IGNITION_COMPLETE' }
   | { type: 'ACTION_COMPLETE' }
+  | { type: 'CELEBRATION_COMPLETE' }
+  | { type: 'START_FIRECRACKERS' }
+  | { type: 'FIRECRACKERS_COMPLETE' }
+  | { type: 'SKIP_FIRECRACKERS' }
+  // Backwards compatibility aliases
   | { type: 'START_RANGOLI' }
   | { type: 'RANGOLI_COMPLETE' }
   | { type: 'SKIP_RANGOLI' }
-  | { type: 'CELEBRATION_COMPLETE' }
   | { type: 'REPLAY' };
 
 export class AppStateMachine {
@@ -75,19 +79,29 @@ export class AppStateMachine {
         }
         break;
       case 'IGNITING':
-        if (event.type === 'START_RANGOLI' || event.type === 'IGNITION_COMPLETE') {
-          this.currentState = 'RANGOLI_CEREMONY';
-        } else if (event.type === 'ACTION_COMPLETE') {
-          this.currentState = 'LIT_CELEBRATION';
-        }
-        break;
-      case 'RANGOLI_CEREMONY':
-        if (event.type === 'RANGOLI_COMPLETE' || event.type === 'SKIP_RANGOLI') {
+        if (
+          event.type === 'IGNITION_COMPLETE' ||
+          event.type === 'ACTION_COMPLETE' ||
+          event.type === 'START_RANGOLI'
+        ) {
           this.currentState = 'LIT_CELEBRATION';
         }
         break;
       case 'LIT_CELEBRATION':
-        if (event.type === 'CELEBRATION_COMPLETE') {
+        if (
+          event.type === 'CELEBRATION_COMPLETE' ||
+          event.type === 'START_FIRECRACKERS'
+        ) {
+          this.currentState = 'FIRECRACKER_CEREMONY';
+        }
+        break;
+      case 'FIRECRACKER_CEREMONY':
+        if (
+          event.type === 'FIRECRACKERS_COMPLETE' ||
+          event.type === 'SKIP_FIRECRACKERS' ||
+          event.type === 'RANGOLI_COMPLETE' ||
+          event.type === 'SKIP_RANGOLI'
+        ) {
           this.currentState = 'GREETING_REVEAL';
         }
         break;

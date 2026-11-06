@@ -50,6 +50,14 @@ void main() {
   float noiseZ = snoise(vec2(pos.z * 5.0 + 3.14, pos.y * 4.0 - uTime * 5.5));
   float flutter = sin(uTime * 8.0 + pos.y * 12.0) * 0.035;
 
+  // Sculpt rigid cone geometry into an organic, curved teardrop flame bulb
+  // Narrow wick anchor (base), bulbous belly (uv.y ~ 0.25..0.4), flicking tip
+  float bulb = sin(pow(clamp(uv.y, 0.0, 1.0), 0.58) * 3.14159265);
+  float teardropRadius = bulb * 0.19 + (1.0 - uv.y) * 0.035;
+  if (length(pos.xz) > 0.0001) {
+    pos.xz = normalize(pos.xz) * teardropRadius;
+  }
+
   pos.x += (noiseX * 0.045 + flutter) * heightWeight;
   pos.z += (noiseZ * 0.045) * heightWeight;
 
@@ -74,6 +82,7 @@ void main() {
   vec3 colorBlue = vec3(0.114, 0.141, 0.251); // #1d2440 deep indigo base
   vec3 colorAmber = vec3(1.0, 0.533, 0.0);    // #ff8800 golden amber belly
   vec3 colorYellow = vec3(1.0, 0.957, 0.80);  // #fff4cc incandescent yellow tip
+  vec3 colorWhiteCore = vec3(1.0, 0.99, 0.96); // Incandescent white-hot center core
 
   vec3 color;
   if (h < 0.25) {
@@ -87,6 +96,12 @@ void main() {
   float alphaEdge = 1.0 - smoothstep(0.4, 0.98, edgeDist);
   float alphaTip = 1.0 - smoothstep(0.75, 1.0, h);
   float alpha = alphaEdge * alphaTip * min(uScale, 1.0);
+
+  // Intense incandescent white-hot core boost in center
+  if (h > 0.08 && edgeDist < 0.5) {
+    float coreFactor = (1.0 - smoothstep(0.0, 0.5, edgeDist)) * (1.0 - smoothstep(0.65, 0.95, h));
+    color = mix(color, colorWhiteCore, coreFactor * 0.75);
+  }
 
   if (alpha < 0.01) discard;
   gl_FragColor = vec4(color, alpha);

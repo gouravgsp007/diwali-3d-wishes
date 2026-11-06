@@ -101,7 +101,7 @@ export class GreetingModal {
             rel="noopener noreferrer"
             class="text-[11px] font-medium text-amber-400/80 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-none"
           >
-            Order Your Custom 3D Wish via Instagram DM 🎁✨
+            ✨ Order Your Custom 3D Wish for ₹49 (Original ₹99) via Instagram DM 🎁
           </a>
         </div>
       </div>

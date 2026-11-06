@@ -34,7 +34,7 @@ describe('AppStateMachine', () => {
     expect(fsm.getGreeting()).toEqual(mockPayload);
   });
 
-  it('sequentially advances through UNLOCKED_INTRO -> INTERACTIVE_UNLIT -> IGNITING -> LIT_CELEBRATION -> GREETING_REVEAL -> INTERACTIVE_UNLIT', () => {
+  it('sequentially advances through UNLOCKED_INTRO -> INTERACTIVE_UNLIT -> IGNITING -> LIT_CELEBRATION -> FIRECRACKER_CEREMONY -> GREETING_REVEAL -> INTERACTIVE_UNLIT', () => {
     const fsm = new AppStateMachine();
     fsm.transition({ type: 'BOOT_COMPLETE', hasCiphertext: true });
     fsm.transition({ type: 'UNLOCK_SUCCESS', payload: mockPayload });
@@ -45,13 +45,13 @@ describe('AppStateMachine', () => {
     expect(fsm.transition({ type: 'WICK_TOUCHED' })).toBe('IGNITING');
     expect(fsm.getState()).toBe('IGNITING');
 
-    expect(fsm.transition({ type: 'IGNITION_COMPLETE' })).toBe('RANGOLI_CEREMONY');
-    expect(fsm.getState()).toBe('RANGOLI_CEREMONY');
-
-    expect(fsm.transition({ type: 'RANGOLI_COMPLETE' })).toBe('LIT_CELEBRATION');
+    expect(fsm.transition({ type: 'IGNITION_COMPLETE' })).toBe('LIT_CELEBRATION');
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
-    expect(fsm.transition({ type: 'CELEBRATION_COMPLETE' })).toBe('GREETING_REVEAL');
+    expect(fsm.transition({ type: 'CELEBRATION_COMPLETE' })).toBe('FIRECRACKER_CEREMONY');
+    expect(fsm.getState()).toBe('FIRECRACKER_CEREMONY');
+
+    expect(fsm.transition({ type: 'FIRECRACKERS_COMPLETE' })).toBe('GREETING_REVEAL');
     expect(fsm.getState()).toBe('GREETING_REVEAL');
 
     expect(fsm.transition({ type: 'REPLAY' })).toBe('INTERACTIVE_UNLIT');

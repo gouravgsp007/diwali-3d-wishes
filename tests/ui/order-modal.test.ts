@@ -101,4 +101,14 @@ describe('OrderModal UI Component', () => {
     orderModal.dispose();
     expect(document.getElementById('order-modal-overlay')).toBeNull();
   });
+
+  it('renders the festive offer pricing of ₹49 with original ₹99 struck through', () => {
+    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal.mount();
+
+    const overlay = document.getElementById('order-modal-overlay');
+    expect(overlay?.textContent).toContain('₹49');
+    expect(overlay?.textContent).toContain('₹99');
+    expect(overlay?.innerHTML).toContain('line-through');
+  });
 });
