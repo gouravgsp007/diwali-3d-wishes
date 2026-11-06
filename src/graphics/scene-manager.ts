@@ -20,6 +20,7 @@ import { Starfield } from './fx/starfield';
 import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
+import { RangoliCeremonyOverlay } from '../fx/rangoli/rangoli-ceremony-overlay';
 import type { ExperienceTheme } from '../themes/experience-theme.interface';
 import { ThemeRegistry } from '../themes/theme-registry';
 
@@ -72,6 +73,7 @@ export class SceneManager {
   private onSparklerStateChange?: (active: boolean) => void;
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
+  private rangoliCeremony: RangoliCeremonyOverlay | null = null;
   private theme: ExperienceTheme | null = null;
 
   constructor(
@@ -477,8 +479,26 @@ export class SceneManager {
         : this.theme.triggerAction();
 
       actionPromise?.then(() => {
-        this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
+        if (!this.theme || this.theme.id === 'diwali') {
+          this.fsm?.transition({ type: 'IGNITION_COMPLETE' });
+        } else {
+          this.fsm?.transition({ type: 'ACTION_COMPLETE' });
+        }
       });
+    } else if (state === 'RANGOLI_CEREMONY') {
+      // Launch dedicated fullscreen Rangoli creation ritual (Wish is strictly separate and hidden)
+      this.rangoliCeremony = new RangoliCeremonyOverlay({
+        container: this.container,
+        onComplete: () => {
+          this.rangoliCeremony = null;
+          this.fsm?.transition({ type: 'RANGOLI_COMPLETE' });
+        },
+        onSkip: () => {
+          this.rangoliCeremony = null;
+          this.fsm?.transition({ type: 'SKIP_RANGOLI' });
+        },
+      });
+      this.rangoliCeremony.mount();
     } else if (state === 'LIT_CELEBRATION') {
       // Automatically burst fireworks every 2-3 seconds continuously once the diya lights up!
       this.celebrationManager?.startAutoFireworks(2500);
@@ -965,6 +985,10 @@ export class SceneManager {
     return !!this.sparkler?.getActive();
   }
 
+  public getRangoliCeremony(): RangoliCeremonyOverlay | null {
+    return this.rangoliCeremony;
+  }
+
   public getSkyLanternsManager(): SkyLanternsManager | null {
     return this.skyLanternsManager;
   }
@@ -1015,6 +1039,11 @@ export class SceneManager {
     window.removeEventListener('pointercancel', this.onPointerCancel);
 
     this.disposeSceneComponents();
+
+    if (this.rangoliCeremony) {
+      this.rangoliCeremony.dispose();
+      this.rangoliCeremony = null;
+    }
 
     if (this.renderer) {
       this.renderer.dispose();

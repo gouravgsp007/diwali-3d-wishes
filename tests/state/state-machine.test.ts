@@ -45,7 +45,10 @@ describe('AppStateMachine', () => {
     expect(fsm.transition({ type: 'WICK_TOUCHED' })).toBe('IGNITING');
     expect(fsm.getState()).toBe('IGNITING');
 
-    expect(fsm.transition({ type: 'IGNITION_COMPLETE' })).toBe('LIT_CELEBRATION');
+    expect(fsm.transition({ type: 'IGNITION_COMPLETE' })).toBe('RANGOLI_CEREMONY');
+    expect(fsm.getState()).toBe('RANGOLI_CEREMONY');
+
+    expect(fsm.transition({ type: 'RANGOLI_COMPLETE' })).toBe('LIT_CELEBRATION');
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
     expect(fsm.transition({ type: 'CELEBRATION_COMPLETE' })).toBe('GREETING_REVEAL');

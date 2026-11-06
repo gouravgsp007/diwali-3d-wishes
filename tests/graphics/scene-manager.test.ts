@@ -295,8 +295,11 @@ describe('SceneManager Foundation', () => {
     TWEEN.update(performance.now() + 850);
 
     await vi.waitFor(() => {
-      expect(fsm.getState()).toBe('LIT_CELEBRATION');
+      expect(fsm.getState()).toBe('RANGOLI_CEREMONY');
     });
+
+    fsm.transition({ type: 'RANGOLI_COMPLETE' });
+    expect(fsm.getState()).toBe('LIT_CELEBRATION');
   });
 
   it('disposes and cleans up TouchController, TouchHint, and match follower on dispose() per D-09, ASVS V14', () => {
@@ -344,6 +347,7 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'RANGOLI_COMPLETE' });
 
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
@@ -372,6 +376,7 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'RANGOLI_COMPLETE' });
 
     expect(fsm.getState()).toBe('LIT_CELEBRATION');
 
@@ -400,6 +405,7 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'RANGOLI_COMPLETE' });
     fsm.transition({ type: 'CELEBRATION_COMPLETE' });
 
     expect(fsm.getState()).toBe('GREETING_REVEAL');
@@ -456,6 +462,7 @@ describe('SceneManager Foundation', () => {
     fsm.transition({ type: 'INTRO_COMPLETE' });
     fsm.transition({ type: 'WICK_TOUCHED' });
     fsm.transition({ type: 'IGNITION_COMPLETE' });
+    fsm.transition({ type: 'RANGOLI_COMPLETE' });
     fsm.transition({ type: 'CELEBRATION_COMPLETE' });
 
     expect(fsm.getState()).toBe('GREETING_REVEAL');

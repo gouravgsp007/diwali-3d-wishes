@@ -18,6 +18,7 @@ export interface SfxPlayer {
   playFlameCrackle(): void;
   playTempleBell?(): void;
   playSparklerSizzle?(): void;
+  playRangoliChime?(): void;
 }
 
 export interface AudioTrackInfo {
@@ -325,6 +326,15 @@ export class AudioEngine {
   public playSparklerSizzle(): void {
     if (!this.isMuted) {
       this.sfxSynth?.playSparklerSizzle?.();
+    }
+  }
+
+  /**
+   * Plays magical celestial Rangoli completion chime.
+   */
+  public playRangoliChime(): void {
+    if (!this.isMuted) {
+      this.sfxSynth?.playRangoliChime?.();
     }
   }
 

@@ -188,4 +188,45 @@ export class SfxSynthesizer implements SfxPlayer {
 
     source.start(t);
   }
+
+  /**
+   * Synthesizes magical celestial Rangoli completion chime (pentatonic glissando).
+   */
+  public playRangoliChime(): void {
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+
+    const t = this.audioCtx.currentTime;
+    // Auspicious pentatonic glissando: E5, G#5, B5, C#6, E6
+    const notes = [659.25, 830.61, 987.77, 1108.73, 1318.51];
+
+    notes.forEach((freq, idx) => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      const noteTime = t + idx * 0.07;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, noteTime);
+
+      gain.gain.setValueAtTime(0.001, noteTime);
+      gain.gain.linearRampToValueAtTime(0.18 / (idx + 1), noteTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.95);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.onended = () => {
+        try {
+          osc.disconnect();
+          gain.disconnect();
+        } catch {
+          // Disposed
+        }
+      };
+
+      osc.start(noteTime);
+      osc.stop(noteTime + 1.0);
+    });
+  }
 }
