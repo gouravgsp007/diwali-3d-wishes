@@ -277,4 +277,42 @@ describe('PasscodeGate UI Controller', () => {
     expect(cardEl.textContent).toContain('Unlock Your Diwali Surprise');
     expect(inputEl.placeholder).toBe('ENTER PASSCODE');
   });
+
+  it('shows friendly validation feedback when passcode is shorter than 4 or longer than 6', async () => {
+    const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
+    gate.mount();
+
+    inputEl.value = 'ABC'; // 3 characters
+    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(fsm.state).toBe('LOCKED');
+    expect(errorEl.textContent).toContain('between 4 and 6 characters');
+    expect(cardEl.classList.contains('animate-shake')).toBe(true);
+  });
+
+  it('dynamically re-resolves encrypted token from URL hash or sessionStorage on submit', async () => {
+    const payload = {
+      recipient: 'Rohan',
+      sender: 'Kavya',
+      message: 'Happy Deepavali!',
+      templateId: 'diwali',
+      createdAt: 1730635200000,
+    };
+    const token = await GreetingCodec.encrypt(payload, 'ROHAN');
+
+    // Mount initially in demo mode (e.g. user loaded page without hash)
+    const gate = new PasscodeGate(fsm, { token: null, isDemo: true });
+    gate.mount();
+
+    // User pastes or receives hash without page reload
+    window.location.hash = `#d=${token}`;
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    inputEl.value = 'ROHAN';
+    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    await vi.waitFor(() => expect(fsm.state).toBe('UNLOCKED_INTRO'), { timeout: 3000 });
+    expect(fsm.payload?.recipient).toBe('Rohan');
+  });
 });

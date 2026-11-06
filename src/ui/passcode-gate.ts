@@ -2,7 +2,7 @@ import { GreetingCodec } from '../crypto/greeting-codec';
 import { getDemoGreeting } from '../crypto/demo-greeting';
 import { AudioEngine } from '../audio/audio-engine';
 import type { AppStateMachine } from '../app/state-machine';
-import type { ResolvedToken } from './url-resolver';
+import { resolveGreetingToken, type ResolvedToken } from './url-resolver';
 
 /**
  * Controller for the festive glassmorphic Passcode Gate UI.
@@ -70,7 +70,18 @@ export class PasscodeGate {
       e.preventDefault();
       await this.handleUnlock();
     });
+
+    // Listen for hash changes so pasting/opening link dynamically updates gate
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', this.onHashChange);
+    }
   }
+
+  private onHashChange = (): void => {
+    this.tokenInfo = resolveGreetingToken();
+    const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
+    this.updateThemeContent(queryTheme);
+  };
 
   /**
    * Adapts passcode card title, emoji, and button to the active theme.
@@ -113,6 +124,7 @@ export class PasscodeGate {
   private async handleUnlock(): Promise<void> {
     const passcode = this.inputEl?.value.trim().toUpperCase() || '';
     if (passcode.length < 4 || passcode.length > 6) {
+      this.triggerRejection('Passcode must be between 4 and 6 characters.');
       return;
     }
 
@@ -120,10 +132,14 @@ export class PasscodeGate {
     // Must be invoked prior to any await microtask tick to satisfy mobile WebKit policies
     AudioEngine.getInstance().unlock();
 
+    // 2. Dynamically re-resolve active token from URL or session in case link was pasted or refreshed
+    const currentTokenInfo = resolveGreetingToken();
+    const activeToken = currentTokenInfo.token || this.tokenInfo.token;
+
     try {
       let payload;
 
-      if (this.tokenInfo.isDemo || !this.tokenInfo.token) {
+      if (!activeToken) {
         // Built-in demo fallback (D-07)
         const demo = getDemoGreeting(passcode);
         if (!demo) {
@@ -132,7 +148,7 @@ export class PasscodeGate {
         payload = demo;
       } else {
         // Cryptographic decryption via AES-GCM 256-bit PBKDF2 (D-04)
-        payload = await GreetingCodec.decrypt(this.tokenInfo.token, passcode);
+        payload = await GreetingCodec.decrypt(activeToken, passcode);
       }
 
       // Set soundtrack if specified in payload
@@ -153,7 +169,7 @@ export class PasscodeGate {
     }
   }
 
-  private triggerRejection(): void {
+  private triggerRejection(customMessage?: string): void {
     if (this.cardEl) {
       this.cardEl.classList.remove('animate-shake');
       void this.cardEl.offsetWidth; // Force CSS reflow to restart animation
@@ -162,7 +178,7 @@ export class PasscodeGate {
 
     if (this.errorEl) {
       // Render text strictly via textContent to prevent stored XSS (T-01-04)
-      this.errorEl.textContent = "Passcode doesn't match this greeting. Please check your message!";
+      this.errorEl.textContent = customMessage || "Passcode doesn't match this greeting. Please check your message!";
       this.errorEl.classList.remove('hidden');
     }
 
@@ -215,6 +231,9 @@ export class PasscodeGate {
   }
 
   public dispose(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('hashchange', this.onHashChange);
+    }
     if (this.hideTimeoutId) {
       clearTimeout(this.hideTimeoutId);
       this.hideTimeoutId = null;

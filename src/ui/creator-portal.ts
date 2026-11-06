@@ -4,6 +4,7 @@ import type { OccasionId } from '../themes/experience-theme.interface';
 import { copyToClipboard } from '../utils/clipboard';
 import { formatDeliveryMessage, createDeliveryWhatsAppUrl } from './delivery-message';
 import { OrderHistoryStore } from '../storage/order-history-store';
+import { getRestoredGreetingHash } from './url-resolver';
 
 export interface CreatorPortalOptions {
   container: HTMLElement;
@@ -1286,10 +1287,11 @@ export class CreatorPortal {
     }
 
     if (updateHash && typeof window !== 'undefined' && (window.location.hash.startsWith('#create') || window.location.hash.startsWith('#admin'))) {
+      const restoredHash = getRestoredGreetingHash();
       if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
+        history.replaceState(null, '', window.location.pathname + window.location.search + restoredHash);
       } else {
-        window.location.hash = '';
+        window.location.hash = restoredHash;
       }
     }
 

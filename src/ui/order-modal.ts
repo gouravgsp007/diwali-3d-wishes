@@ -1,3 +1,5 @@
+import { getRestoredGreetingHash } from './url-resolver';
+
 /**
  * OrderModal UI Controller
  *
@@ -197,10 +199,11 @@ export class OrderModal {
     }
 
     if (updateHash && typeof window !== 'undefined' && window.location.hash.startsWith('#order')) {
+      const restoredHash = getRestoredGreetingHash();
       if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
+        history.replaceState(null, '', window.location.pathname + window.location.search + restoredHash);
       } else {
-        window.location.hash = '';
+        window.location.hash = restoredHash;
       }
     }
   }

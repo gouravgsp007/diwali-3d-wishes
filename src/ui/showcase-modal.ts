@@ -1,4 +1,5 @@
 import type { OccasionId } from '../themes/experience-theme.interface';
+import { getRestoredGreetingHash } from './url-resolver';
 
 export interface ShowcaseModalOptions {
   container: HTMLElement;
@@ -266,7 +267,12 @@ export class ShowcaseModal {
     }
 
     if (updateHash && typeof window !== 'undefined' && (window.location.hash.startsWith('#showcase') || window.location.hash.startsWith('#explore'))) {
-      history.replaceState(null, '', window.location.pathname + window.location.search);
+      const restoredHash = getRestoredGreetingHash();
+      if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
+        history.replaceState(null, '', window.location.pathname + window.location.search + restoredHash);
+      } else {
+        window.location.hash = restoredHash;
+      }
     }
 
     this.options.onClose?.();
