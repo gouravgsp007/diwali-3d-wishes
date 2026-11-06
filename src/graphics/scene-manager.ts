@@ -69,6 +69,7 @@ export class SceneManager {
 
   private starfield: Starfield | null = null;
   private sparkler: InteractiveSparkler | null = null;
+  private onSparklerStateChange?: (active: boolean) => void;
   private skyLanternsManager: SkyLanternsManager | null = null;
   private flowerShower: FlowerShower | null = null;
   private theme: ExperienceTheme | null = null;
@@ -537,6 +538,8 @@ export class SceneManager {
     this.container.addEventListener('pointerup', this.onPointerUp);
     this.container.addEventListener('pointercancel', this.onPointerUp);
     window.addEventListener('pointermove', this.onWindowPointerMove);
+    window.addEventListener('pointerup', this.onPointerUp);
+    window.addEventListener('pointercancel', this.onPointerUp);
   }
 
   private onResize = (): void => {
@@ -621,7 +624,17 @@ export class SceneManager {
 
   private onPointerUp = (): void => {
     this.cameraRig?.onPointerUp();
+    if (this.sparkler?.getActive()) {
+      this.setSparklerActive(false);
+    }
   };
+
+  /**
+   * Forwards pointer moves from overlay UI buttons (e.g. sparkler hold-and-drag).
+   */
+  public handlePointerMove(event: PointerEvent | MouseEvent | TouchEvent): void {
+    this.onPointerMove(event);
+  }
 
   /**
    * Pauses requestAnimationFrame rendering loop to conserve battery/GPU.
@@ -924,10 +937,20 @@ export class SceneManager {
     this.flowerShower?.triggerFlowerShower();
   }
 
+  public setOnSparklerStateChange(cb: (active: boolean) => void): void {
+    this.onSparklerStateChange = cb;
+  }
+
+  public setSparklerActive(active: boolean): void {
+    if (!this.sparkler) return;
+    this.sparkler.setActive(active);
+    this.onSparklerStateChange?.(active);
+  }
+
   public toggleSparkler(): boolean {
     if (!this.sparkler) return false;
     const next = !this.sparkler.getActive();
-    this.sparkler.setActive(next);
+    this.setSparklerActive(next);
     return next;
   }
 
@@ -981,6 +1004,8 @@ export class SceneManager {
     this.container.removeEventListener('pointerup', this.onPointerUp);
     this.container.removeEventListener('pointercancel', this.onPointerUp);
     window.removeEventListener('pointermove', this.onWindowPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointercancel', this.onPointerUp);
 
     this.disposeSceneComponents();
 

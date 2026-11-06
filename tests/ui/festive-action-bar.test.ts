@@ -20,6 +20,10 @@ describe('FestiveActionBar UI', () => {
 
     mockSceneManager = {
       toggleSparkler: vi.fn().mockReturnValue(true),
+      setSparklerActive: vi.fn(),
+      isSparklerActive: vi.fn().mockReturnValue(false),
+      setOnSparklerStateChange: vi.fn(),
+      handlePointerMove: vi.fn(),
       triggerSkyLantern: vi.fn(),
       triggerFlowerShower: vi.fn(),
       getCelebrationManager: vi.fn().mockReturnValue(mockCelebrationManager as unknown),
@@ -71,6 +75,30 @@ describe('FestiveActionBar UI', () => {
     (mockSceneManager.toggleSparkler as ReturnType<typeof vi.fn>).mockReturnValue(false);
     sparklerBtn.click();
     expect(toast?.textContent).toContain('extinguished');
+  });
+
+  it('activates sparkler on pointerdown and automatically deactivates on pointerup (thumb release)', () => {
+    actionBar.mount();
+    const sparklerBtn = container.querySelector('#action-sparkler-btn') as HTMLButtonElement;
+
+    // 1. Press thumb down
+    sparklerBtn.dispatchEvent(new Event('pointerdown'));
+    expect(mockSceneManager.setSparklerActive).toHaveBeenCalledWith(true);
+    expect(sparklerBtn.classList.contains('bg-amber-400')).toBe(true);
+
+    const toast = container.querySelector('#festive-toast');
+    expect(toast?.textContent).toContain('Sparkler lit');
+
+    // 2. Release thumb
+    sparklerBtn.dispatchEvent(new Event('pointerup'));
+    expect(mockSceneManager.setSparklerActive).toHaveBeenCalledWith(false);
+    expect(sparklerBtn.classList.contains('bg-amber-400')).toBe(false);
+    expect(toast?.textContent).toContain('extinguished');
+
+    // 3. Trailing synthetic click dispatched by browser after pointer release must be suppressed
+    sparklerBtn.click();
+    expect(mockSceneManager.toggleSparkler).not.toHaveBeenCalled();
+    expect(sparklerBtn.classList.contains('bg-amber-400')).toBe(false);
   });
 
   it('releases sky lantern and shows blessing toast', () => {

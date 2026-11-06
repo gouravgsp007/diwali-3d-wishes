@@ -196,25 +196,71 @@ export class FestiveActionBar {
 
     // 1. Sparkler
     this.sparklerBtn = this.element.querySelector('#action-sparkler-btn') as HTMLButtonElement | null;
+
+    // Synchronize button UI whenever SceneManager changes sparkler state (e.g. on pointerup)
+    this.sceneManager.setOnSparklerStateChange?.((active) => {
+      this.updateSparklerButtonUI(active);
+    });
+
+    let pointerStarted = false;
+    let lastPointerReleaseTime = 0;
+
+    // Press down with thumb: activate sparkler immediately and start tracking
+    this.sparklerBtn?.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      pointerStarted = true;
+      if (this.sparklerBtn && 'setPointerCapture' in this.sparklerBtn) {
+        try {
+          this.sparklerBtn.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      if (!this.sceneManager.isSparklerActive()) {
+        this.sceneManager.setSparklerActive(true);
+        this.updateSparklerButtonUI(true);
+        this.showSparklerLitToast();
+      }
+      this.sceneManager.handlePointerMove?.(e);
+    });
+
+    // Dragging thumb while pressed: forward coordinates so sparks follow thumb
+    this.sparklerBtn?.addEventListener('pointermove', (e) => {
+      if (pointerStarted && this.sceneManager.isSparklerActive()) {
+        this.sceneManager.handlePointerMove?.(e);
+      }
+    });
+
+    // Release thumb (pointerup / pointercancel / lostpointercapture): extinguish immediately
+    const onThumbRelease = (e: Event) => {
+      if (pointerStarted) {
+        pointerStarted = false;
+        lastPointerReleaseTime = Date.now();
+        e.stopPropagation();
+        this.sceneManager.setSparklerActive(false);
+        this.updateSparklerButtonUI(false);
+        this.showToast('Sparkler extinguished ✨');
+      }
+    };
+
+    this.sparklerBtn?.addEventListener('pointerup', onThumbRelease);
+    this.sparklerBtn?.addEventListener('pointercancel', onThumbRelease);
+    this.sparklerBtn?.addEventListener('lostpointercapture', onThumbRelease);
+
+    // Fallback click handler (supports keyboard Enter / programmatic click in unit tests)
     this.sparklerBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
+      // Suppress trailing click event synthesized by browser after pointer release
+      if (Date.now() - lastPointerReleaseTime < 450) {
+        return;
+      }
+      if (pointerStarted) {
+        pointerStarted = false;
+        return;
+      }
       const isActive = this.sceneManager.toggleSparkler();
+      this.updateSparklerButtonUI(isActive);
       if (isActive) {
-        this.sparklerBtn?.classList.add('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
-        this.sparklerBtn?.classList.remove('bg-amber-500/15', 'text-amber-200');
-        const themeId = this.sceneManager.getTheme?.()?.id;
-        if (themeId === 'birthday') {
-          this.showToast('✨ Sparkler lit! Draw magic birthday sparkles in the air!');
-        } else if (themeId === 'wedding') {
-          this.showToast('✨ Golden sparkler lit! Draw love sparkles for the couple!');
-        } else if (themeId === 'newyear') {
-          this.showToast('✨ 2026 Celebration sparkler lit! Draw fireworks in the air!');
-        } else {
-          this.showToast('✨ Sparkler lit! Touch & drag anywhere to draw golden sparks!');
-        }
+        this.showSparklerLitToast();
       } else {
-        this.sparklerBtn?.classList.remove('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
-        this.sparklerBtn?.classList.add('bg-amber-500/15', 'text-amber-200');
         this.showToast('Sparkler extinguished ✨');
       }
     });
@@ -287,7 +333,32 @@ export class FestiveActionBar {
     }, 2800);
   }
 
+  public updateSparklerButtonUI(active: boolean): void {
+    if (!this.sparklerBtn) return;
+    if (active) {
+      this.sparklerBtn.classList.add('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
+      this.sparklerBtn.classList.remove('bg-amber-500/15', 'text-amber-200');
+    } else {
+      this.sparklerBtn.classList.remove('bg-amber-400', 'text-stone-950', 'font-bold', 'border-amber-300');
+      this.sparklerBtn.classList.add('bg-amber-500/15', 'text-amber-200');
+    }
+  }
+
+  private showSparklerLitToast(): void {
+    const themeId = this.sceneManager.getTheme?.()?.id;
+    if (themeId === 'birthday') {
+      this.showToast('✨ Sparkler lit! Draw magic birthday sparkles in the air!');
+    } else if (themeId === 'wedding') {
+      this.showToast('✨ Golden sparkler lit! Draw love sparkles for the couple!');
+    } else if (themeId === 'newyear') {
+      this.showToast('✨ 2026 Celebration sparkler lit! Draw fireworks in the air!');
+    } else {
+      this.showToast('✨ Sparkler lit! Touch & drag anywhere to draw golden sparks!');
+    }
+  }
+
   public dispose(): void {
+    this.sceneManager.setOnSparklerStateChange?.(() => {});
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
       this.toastTimeout = null;
