@@ -532,9 +532,11 @@ export class SceneManager {
       this.canvas.addEventListener('webglcontextrestored', this.onContextRestored);
     }
 
+    this.container.addEventListener('pointerdown', this.onPointerDown);
     this.container.addEventListener('pointermove', this.onPointerMove);
     this.container.addEventListener('pointerup', this.onPointerUp);
     this.container.addEventListener('pointercancel', this.onPointerUp);
+    window.addEventListener('pointermove', this.onWindowPointerMove);
   }
 
   private onResize = (): void => {
@@ -574,6 +576,20 @@ export class SceneManager {
   private onContextRestored = (): void => {
     this.rebuildScene();
     this.resumeRenderLoop();
+  };
+
+  private onPointerDown = (event: PointerEvent | MouseEvent | TouchEvent): void => {
+    this.onPointerMove(event);
+  };
+
+  private onWindowPointerMove = (event: PointerEvent | MouseEvent | TouchEvent): void => {
+    // If target is inside container, container's own pointermove already handled it
+    if (event.target && this.container.contains(event.target as Node)) {
+      return;
+    }
+    if (this.sparkler?.getActive() && this.cameraRig) {
+      this.onPointerMove(event);
+    }
   };
 
   private onPointerMove = (event: PointerEvent | MouseEvent | TouchEvent): void => {
@@ -901,7 +917,7 @@ export class SceneManager {
   }
 
   public triggerSkyLantern(): void {
-    this.skyLanternsManager?.releaseLantern();
+    this.skyLanternsManager?.releaseCluster(5);
   }
 
   public triggerFlowerShower(): void {
@@ -960,9 +976,11 @@ export class SceneManager {
       this.canvas = null;
     }
 
+    this.container.removeEventListener('pointerdown', this.onPointerDown);
     this.container.removeEventListener('pointermove', this.onPointerMove);
     this.container.removeEventListener('pointerup', this.onPointerUp);
     this.container.removeEventListener('pointercancel', this.onPointerUp);
+    window.removeEventListener('pointermove', this.onWindowPointerMove);
 
     this.disposeSceneComponents();
 

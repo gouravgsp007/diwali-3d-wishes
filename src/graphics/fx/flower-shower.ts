@@ -22,7 +22,8 @@ export class FlowerShower {
   private maxPetals = 160;
 
   // Shared Geometries & Materials for high performance (0 lag, 60fps)
-  private petalGeo: THREE.PlaneGeometry;
+  private petalGeo: THREE.BufferGeometry;
+  private petalTexture: THREE.CanvasTexture | null = null;
   private marigoldYellowMat: THREE.MeshStandardMaterial;
   private marigoldOrangeMat: THREE.MeshStandardMaterial;
   private roseCrimsonMat: THREE.MeshStandardMaterial;
@@ -30,24 +31,95 @@ export class FlowerShower {
   constructor() {
     this.group = new THREE.Group();
 
-    // Curved petal-like plane (slight rounded aspect ratio)
-    this.petalGeo = new THREE.PlaneGeometry(0.08, 0.12, 2, 2);
+    // Authentic organic curved petal geometry with natural spoon cupping
+    this.petalGeo = this.createPetalGeometry();
+    this.petalTexture = this.createPetalTexture();
 
     this.marigoldYellowMat = new THREE.MeshStandardMaterial({
       color: 0xffcc00,
-      roughness: 0.6,
+      map: this.petalTexture,
+      roughness: 0.42,
       side: THREE.DoubleSide,
     });
     this.marigoldOrangeMat = new THREE.MeshStandardMaterial({
       color: 0xff6600,
-      roughness: 0.6,
+      map: this.petalTexture,
+      roughness: 0.42,
       side: THREE.DoubleSide,
     });
     this.roseCrimsonMat = new THREE.MeshStandardMaterial({
       color: 0xcc1133,
-      roughness: 0.5,
+      map: this.petalTexture,
+      roughness: 0.38,
       side: THREE.DoubleSide,
     });
+  }
+
+  /**
+   * Constructs an authentic organic curved petal shape with natural 3D cupped curvature.
+   * Replaces flat rectangular paper pieces with realistic floral contours.
+   */
+  private createPetalGeometry(): THREE.BufferGeometry {
+    const shape = new THREE.Shape();
+    // Narrow base at bottom
+    shape.moveTo(0, -0.06);
+    // Left curved belly
+    shape.bezierCurveTo(-0.042, -0.035, -0.048, 0.015, -0.026, 0.052);
+    // Rounded tip
+    shape.bezierCurveTo(-0.010, 0.068, 0.010, 0.068, 0.026, 0.052);
+    // Right curved belly returning to base
+    shape.bezierCurveTo(0.048, 0.015, 0.042, -0.035, 0, -0.06);
+
+    const geo = new THREE.ShapeGeometry(shape, 8);
+
+    // Cup the petal into a realistic 3D scooped bowl/spoon shape
+    const pos = geo.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const cup = -(x * x * 2.2) + (0.003 - (y + 0.01) * (y + 0.01) * 0.8);
+      pos.setZ(i, cup);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  /**
+   * Generates a delicate procedural canvas texture with subtle micro-veins and velvety shading.
+   */
+  private createPetalTexture(): THREE.CanvasTexture {
+    if (typeof document === 'undefined') {
+      return new THREE.CanvasTexture(null as unknown as HTMLCanvasElement);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // Soft organic radial glow
+    const grad = ctx.createRadialGradient(64, 75, 4, 64, 64, 62);
+    grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
+    grad.addColorStop(0.65, 'rgba(240, 240, 240, 0.95)');
+    grad.addColorStop(1.0, 'rgba(215, 215, 215, 0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+
+    // Delicate petal micro-veins radiating from stem
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.07)';
+    ctx.lineWidth = 1.2;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(64, 120);
+      ctx.quadraticCurveTo(64 + i * 14, 60, 64 + i * 18, 15);
+      ctx.stroke();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
   }
 
   /**
@@ -149,6 +221,7 @@ export class FlowerShower {
     this.petals.forEach((p) => this.group.remove(p.mesh));
     this.petals = [];
     this.petalGeo.dispose();
+    this.petalTexture?.dispose();
     this.marigoldYellowMat.dispose();
     this.marigoldOrangeMat.dispose();
     this.roseCrimsonMat.dispose();

@@ -31,6 +31,10 @@ describe('Festive 3D Features (Stars, Lanterns, Flowers, Sparkler)', () => {
     manager.releaseLantern();
     expect(manager.getLanternsCount()).toBe(2);
 
+    // Release cluster of 5 mini lanterns
+    manager.releaseCluster(5);
+    expect(manager.getLanternsCount()).toBe(7);
+
     manager.dispose();
     expect(manager.getLanternsCount()).toBe(0);
   });
