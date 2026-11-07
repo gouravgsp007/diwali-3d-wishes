@@ -55,7 +55,7 @@ describe('Interactive Firecracker Window (Card-Free 3D Ceremony HUD)', () => {
 
     // Verify guidance toast exists
     const guidance = container.querySelector('#firecracker-guidance-pill');
-    expect(guidance?.textContent).toContain('Tap any 3D rocket');
+    expect(guidance?.textContent).toContain('Tap any 3D Rocket');
   });
 
   it('launchRocket(id) notifies 3D scene, updates guidance, and increments launched count', () => {

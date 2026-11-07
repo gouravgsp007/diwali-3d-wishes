@@ -108,13 +108,14 @@ export class FirecrackerWindow {
         </button>
       </div>
 
-      <!-- Floating Guidance Toast (Card-Free, Immersive 3D Interaction) -->
-      <div class="w-full flex justify-center pointer-events-none pb-4 sm:pb-8">
+      <!-- Floating Guidance Toast (Highlighted, High-Contrast Festive Glow) -->
+      <div class="w-full flex justify-center pointer-events-none pb-6 sm:pb-10">
         <div
           id="firecracker-guidance-pill"
-          class="px-4 py-1.5 rounded-full bg-stone-950/85 backdrop-blur-md border border-amber-500/30 text-xs text-amber-200 font-medium text-center shadow-lg animate-pulse pointer-events-auto"
+          class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-950/90 via-stone-950/95 to-amber-950/90 backdrop-blur-xl border-2 border-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.55)] text-xs sm:text-sm text-amber-100 font-bold text-center tracking-wide animate-pulse pointer-events-auto select-none"
         >
-          ✨ Tap any 3D rocket in the scene to launch
+          <span class="text-base sm:text-lg">✨</span>
+          <span>Tap any 3D Rocket to Launch! 🚀</span>
         </div>
       </div>
     `;
@@ -173,9 +174,9 @@ export class FirecrackerWindow {
       const guidance = this.overlayEl.querySelector('#firecracker-guidance-pill');
       if (guidance) {
         if (this.launchedRockets.size < 3) {
-          guidance.textContent = '✨ Tap another 3D rocket in the scene';
+          guidance.innerHTML = `<span class="text-base sm:text-lg">✨</span><span>Tap another 3D Rocket! 🚀 (${this.launchedRockets.size}/3)</span>`;
         } else {
-          guidance.textContent = '🎇 Shubh Deepotsav! Revealing your festive wish...';
+          guidance.innerHTML = `<span class="text-base sm:text-lg">🎇</span><span>Shubh Deepotsav! Revealing your festive wish...</span>`;
         }
       }
     }

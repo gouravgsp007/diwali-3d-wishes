@@ -683,8 +683,9 @@ export class SceneManager {
         false
       );
 
-      if (intersects.length > 0) {
-        const hit = intersects[0];
+      const visibleIntersects = intersects.filter((hit) => hit.object.visible !== false);
+      if (visibleIntersects.length > 0) {
+        const hit = visibleIntersects[0];
         const rocketId = hit.object.userData?.rocketId;
         if (typeof rocketId === 'number') {
           this.firecrackerWindow?.launchRocket(rocketId);

@@ -183,4 +183,15 @@ describe('FestiveActionBar UI', () => {
     fireworksBtn.click();
     expect(toast?.textContent).toContain('2026');
   });
+
+  it('manages visibility via show(), hide(), and isVisible()', () => {
+    actionBar.mount();
+    expect(actionBar.isVisible()).toBe(false);
+
+    actionBar.show();
+    expect(actionBar.isVisible()).toBe(true);
+
+    actionBar.hide();
+    expect(actionBar.isVisible()).toBe(false);
+  });
 });

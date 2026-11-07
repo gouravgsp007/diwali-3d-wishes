@@ -51,6 +51,15 @@ export function bootstrap(): {
   const festiveActionBar = new FestiveActionBar(sceneContainer, sceneManager);
   festiveActionBar.mount();
 
+  // Show festive action bar only during GREETING_REVEAL for free exploration; hide during ceremony
+  fsm.subscribe((state) => {
+    if (state === 'GREETING_REVEAL') {
+      festiveActionBar.show();
+    } else {
+      festiveActionBar.hide();
+    }
+  });
+
   const showcaseModal = new ShowcaseModal({
     container: sceneContainer,
     instagramHandle: 'dreamroutes07',

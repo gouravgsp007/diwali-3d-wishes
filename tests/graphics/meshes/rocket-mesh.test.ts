@@ -21,11 +21,12 @@ describe('RocketStandManager (3D In-Scene Rockets)', () => {
     expect(manager.getLaunchedCount()).toBe(0);
 
     const interactiveMeshes = manager.getInteractiveMeshes();
-    expect(interactiveMeshes.length).toBe(3);
+    // 3 hit proxies + 3 callout sprites = 6 interactive objects
+    expect(interactiveMeshes.length).toBe(6);
 
     // Verify IDs on interactive meshes
     const ids = interactiveMeshes.map((m) => m.userData.rocketId);
-    expect(ids).toEqual([1, 2, 3]);
+    expect(ids).toEqual([1, 1, 2, 2, 3, 3]);
   });
 
   it('launch(id) begins upward rocket ascent and marks rocket as launched', () => {

@@ -29,7 +29,8 @@ export class FestiveActionBar {
     this.element.id = 'festive-action-bar';
     this.element.className =
       'fixed bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 ' +
-      'rounded-full bg-black/70 backdrop-blur-xl border border-amber-500/40 shadow-2xl shadow-amber-950/70 select-none pointer-events-auto';
+      'rounded-full bg-black/70 backdrop-blur-xl border border-amber-500/40 shadow-2xl shadow-amber-950/70 select-none ' +
+      'transition-all duration-300 opacity-0 pointer-events-none';
 
     this.element.innerHTML = `
       <!-- 1. Interactive Sparkler (Phuljhadi) -->
@@ -331,6 +332,23 @@ export class FestiveActionBar {
       this.toastEl?.classList.add('opacity-0', 'pointer-events-none');
       this.toastTimeout = null;
     }, 2800);
+  }
+
+  public show(): void {
+    if (!this.element) return;
+    this.element.classList.remove('opacity-0', 'pointer-events-none');
+    this.element.classList.add('opacity-100', 'pointer-events-auto');
+  }
+
+  public hide(): void {
+    if (!this.element) return;
+    this.element.classList.remove('opacity-100', 'pointer-events-auto');
+    this.element.classList.add('opacity-0', 'pointer-events-none');
+  }
+
+  public isVisible(): boolean {
+    if (!this.element) return false;
+    return this.element.classList.contains('opacity-100');
   }
 
   public updateSparklerButtonUI(active: boolean): void {
