@@ -140,31 +140,49 @@ export class CelebrationManager {
   }
 
   /**
-   * Handles pointerdown events on the screen outside of card interactive elements.
+   * Fires festive multi-point golden sparkles across 3-4 coordinated points at once
+   * over the screen and greeting card.
+   *
+   * @param originX Normalized horizontal coordinate [0, 1]
+   * @param originY Normalized vertical coordinate [0, 1]
    */
-  private handlePointerDown(e: PointerEvent): void {
-    if (!this.isActive) return;
+  public fireMultiPointSparkle(originX: number, originY: number): void {
+    const festiveColors = ['#ffd700', '#ff9900', '#ffffff', '#ffcc00', '#ffa500', '#fff3b0'];
 
-    // Click delegation: Ignore clicks on modal card, buttons, links, inputs, textareas per D-05, T-05-03
-    const target = e.target as HTMLElement | null;
-    if (typeof target?.closest === 'function' && target.closest('#greeting-card, button, a, input, textarea')) {
-      return;
-    }
+    // 4 coordinated burst coordinates surrounding the tap/trigger point
+    const points = [
+      { x: originX, y: originY, count: 20, spread: 50 },
+      {
+        x: Math.max(0.04, Math.min(0.96, originX - 0.10)),
+        y: Math.max(0.04, Math.min(0.96, originY - 0.08)),
+        count: 14,
+        spread: 40,
+      },
+      {
+        x: Math.max(0.04, Math.min(0.96, originX + 0.12)),
+        y: Math.max(0.04, Math.min(0.96, originY - 0.06)),
+        count: 14,
+        spread: 40,
+      },
+      {
+        x: Math.max(0.04, Math.min(0.96, originX - 0.04)),
+        y: Math.max(0.04, Math.min(0.96, originY + 0.09)),
+        count: 12,
+        spread: 35,
+      },
+    ];
 
-    const width = window.innerWidth || 1;
-    const height = window.innerHeight || 1;
-    const originX = Math.max(0, Math.min(1, e.clientX / width));
-    const originY = Math.max(0, Math.min(1, e.clientY / height));
-
-    confetti({
-      origin: { x: originX, y: originY },
-      particleCount: 25,
-      spread: 45,
-      startVelocity: 18,
-      scalar: 0.65,
-      ticks: 100,
-      colors: ['#ffd700', '#ff9900', '#ffffff', '#ffcc00', '#ffa500'],
-      disableForReducedMotion: true,
+    points.forEach((pt) => {
+      confetti({
+        origin: { x: pt.x, y: pt.y },
+        particleCount: pt.count,
+        spread: pt.spread,
+        startVelocity: 16,
+        scalar: 0.65,
+        ticks: 90,
+        colors: festiveColors,
+        disableForReducedMotion: true,
+      });
     });
 
     // Multisensory tactile and audio feedback (defensive in test environments)
@@ -181,6 +199,60 @@ export class CelebrationManager {
         // Graceful no-op
       }
     }
+  }
+
+  /**
+   * Fires 4 coordinated sparkling bursts around the perimeter and corners of the wish message card.
+   */
+  public fireCardSparkleSalute(): void {
+    const festiveColors = ['#ffd700', '#ffaa00', '#ffffff', '#ff8800', '#fff3b0'];
+    const cardCorners = [
+      { x: 0.28, y: 0.62 }, // Upper-left corner
+      { x: 0.72, y: 0.62 }, // Upper-right corner
+      { x: 0.32, y: 0.82 }, // Lower-left flank
+      { x: 0.68, y: 0.82 }, // Lower-right flank
+    ];
+
+    cardCorners.forEach((pt) => {
+      confetti({
+        origin: { x: pt.x, y: pt.y },
+        particleCount: 18,
+        spread: 45,
+        startVelocity: 17,
+        scalar: 0.68,
+        ticks: 85,
+        colors: festiveColors,
+        disableForReducedMotion: true,
+      });
+    });
+
+    try {
+      AudioEngine.getInstance().playSparklerSizzle();
+    } catch {
+      // Graceful no-op
+    }
+  }
+
+  /**
+   * Handles pointerdown events on the screen outside of card interactive elements.
+   * Tapping directly on the greeting card triggers sparkles OVER the card!
+   */
+  private handlePointerDown(e: PointerEvent): void {
+    if (!this.isActive) return;
+
+    // Click delegation: Ignore clicks on actionable controls (buttons, links, inputs, textareas)
+    // Taps directly on #greeting-card trigger sparkles OVER the card!
+    const target = e.target as HTMLElement | null;
+    if (typeof target?.closest === 'function' && target.closest('button, a, input, textarea')) {
+      return;
+    }
+
+    const width = window.innerWidth || 1;
+    const height = window.innerHeight || 1;
+    const originX = Math.max(0, Math.min(1, e.clientX / width));
+    const originY = Math.max(0, Math.min(1, e.clientY / height));
+
+    this.fireMultiPointSparkle(originX, originY);
   }
 
   /**

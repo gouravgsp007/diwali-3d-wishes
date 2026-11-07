@@ -21,6 +21,7 @@ import { InteractiveSparkler } from './fx/interactive-sparkler';
 import { SkyLanternsManager } from './fx/sky-lanterns-manager';
 import { FlowerShower } from './fx/flower-shower';
 import { FirecrackerWindow } from '../fx/firecrackers/firecracker-window';
+import { SkyLanternOverlay } from '../fx/sky-lantern-overlay';
 import { Fireworks3D } from './fx/fireworks-3d';
 import { RocketStandManager } from './meshes/rocket-mesh';
 import type { ExperienceTheme } from '../themes/experience-theme.interface';
@@ -74,6 +75,7 @@ export class SceneManager {
   private sparkler: InteractiveSparkler | null = null;
   private onSparklerStateChange?: (active: boolean) => void;
   private skyLanternsManager: SkyLanternsManager | null = null;
+  private skyLanternOverlay: SkyLanternOverlay | null = null;
   private flowerShower: FlowerShower | null = null;
   private firecrackerWindow: FirecrackerWindow | null = null;
   private fireworks3D: Fireworks3D | null = null;
@@ -322,6 +324,10 @@ export class SceneManager {
     // 12. 3D Particle Fireworks System in WebGL
     this.fireworks3D = new Fireworks3D();
     this.scene.add(this.fireworks3D.group);
+
+    // 13. Foreground Sky Lantern Overlay (Rising from bottom across & over wish card at z-index: 25)
+    this.skyLanternOverlay = new SkyLanternOverlay();
+    this.skyLanternOverlay.mount(this.container);
   }
 
   /**
@@ -951,6 +957,11 @@ export class SceneManager {
       this.skyLanternsManager = null;
     }
 
+    if (this.skyLanternOverlay) {
+      this.skyLanternOverlay.dispose();
+      this.skyLanternOverlay = null;
+    }
+
     if (this.flowerShower) {
       this.scene.remove(this.flowerShower.group);
       this.flowerShower.dispose();
@@ -1076,6 +1087,9 @@ export class SceneManager {
   }
 
   public triggerSkyLantern(): void {
+    // 1. Release foreground lanterns ascending from bottom of screen across & over wish card (z-index: 25)
+    this.skyLanternOverlay?.spawnLanterns(5);
+    // 2. Also release 3D celestial lanterns in the background for depth
     this.skyLanternsManager?.releaseCluster(5);
   }
 
@@ -1091,6 +1105,9 @@ export class SceneManager {
     if (!this.sparkler) return;
     this.sparkler.setActive(active);
     this.onSparklerStateChange?.(active);
+    if (active) {
+      this.celebrationManager?.fireCardSparkleSalute();
+    }
   }
 
   public toggleSparkler(): boolean {
@@ -1114,6 +1131,10 @@ export class SceneManager {
 
   public getSkyLanternsManager(): SkyLanternsManager | null {
     return this.skyLanternsManager;
+  }
+
+  public getSkyLanternOverlay(): SkyLanternOverlay | null {
+    return this.skyLanternOverlay;
   }
 
   public getFlowerShower(): FlowerShower | null {

@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FirecrackerWindow } from '../../src/fx/firecrackers/firecracker-window';
 import type { AudioEngine } from '../../src/audio/audio-engine';
 
+vi.mock('canvas-confetti', () => {
+  const mockConfetti = vi.fn();
+  (mockConfetti as any).reset = vi.fn();
+  return { default: mockConfetti };
+});
+
 describe('Interactive Firecracker Window (Card-Free 3D Ceremony HUD)', () => {
   let container: HTMLDivElement;
   let mockAudioEngine: AudioEngine;
@@ -96,11 +102,13 @@ describe('Interactive Firecracker Window (Card-Free 3D Ceremony HUD)', () => {
 
     expect(firecrackerWindow.getLaunchedCount()).toBe(3);
 
-    const guidance = container.querySelector('#firecracker-guidance-pill');
-    expect(guidance?.textContent).toContain('Revealing your festive wish');
+    // Verify centered announcement card is displayed for user excitement
+    const announcement = container.querySelector('#firecracker-reveal-announcement');
+    expect(announcement).not.toBeNull();
+    expect(announcement?.textContent).toContain('Revealing Your Magical Diwali Wish');
 
-    // Fast-forward completion delay (1500ms) + dismiss animation (400ms)
-    vi.advanceTimersByTime(2000);
+    // Fast-forward completion delay (2800ms) + dismiss animation (400ms)
+    vi.advanceTimersByTime(3300);
 
     expect(onCompleteSpy).toHaveBeenCalledTimes(1);
     expect(container.querySelector('#firecracker-window-overlay')).toBeNull();

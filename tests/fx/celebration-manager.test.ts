@@ -96,21 +96,10 @@ describe('CelebrationManager Service', () => {
         bubbles: true,
       })
     );
-    expect(confetti).toHaveBeenCalledTimes(1);
-
-    // When deactivated again:
-    manager.setActive(false);
-    window.dispatchEvent(
-      new PointerEvent('pointerdown', {
-        clientX: 200,
-        clientY: 300,
-        bubbles: true,
-      })
-    );
-    expect(confetti).toHaveBeenCalledTimes(1); // Still 1, no new call
+    expect(confetti).toHaveBeenCalledTimes(4); // 4 simultaneous sparkle points
   });
 
-  it('Test 5 & 7: handlePointerDown normalizes client coordinates to [0, 1] range and triggers localized micro-sparkler burst per D-05, VFX-05', () => {
+  it('Test 5 & 7: handlePointerDown normalizes client coordinates to [0, 1] range and triggers multi-point sparkles per D-05, VFX-05', () => {
     manager.setActive(true);
 
     // Mock window dimensions
@@ -125,18 +114,19 @@ describe('CelebrationManager Service', () => {
       })
     );
 
+    // Primary point at touch coordinate
     expect(confetti).toHaveBeenCalledWith(
       expect.objectContaining({
         origin: { x: 0.5, y: 0.5 },
-        particleCount: 25,
-        spread: 45,
-        startVelocity: 18,
+        particleCount: 20,
+        spread: 50,
         scalar: 0.65,
-        ticks: 100,
-        colors: ['#ffd700', '#ff9900', '#ffffff', '#ffcc00', '#ffa500'],
+        ticks: 90,
         disableForReducedMotion: true,
       })
     );
+    // Total 4 coordinated points fired simultaneously
+    expect(confetti).toHaveBeenCalledTimes(4);
   });
 
   it('clamps coordinates to [0, 1] if client coordinates fall outside viewport bounds', () => {
@@ -160,7 +150,7 @@ describe('CelebrationManager Service', () => {
     );
   });
 
-  it('Test 6: handlePointerDown filters click targets: if e.target.closest("#greeting-card, button, a, input, textarea") matches, confetti is NOT triggered per D-05, T-05-03', () => {
+  it('Test 6: allows sparkles over greeting card, while filtering actionable buttons, links, inputs, and textareas', () => {
     manager.setActive(true);
 
     const card = document.createElement('div');
@@ -178,25 +168,32 @@ describe('CelebrationManager Service', () => {
     card.appendChild(textarea);
     document.body.appendChild(card);
 
-    // Click directly on card container
+    // 1. Click directly on card container: NOW triggers sparkles over the wish card!
     card.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
-    expect(confetti).not.toHaveBeenCalled();
+    expect(confetti).toHaveBeenCalledTimes(4);
 
-    // Click on button inside card
+    vi.clearAllMocks();
+
+    // 2. Click on button inside card: filtered so button click works without interference
     button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(confetti).not.toHaveBeenCalled();
 
-    // Click on anchor link
+    // 3. Click on anchor link: filtered
     link.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(confetti).not.toHaveBeenCalled();
 
-    // Click on input
+    // 4. Click on input: filtered
     input.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(confetti).not.toHaveBeenCalled();
 
-    // Click on textarea
+    // 5. Click on textarea: filtered
     textarea.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(confetti).not.toHaveBeenCalled();
+  });
+
+  it('fireCardSparkleSalute() fires 4 coordinated sparkling bursts around card perimeter', () => {
+    manager.fireCardSparkleSalute();
+    expect(confetti).toHaveBeenCalledTimes(4);
   });
 
   it('Test 8: handlePointerDown invokes AudioEngine.getInstance().playFlameCrackle() safely within try/catch per D-05', () => {

@@ -34,3 +34,18 @@
 .animate-shake {
   animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
+@keyframes announcementZoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+}
+
+.animate-reveal-zoom {
+  animation: announcementZoom 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

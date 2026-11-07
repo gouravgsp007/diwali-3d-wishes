@@ -1,3 +1,4 @@
+import confetti from 'canvas-confetti';
 import type { AudioEngine } from '../../audio/audio-engine';
 
 export interface FirecrackerWindowOptions {
@@ -201,10 +202,92 @@ export class FirecrackerWindow {
     if (this.hasTriggeredCompletion) return;
     this.hasTriggeredCompletion = true;
 
-    // Allow fireworks to burst, then cleanly dismiss and reveal wish
+    this.showRevealAnnouncement();
+
+    // Hold announcement for 2800ms (2.8 seconds) so user gets truly excited!
     this.completeTimeoutId = setTimeout(() => {
       this.dismissAndComplete(false);
-    }, 1500);
+    }, 2800);
+  }
+
+  private showRevealAnnouncement(): void {
+    if (!this.overlayEl) return;
+
+    // Remove bottom guidance pill so it doesn't distract
+    const guidance = this.overlayEl.querySelector('#firecracker-guidance-pill');
+    if (guidance) {
+      guidance.remove();
+    }
+
+    // Trigger celebratory sound
+    try {
+      this.options.audioEngine?.playFireworksBurst?.();
+    } catch (_) {}
+
+    // Celebratory confetti burst
+    try {
+      confetti({
+        particleCount: 70,
+        spread: 90,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ['#ffd700', '#ffa500', '#ffffff', '#ff8c00', '#fff8dc'],
+        startVelocity: 35,
+        disableForReducedMotion: true,
+      });
+    } catch (_) {}
+
+    // Centered Grand Reveal Announcement Card
+    const announcement = document.createElement('div');
+    announcement.id = 'firecracker-reveal-announcement';
+    announcement.className =
+      'fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md transition-all duration-500 animate-reveal-zoom select-none';
+
+    announcement.innerHTML = `
+      <div
+        class="w-full max-w-sm sm:max-w-md p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-stone-900/95 via-stone-950/98 to-stone-900/95 border-2 border-amber-400 shadow-[0_0_50px_rgba(251,191,36,0.55)] text-center transform transition-transform duration-500 scale-100"
+      >
+        <!-- Festive Top Icon Cluster -->
+        <div class="flex items-center justify-center gap-2 mb-3 text-2xl sm:text-3xl animate-bounce">
+          <span>🪔</span>
+          <span>✨</span>
+          <span>🎆</span>
+        </div>
+
+        <!-- Shimmering Golden Title -->
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-200 drop-shadow-md mb-2">
+          ✨ Shubh Deepotsav! ✨
+        </h2>
+
+        <!-- Exciting Prominent Announcement -->
+        <p class="text-base sm:text-lg font-semibold text-amber-100 tracking-wide mb-3">
+          🎁 Revealing Your Magical Diwali Wish... 💫
+        </p>
+
+        <p class="text-xs sm:text-sm text-amber-300/80 mb-5 italic">
+          Illuminating your world with festive joy, light & prosperity
+        </p>
+
+        <!-- Golden Animated Countdown Bar (2.8s) -->
+        <div class="w-full h-1.5 sm:h-2 bg-amber-950/80 rounded-full overflow-hidden border border-amber-500/30 p-0.5">
+          <div
+            id="reveal-progress-bar"
+            class="h-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 rounded-full transition-all duration-[2800ms] ease-linear w-0"
+          ></div>
+        </div>
+      </div>
+    `;
+
+    this.overlayEl.appendChild(announcement);
+
+    // Trigger width expansion animation on the progress bar
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => {
+        const bar = announcement.querySelector('#reveal-progress-bar') as HTMLElement;
+        if (bar) {
+          bar.style.width = '100%';
+        }
+      });
+    }
   }
 
   private handleSkip(): void {
