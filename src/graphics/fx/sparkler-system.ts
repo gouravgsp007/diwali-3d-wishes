@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getSparkTexture } from '../materials/procedural-textures';
 
 /**
  * 300-particle single-buffer sparkler system (phuljhadi) running in 1 draw call.
@@ -30,15 +31,15 @@ export class SparklerSystem {
     this.lifetimes = new Float32Array(this.particleCount);
     this.maxLifetimes = new Float32Array(this.particleCount);
 
-    // Initial state: all inactive at wick anchor
+    // Initial state: all inactive (zero color, waiting for burst)
     for (let i = 0; i < this.particleCount; i++) {
       this.positions[i * 3 + 0] = wickAnchor.x;
       this.positions[i * 3 + 1] = wickAnchor.y;
       this.positions[i * 3 + 2] = wickAnchor.z;
 
-      this.colors[i * 3 + 0] = 1.0;
-      this.colors[i * 3 + 1] = 0.95;
-      this.colors[i * 3 + 2] = 0.8;
+      this.colors[i * 3 + 0] = 0.0;
+      this.colors[i * 3 + 1] = 0.0;
+      this.colors[i * 3 + 2] = 0.0;
 
       this.lifetimes[i] = 0.0;
       this.maxLifetimes[i] = 1.0;
@@ -48,7 +49,8 @@ export class SparklerSystem {
     geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
 
     const mat = new THREE.PointsMaterial({
-      size: 0.075,
+      size: 0.18,
+      map: getSparkTexture(),
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -111,12 +113,21 @@ export class SparklerSystem {
     let anyActive = false;
 
     for (let i = 0; i < this.particleCount; i++) {
-      if (this.lifetimes[i] <= 0.0) continue;
+      const idx = i * 3;
+      if (this.lifetimes[i] <= 0.0) {
+        if (this.colors[idx + 0] > 0 || this.colors[idx + 1] > 0 || this.colors[idx + 2] > 0) {
+          this.colors[idx + 0] = 0.0;
+          this.colors[idx + 1] = 0.0;
+          this.colors[idx + 2] = 0.0;
+          this.positions[idx + 1] = -9999;
+          anyActive = true;
+        }
+        continue;
+      }
       anyActive = true;
 
       this.lifetimes[i] -= safeDt;
 
-      const idx = i * 3;
       // Gravity acceleration (g = -4.5 units/s^2)
       this.velocities[idx + 1] += -4.5 * safeDt;
       // Air drag on horizontal velocities
@@ -128,23 +139,25 @@ export class SparklerSystem {
       this.positions[idx + 1] += this.velocities[idx + 1] * safeDt;
       this.positions[idx + 2] += this.velocities[idx + 2] * safeDt;
 
-      // Color fade: White-hot -> Golden-amber -> Ember-red
+      // Color fade: White-hot -> Golden-amber -> Ember-red with smooth alpha decay
       const progress = 1.0 - Math.max(0.0, this.lifetimes[i] / this.maxLifetimes[i]);
-      if (progress < 0.4) {
+      const alpha = Math.max(0.0, Math.min(1.0, this.lifetimes[i] / 0.35));
+
+      if (progress < 0.35) {
         // White-hot
-        this.colors[idx + 0] = 1.0;
-        this.colors[idx + 1] = 0.95;
-        this.colors[idx + 2] = 0.8;
-      } else if (progress < 0.8) {
+        this.colors[idx + 0] = 1.0 * alpha;
+        this.colors[idx + 1] = 0.95 * alpha;
+        this.colors[idx + 2] = 0.8 * alpha;
+      } else if (progress < 0.75) {
         // Golden amber
-        this.colors[idx + 0] = 1.0;
-        this.colors[idx + 1] = 0.65;
-        this.colors[idx + 2] = 0.1;
+        this.colors[idx + 0] = 1.0 * alpha;
+        this.colors[idx + 1] = 0.65 * alpha;
+        this.colors[idx + 2] = 0.1 * alpha;
       } else {
         // Ember red
-        this.colors[idx + 0] = 0.85;
-        this.colors[idx + 1] = 0.2;
-        this.colors[idx + 2] = 0.05;
+        this.colors[idx + 0] = 0.85 * alpha;
+        this.colors[idx + 1] = 0.2 * alpha;
+        this.colors[idx + 2] = 0.05 * alpha;
       }
     }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getSparkTexture } from '../materials/procedural-textures';
 
 export interface Fireworks3DOptions {
   maxParticles?: number;
@@ -72,9 +73,12 @@ export class Fireworks3D {
     const positions = new Float32Array(this.maxParticles * 3);
     const colors = new Float32Array(this.maxParticles * 3);
 
-    // Initialize all offscreen
+    // Initialize all offscreen with zero color
     for (let i = 0; i < this.maxParticles; i++) {
       positions[i * 3 + 1] = -9999;
+      colors[i * 3 + 0] = 0;
+      colors[i * 3 + 1] = 0;
+      colors[i * 3 + 2] = 0;
     }
 
     this.geometry = new THREE.BufferGeometry();
@@ -85,7 +89,8 @@ export class Fireworks3D {
     this.geometry.setAttribute('color', this.colorAttr);
 
     this.material = new THREE.PointsMaterial({
-      size: 0.16,
+      size: 0.28,
+      map: getSparkTexture(),
       vertexColors: true,
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -271,6 +276,9 @@ export class Fireworks3D {
       if (p.life >= p.maxLife) {
         p.active = false;
         positions[i * 3 + 1] = -9999; // Move offscreen
+        colors[i * 3 + 0] = 0;
+        colors[i * 3 + 1] = 0;
+        colors[i * 3 + 2] = 0;
         continue;
       }
 

@@ -12,6 +12,8 @@ uniform float uScale;
 
 varying vec2 vUv;
 varying vec3 vPosition;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
 
 // Stefan Gustavson 2D Simplex Noise
 vec3 permute(vec3 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
@@ -42,29 +44,26 @@ void main() {
   vUv = uv;
   vec3 pos = position;
 
-  // Pin base firmly to cotton wick (zero displacement at base uv.y <= 0.05)
-  float heightWeight = smoothstep(0.05, 0.9, uv.y);
+  // Pin base firmly to cotton wick (zero displacement at base uv.y <= 0.06)
+  float heightWeight = smoothstep(0.06, 0.95, uv.y);
 
   // Upward convection noise sampling
-  float noiseX = snoise(vec2(pos.x * 5.0, pos.y * 4.0 - uTime * 6.0));
-  float noiseZ = snoise(vec2(pos.z * 5.0 + 3.14, pos.y * 4.0 - uTime * 5.5));
-  float flutter = sin(uTime * 8.0 + pos.y * 12.0) * 0.035;
+  float noiseX = snoise(vec2(pos.x * 4.0, pos.y * 3.5 - uTime * 5.0));
+  float noiseZ = snoise(vec2(pos.z * 4.0 + 3.14, pos.y * 3.5 - uTime * 4.8));
+  float flutter = sin(uTime * 7.0 + pos.y * 10.0) * 0.025;
 
-  // Sculpt rigid cone geometry into an organic, curved teardrop flame bulb
-  // Narrow wick anchor (base), bulbous belly (uv.y ~ 0.25..0.4), flicking tip
-  float bulb = sin(pow(clamp(uv.y, 0.0, 1.0), 0.58) * 3.14159265);
-  float teardropRadius = bulb * 0.19 + (1.0 - uv.y) * 0.035;
-  if (length(pos.xz) > 0.0001) {
-    pos.xz = normalize(pos.xz) * teardropRadius;
-  }
-
-  pos.x += (noiseX * 0.045 + flutter) * heightWeight;
-  pos.z += (noiseZ * 0.045) * heightWeight;
+  // Gentle convection waft, stronger at flame tip
+  pos.x += (noiseX * 0.035 + flutter) * heightWeight;
+  pos.z += (noiseZ * 0.035) * heightWeight;
 
   pos *= uScale;
   vPosition = pos;
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+  vViewPosition = -mvPosition.xyz;
+  vNormal = normalMatrix * normal;
+
+  gl_Position = projectionMatrix * mvPosition;
 }
 `;
 
@@ -74,34 +73,52 @@ uniform float uScale;
 
 varying vec2 vUv;
 varying vec3 vPosition;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
 
 void main() {
   if (uScale <= 0.001) discard;
 
-  float h = vUv.y;
-  vec3 colorBlue = vec3(0.114, 0.141, 0.251); // #1d2440 deep indigo base
-  vec3 colorAmber = vec3(1.0, 0.533, 0.0);    // #ff8800 golden amber belly
-  vec3 colorYellow = vec3(1.0, 0.957, 0.80);  // #fff4cc incandescent yellow tip
-  vec3 colorWhiteCore = vec3(1.0, 0.99, 0.96); // Incandescent white-hot center core
+  float h = clamp(vUv.y, 0.0, 1.0);
+
+  // View-independent 3D Fresnel / normal falloff
+  vec3 norm = normalize(vNormal);
+  vec3 viewDir = normalize(vViewPosition);
+  float nDotV = abs(dot(norm, viewDir));
+
+  // Authentic Color Palette:
+  // 1. Oxygen-rich royal blue wick collar (h < 0.12)
+  vec3 colorBlue = vec3(0.08, 0.35, 0.98);    // Luminous royal blue
+  // 2. Warm Indian saffron-amber mantle (0.12 <= h <= 0.65)
+  vec3 colorSaffron = vec3(1.0, 0.45, 0.04); // Vibrant saffron
+  vec3 colorAmber = vec3(1.0, 0.75, 0.12);   // Golden amber
+  // 3. Incandescent golden-yellow tip (h > 0.65)
+  vec3 colorYellow = vec3(1.0, 0.94, 0.40);  // Bright yellow tip
+  // 4. White-hot interior core
+  vec3 colorWhiteCore = vec3(1.0, 0.99, 0.95);
 
   vec3 color;
-  if (h < 0.25) {
-    color = mix(colorBlue, colorAmber, smoothstep(0.0, 0.25, h));
+  if (h < 0.12) {
+    float blueFactor = smoothstep(0.12, 0.0, h);
+    color = mix(colorSaffron, colorBlue, blueFactor * 0.9);
+  } else if (h < 0.65) {
+    color = mix(colorSaffron, colorAmber, smoothstep(0.12, 0.65, h));
   } else {
-    color = mix(colorAmber, colorYellow, smoothstep(0.25, 0.90, h));
+    color = mix(colorAmber, colorYellow, smoothstep(0.65, 1.0, h));
   }
 
-  // Alpha dissolve: soft edge falloff and fade at sharp tip
-  float edgeDist = abs(vUv.x - 0.5) * 2.0;
-  float alphaEdge = 1.0 - smoothstep(0.4, 0.98, edgeDist);
-  float alphaTip = 1.0 - smoothstep(0.75, 1.0, h);
-  float alpha = alphaEdge * alphaTip * min(uScale, 1.0);
+  // Additive incandescent center core (strongest when looking directly at flame center)
+  float coreIntensity = pow(nDotV, 1.6) * (1.0 - smoothstep(0.65, 0.98, h)) * smoothstep(0.04, 0.20, h);
+  color = mix(color, colorWhiteCore, coreIntensity * 0.75);
 
-  // Intense incandescent white-hot core boost in center
-  if (h > 0.08 && edgeDist < 0.5) {
-    float coreFactor = (1.0 - smoothstep(0.0, 0.5, edgeDist)) * (1.0 - smoothstep(0.65, 0.95, h));
-    color = mix(color, colorWhiteCore, coreFactor * 0.75);
-  }
+  // Soft edge dissolve: smooth grazing rim and gentle fade at top tip
+  float alphaRim = pow(nDotV, 0.45); // Soft translucent edges
+  float alphaTip = 1.0 - smoothstep(0.82, 1.0, h); // Smooth tapered apex fade
+  float alpha = alphaRim * alphaTip * min(uScale, 1.0);
+
+  // Base transparency for smooth wick blend
+  float baseAlpha = smoothstep(0.0, 0.06, h);
+  alpha *= baseAlpha;
 
   if (alpha < 0.01) discard;
   gl_FragColor = vec4(color, alpha);

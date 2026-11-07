@@ -20,6 +20,13 @@ describe('Fireworks3D Particle Engine', () => {
     expect(fireworks.group).toBeInstanceOf(THREE.Group);
     expect(fireworks.getActiveParticleCount()).toBe(0);
     expect(fireworks.getFlashLight()).toBeInstanceOf(THREE.PointLight);
+
+    const points = fireworks.group.children.find((c) => c instanceof THREE.Points) as THREE.Points;
+    expect(points).toBeDefined();
+    const mat = points.material as THREE.PointsMaterial;
+    expect(mat.map).toBeDefined();
+    expect(mat.blending).toBe(THREE.AdditiveBlending);
+    expect(mat.size).toBeCloseTo(0.28, 2);
   });
 
   it('triggers 3D spherical burst for Swarna Baan (ID 1) with golden willow colors', () => {

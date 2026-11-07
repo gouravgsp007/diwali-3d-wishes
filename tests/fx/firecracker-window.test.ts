@@ -2,15 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FirecrackerWindow } from '../../src/fx/firecrackers/firecracker-window';
 import type { AudioEngine } from '../../src/audio/audio-engine';
 
-vi.mock('canvas-confetti', () => ({
-  default: vi.fn(),
-}));
-
-describe('Interactive Firecracker Window (3 Rockets)', () => {
+describe('Interactive Firecracker Window (Card-Free 3D Ceremony HUD)', () => {
   let container: HTMLDivElement;
   let mockAudioEngine: AudioEngine;
   let onCompleteSpy: () => void;
   let onSkipSpy: () => void;
+  let onRocketTriggeredSpy: (id: number) => void;
   let firecrackerWindow: FirecrackerWindow;
 
   beforeEach(() => {
@@ -21,16 +18,19 @@ describe('Interactive Firecracker Window (3 Rockets)', () => {
     mockAudioEngine = {
       playRocketLaunch: vi.fn(),
       playFireworksBurst: vi.fn(),
+      playSparklerSizzle: vi.fn(),
     } as unknown as AudioEngine;
 
     onCompleteSpy = vi.fn();
     onSkipSpy = vi.fn();
+    onRocketTriggeredSpy = vi.fn();
 
     firecrackerWindow = new FirecrackerWindow({
       container,
       audioEngine: mockAudioEngine,
       onComplete: onCompleteSpy,
       onSkip: onSkipSpy,
+      onRocketTriggered: onRocketTriggeredSpy,
     });
   });
 
@@ -40,7 +40,7 @@ describe('Interactive Firecracker Window (3 Rockets)', () => {
     vi.restoreAllMocks();
   });
 
-  it('mounts the overlay with 3 rocket launch cards, guidance banner, and initial count 0/3', () => {
+  it('mounts the overlay with status pill, guidance banner, and initial count 0/3 (no bulky card dock)', () => {
     firecrackerWindow.mount();
 
     const overlay = container.querySelector('#firecracker-window-overlay');
@@ -49,53 +49,30 @@ describe('Interactive Firecracker Window (3 Rockets)', () => {
     const countEl = container.querySelector('#cracker-launched-count');
     expect(countEl?.textContent).toBe('0');
 
-    // Verify all 3 rockets exist in the DOM
-    const rocket1 = container.querySelector('#rocket-card-1');
-    const rocket2 = container.querySelector('#rocket-card-2');
-    const rocket3 = container.querySelector('#rocket-card-3');
-    expect(rocket1).not.toBeNull();
-    expect(rocket2).not.toBeNull();
-    expect(rocket3).not.toBeNull();
+    // Verify card dock does NOT exist in DOM (satisfying user requirement for no cards)
+    expect(container.querySelector('#firecracker-card')).toBeNull();
+    expect(container.querySelector('#rocket-card-1')).toBeNull();
 
-    // Verify rocket titles
-    expect(rocket1?.textContent).toContain('Swarna Baan');
-    expect(rocket2?.textContent).toContain('Taramandal');
-    expect(rocket3?.textContent).toContain('Dhamaaka');
+    // Verify guidance toast exists
+    const guidance = container.querySelector('#firecracker-guidance-pill');
+    expect(guidance?.textContent).toContain('Tap any 3D rocket');
   });
 
-  it('tapping a rocket plays audio launch, updates button label to LAUNCHED, and increments count', () => {
+  it('launchRocket(id) notifies 3D scene, updates guidance, and increments launched count', () => {
     firecrackerWindow.mount();
 
-    const rocket1 = container.querySelector('#rocket-card-1') as HTMLElement;
-    rocket1.click();
-
-    expect(mockAudioEngine.playRocketLaunch).toHaveBeenCalledTimes(1);
-
-    const btn1 = container.querySelector('#rocket-btn-1');
-    expect(btn1?.textContent).toBe('✓ LAUNCHED');
+    const launched = firecrackerWindow.launchRocket(1);
+    expect(launched).toBe(true);
+    expect(onRocketTriggeredSpy).toHaveBeenCalledWith(1);
 
     const countEl = container.querySelector('#cracker-launched-count');
     expect(countEl?.textContent).toBe('1');
     expect(firecrackerWindow.getLaunchedCount()).toBe(1);
 
     // Clicking again should be ignored (idempotent)
-    rocket1.click();
-    expect(mockAudioEngine.playRocketLaunch).toHaveBeenCalledTimes(1);
+    const duplicate = firecrackerWindow.launchRocket(1);
+    expect(duplicate).toBe(false);
     expect(firecrackerWindow.getLaunchedCount()).toBe(1);
-  });
-
-  it('triggers fireworks burst audio and confetti after launch delay', () => {
-    firecrackerWindow.mount();
-
-    const rocket2 = container.querySelector('#rocket-card-2') as HTMLElement;
-    rocket2.click();
-
-    expect(mockAudioEngine.playFireworksBurst).not.toHaveBeenCalled();
-
-    // Advance 600ms for rocket ascent
-    vi.advanceTimersByTime(650);
-
-    expect(mockAudioEngine.playFireworksBurst).toHaveBeenCalledTimes(1);
   });
 
   it('supports keyboard shortcuts 1, 2, 3 to launch rockets', () => {
@@ -103,22 +80,27 @@ describe('Interactive Firecracker Window (3 Rockets)', () => {
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
     expect(firecrackerWindow.getLaunchedCount()).toBe(1);
+    expect(onRocketTriggeredSpy).toHaveBeenCalledWith(1);
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
     expect(firecrackerWindow.getLaunchedCount()).toBe(2);
+    expect(onRocketTriggeredSpy).toHaveBeenCalledWith(3);
   });
 
   it('automatically triggers onComplete after launching all 3 rockets', () => {
     firecrackerWindow.mount();
 
-    (container.querySelector('#rocket-card-1') as HTMLElement).click();
-    (container.querySelector('#rocket-card-2') as HTMLElement).click();
-    (container.querySelector('#rocket-card-3') as HTMLElement).click();
+    firecrackerWindow.launchRocket(1);
+    firecrackerWindow.launchRocket(2);
+    firecrackerWindow.launchRocket(3);
 
     expect(firecrackerWindow.getLaunchedCount()).toBe(3);
 
-    // Fast-forward ascent (600ms) + celebration (500ms) + dismiss (900ms + 400ms)
-    vi.advanceTimersByTime(2500);
+    const guidance = container.querySelector('#firecracker-guidance-pill');
+    expect(guidance?.textContent).toContain('Revealing your festive wish');
+
+    // Fast-forward completion delay (1500ms) + dismiss animation (400ms)
+    vi.advanceTimersByTime(2000);
 
     expect(onCompleteSpy).toHaveBeenCalledTimes(1);
     expect(container.querySelector('#firecracker-window-overlay')).toBeNull();

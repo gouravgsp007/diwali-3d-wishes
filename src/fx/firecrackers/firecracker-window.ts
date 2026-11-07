@@ -90,7 +90,7 @@ export class FirecrackerWindow {
     this.overlayEl.innerHTML = `
       <!-- Top Floating Status Pill -->
       <div class="w-full flex items-center justify-between pointer-events-auto">
-        <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-stone-950/75 backdrop-blur-md border border-amber-500/30 text-xs shadow-lg">
+        <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-stone-950/80 backdrop-blur-md border border-amber-500/30 text-xs shadow-lg">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span class="font-serif font-bold text-amber-200">Shubh Deepotsav</span>
           <span class="text-amber-500/50">•</span>
@@ -100,7 +100,7 @@ export class FirecrackerWindow {
         <button
           id="firecracker-skip-btn"
           type="button"
-          class="text-xs px-3.5 py-1.5 rounded-full bg-stone-950/75 backdrop-blur-md hover:bg-stone-900 text-amber-200/80 hover:text-amber-100 border border-amber-500/30 transition-all cursor-pointer shadow-lg flex items-center gap-1.5"
+          class="text-xs px-3.5 py-1.5 rounded-full bg-stone-950/80 backdrop-blur-md hover:bg-stone-900 text-amber-200/80 hover:text-amber-100 border border-amber-500/30 transition-all cursor-pointer shadow-lg flex items-center gap-1.5"
           title="Skip firecrackers to view personal wish"
         >
           <span>Skip to Wish</span>
@@ -108,45 +108,13 @@ export class FirecrackerWindow {
         </button>
       </div>
 
-      <!-- Bottom Floating Launcher Strip & Guidance (Replaces bulky card modal) -->
-      <div
-        id="firecracker-card"
-        class="w-full max-w-lg mx-auto flex flex-col items-center gap-2 pointer-events-auto transform transition-all duration-300"
-      >
-        <!-- Floating Prompt Pill -->
-        <div class="px-4 py-1 rounded-full bg-stone-950/80 backdrop-blur-md border border-amber-500/25 text-[11px] sm:text-xs text-amber-200 font-medium text-center shadow-lg">
-          ✨ Tap any 3D rocket in the scene or launcher below
-        </div>
-
-        <!-- 3 Quick Launcher Chips -->
-        <div class="w-full flex items-center justify-center gap-2 sm:gap-3">
-          ${ROCKETS.map(
-            (r) => `
-            <div
-              id="rocket-card-${r.id}"
-              data-rocket-id="${r.id}"
-              role="button"
-              tabindex="0"
-              aria-label="Launch ${r.name} rocket (${r.hindiName})"
-              class="group relative flex-1 flex flex-col items-center p-2 sm:p-2.5 rounded-2xl bg-stone-950/85 backdrop-blur-md border ${r.accentClass} active:scale-95 transition-all cursor-pointer shadow-xl text-center focus:outline-none focus:ring-2 focus:ring-amber-400"
-            >
-              <div class="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-amber-100">
-                <span id="rocket-icon-${r.id}" class="text-sm">${r.icon}</span>
-                <span class="truncate">${r.name}</span>
-              </div>
-              <div class="text-[9px] text-amber-300/70 font-serif">${r.hindiName}</div>
-
-              <button
-                id="rocket-btn-${r.id}"
-                type="button"
-                tabindex="-1"
-                class="mt-1.5 w-full py-0.5 px-2 text-[10px] font-bold rounded-lg border ${r.buttonClass} transition-all pointer-events-none"
-              >
-                Launch
-              </button>
-            </div>
-          `
-          ).join('')}
+      <!-- Floating Guidance Toast (Card-Free, Immersive 3D Interaction) -->
+      <div class="w-full flex justify-center pointer-events-none pb-4 sm:pb-8">
+        <div
+          id="firecracker-guidance-pill"
+          class="px-4 py-1.5 rounded-full bg-stone-950/85 backdrop-blur-md border border-amber-500/30 text-xs text-amber-200 font-medium text-center shadow-lg animate-pulse pointer-events-auto"
+        >
+          ✨ Tap any 3D rocket in the scene to launch
         </div>
       </div>
     `;
@@ -174,89 +142,50 @@ export class FirecrackerWindow {
       this.handleSkip();
     });
 
-    // 3 Rocket Launcher Chips
-    ROCKETS.forEach((r) => {
-      const card = this.overlayEl?.querySelector(`#rocket-card-${r.id}`);
-      card?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.launchRocket(r.id);
-      });
-      card?.addEventListener('keydown', (e: Event) => {
-        const keyEvent = e as KeyboardEvent;
-        if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
-          e.preventDefault();
-          e.stopPropagation();
-          this.launchRocket(r.id);
-        }
-      });
-    });
-
-    // Desktop keyboard shortcuts (1, 2, 3)
+    // Desktop keyboard shortcuts (1, 2, 3) for accessibility
     this.keydownListener = (e: KeyboardEvent) => {
       if (this.isDisposed) return;
       if (e.key === '1') this.launchRocket(1);
       if (e.key === '2') this.launchRocket(2);
       if (e.key === '3') this.launchRocket(3);
+      if (e.key === 'Escape') this.handleSkip();
     };
     window.addEventListener('keydown', this.keydownListener);
   }
 
   /**
    * Triggers the launch of a rocket by ID (1, 2, or 3).
-   * Can be called programmatically from 3D scene raycast or from HUD chip click.
+   * Can be called programmatically from 3D scene raycast or keyboard shortcut.
    */
   public launchRocket(id: number): boolean {
     if (this.isDisposed || this.launchedRockets.has(id)) return false;
 
     this.launchedRockets.add(id);
 
-    // 1. Play rising rocket whistle launch sound
-    this.options.audioEngine.playRocketLaunch();
-
-    // 2. Notify external 3D scene manager (to launch in-engine 3D rocket & fireworks)
+    // 1. Notify external 3D scene manager (to ignite in-engine 3D rocket & fireworks)
     this.options.onRocketTriggered?.(id);
 
-    // 3. Update HUD card state
-    this.updateCardState(id);
-
-    // 4. Update launch counter
+    // 2. Update status counter and guidance
     this.updateCounter();
 
-    // 5. Schedule detonation sound (synced with peak 3D rocket ascent)
-    setTimeout(() => {
-      if (this.isDisposed) return;
-      this.options.audioEngine.playFireworksBurst();
-    }, 600);
+    // 4. Update guidance text
+    if (this.overlayEl) {
+      const guidance = this.overlayEl.querySelector('#firecracker-guidance-pill');
+      if (guidance) {
+        if (this.launchedRockets.size < 3) {
+          guidance.textContent = '✨ Tap another 3D rocket in the scene';
+        } else {
+          guidance.textContent = '🎇 Shubh Deepotsav! Revealing your festive wish...';
+        }
+      }
+    }
 
-    // 6. Check if all 3 rockets have launched
+    // 5. Check if all 3 rockets have launched
     if (this.launchedRockets.size === 3) {
       this.handleAllLaunched();
     }
 
     return true;
-  }
-
-  private updateCardState(id: number): void {
-    if (!this.overlayEl) return;
-
-    const card = this.overlayEl.querySelector(`#rocket-card-${id}`);
-    const btn = this.overlayEl.querySelector(`#rocket-btn-${id}`);
-    const icon = this.overlayEl.querySelector(`#rocket-icon-${id}`);
-
-    if (btn) {
-      btn.textContent = '✓ LAUNCHED';
-      btn.className =
-        'mt-1.5 w-full py-0.5 px-2 text-[10px] font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 pointer-events-none';
-    }
-
-    if (card) {
-      card.classList.remove('cursor-pointer', 'active:scale-95');
-      card.classList.add('opacity-70', 'pointer-events-none');
-    }
-
-    if (icon) {
-      icon.classList.add('-translate-y-1', 'scale-110');
-    }
   }
 
   private updateCounter(): void {
@@ -287,8 +216,6 @@ export class FirecrackerWindow {
 
     if (this.overlayEl) {
       this.overlayEl.classList.add('opacity-0', 'pointer-events-none');
-      const card = this.overlayEl.querySelector('#firecracker-card');
-      card?.classList.add('scale-95');
 
       this.dismissTimeoutId = setTimeout(() => {
         this.dismissTimeoutId = null;

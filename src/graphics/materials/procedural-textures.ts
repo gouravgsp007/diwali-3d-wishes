@@ -99,3 +99,54 @@ export function generateProceduralClayTextures(): BakedClayTextures {
 
   return { bumpMap, roughnessMap, colorMap };
 }
+
+let cachedSparkTexture: THREE.CanvasTexture | null = null;
+
+/**
+ * Generates a 64x64 procedural circular Gaussian radial spark texture with an
+ * incandescent white core, golden luminous halo, and soft alpha falloff.
+ * Cached as a singleton (0 KB network payload, single GPU upload).
+ * Eliminates square pixel boxes across all WebGL particle systems.
+ */
+export function getSparkTexture(): THREE.CanvasTexture {
+  if (cachedSparkTexture) {
+    return cachedSparkTexture;
+  }
+
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  if (ctx) {
+    const center = size / 2;
+    const radius = size / 2;
+    const grad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+    grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');     // Incandescent white core
+    grad.addColorStop(0.2, 'rgba(255, 240, 180, 0.95)');    // Brilliant golden white
+    grad.addColorStop(0.45, 'rgba(255, 180, 50, 0.65)');    // Warm amber glow
+    grad.addColorStop(0.75, 'rgba(255, 90, 15, 0.20)');     // Soft fading ember edge
+    grad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');            // Fully transparent border
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  cachedSparkTexture = new THREE.CanvasTexture(canvas);
+  cachedSparkTexture.generateMipmaps = false;
+  cachedSparkTexture.minFilter = THREE.LinearFilter;
+  cachedSparkTexture.magFilter = THREE.LinearFilter;
+  cachedSparkTexture.needsUpdate = true;
+
+  return cachedSparkTexture;
+}
+
+/**
+ * Resets cached spark texture (useful for tests and memory cleanup).
+ */
+export function resetSparkTextureCache(): void {
+  if (cachedSparkTexture) {
+    cachedSparkTexture.dispose();
+    cachedSparkTexture = null;
+  }
+}

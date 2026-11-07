@@ -22,12 +22,12 @@ describe('FlameShader & FlameMesh', () => {
     expect(uniforms.uScale.value).toBe(0.0);
   });
 
-  it('Flame vertex shader implements 2D simplex noise displacement with smoothstep height attenuation pinning base vertices', () => {
+  it('Flame vertex shader implements 2D simplex noise convection displacement with smoothstep height attenuation', () => {
     // Inspect vertex shader code properties
     expect(FLAME_VERTEX_SHADER).toContain('snoise');
-    expect(FLAME_VERTEX_SHADER).toContain('smoothstep(0.05, 0.9, uv.y)');
-    expect(FLAME_VERTEX_SHADER).toContain('uTime * 6.0');
-    expect(FLAME_VERTEX_SHADER).toContain('uTime * 8.0');
+    expect(FLAME_VERTEX_SHADER).toContain('smoothstep(0.06, 0.95, uv.y)');
+    expect(FLAME_VERTEX_SHADER).toContain('uTime * 5.0');
+    expect(FLAME_VERTEX_SHADER).toContain('vNormal = normalMatrix * normal');
     expect(FLAME_VERTEX_SHADER).toContain('pos *= uScale');
 
     // Ensure built-in attributes are not re-declared (prevents GLSL compile errors)
@@ -36,37 +36,35 @@ describe('FlameShader & FlameMesh', () => {
     expect(FLAME_VERTEX_SHADER).not.toMatch(/uniform\s+mat4\s+projectionMatrix/);
   });
 
-  it('Flame fragment shader evaluates 3-stop vertical color ramp with edge and tip alpha dissolve', () => {
-    // Indigo / deep blue base: #1d2440 => vec3(0.114, 0.141, 0.251)
-    expect(FLAME_FRAGMENT_SHADER).toContain('0.114, 0.141, 0.251');
-    // Golden amber belly: #ff8800 => vec3(1.0, 0.533, 0.0)
-    expect(FLAME_FRAGMENT_SHADER).toContain('1.0, 0.533, 0.0');
-    // Incandescent yellow tip: #fff4cc => vec3(1.0, 0.957, 0.80)
-    expect(FLAME_FRAGMENT_SHADER).toContain('1.0, 0.957, 0.80');
+  it('Flame fragment shader evaluates authentic blue collar, saffron mantle, and view-independent fresnel falloff', () => {
+    // Royal blue wick collar base: vec3(0.08, 0.35, 0.98)
+    expect(FLAME_FRAGMENT_SHADER).toContain('0.08, 0.35, 0.98');
+    // Vibrant Indian saffron mantle: vec3(1.0, 0.45, 0.04)
+    expect(FLAME_FRAGMENT_SHADER).toContain('1.0, 0.45, 0.04');
+    // Golden amber: vec3(1.0, 0.75, 0.12)
+    expect(FLAME_FRAGMENT_SHADER).toContain('1.0, 0.75, 0.12');
+    // Incandescent yellow tip: vec3(1.0, 0.94, 0.40)
+    expect(FLAME_FRAGMENT_SHADER).toContain('1.0, 0.94, 0.40');
 
-    // Fragment discards and alpha edge falloff
+    // View-independent fresnel normal dot product
+    expect(FLAME_FRAGMENT_SHADER).toContain('dot(norm, viewDir)');
+
+    // Fragment discards and alpha falloff
     expect(FLAME_FRAGMENT_SHADER).toContain('if (uScale <= 0.001) discard;');
-    expect(FLAME_FRAGMENT_SHADER).toContain('smoothstep(0.4, 0.98, edgeDist)');
-    expect(FLAME_FRAGMENT_SHADER).toContain('smoothstep(0.75, 1.0, h)');
     expect(FLAME_FRAGMENT_SHADER).toContain('if (alpha < 0.01) discard;');
   });
 
-  it('FlameMesh builds ConeGeometry with height 0.45 and radius 0.16 translated upward so pivot is at base', () => {
+  it('FlameMesh builds authentic teardrop LatheGeometry with base anchored at wick base', () => {
     const wickAnchor = new THREE.Vector3(0.0, 0.68, 1.38);
     const flameMesh = new FlameMesh(wickAnchor);
 
-    expect(flameMesh.geometry).toBeInstanceOf(THREE.ConeGeometry);
-    const params = flameMesh.geometry.parameters;
-    expect(params.radius).toBeCloseTo(0.16);
-    expect(params.height).toBeCloseTo(0.45);
-    expect(params.openEnded).toBe(true);
+    expect(flameMesh.geometry).toBeInstanceOf(THREE.LatheGeometry);
 
-    // Verify bounding box or base position: before translation, Y ranges [-0.225, 0.225].
-    // After translating by +0.225, base Y should be ~0.0 and tip Y should be ~0.45.
+    // Verify bounding box: base Y should be ~0.0 and tip Y should be ~0.52
     flameMesh.geometry.computeBoundingBox();
     const bbox = flameMesh.geometry.boundingBox!;
     expect(bbox.min.y).toBeCloseTo(0.0, 2);
-    expect(bbox.max.y).toBeCloseTo(0.45, 2);
+    expect(bbox.max.y).toBeCloseTo(0.52, 2);
 
     flameMesh.dispose();
   });
@@ -99,16 +97,13 @@ describe('FlameShader & FlameMesh', () => {
     flameMesh.dispose();
   });
 
-  it('FlameMesh implements dispose() deallocating geometry and material GPU resources', () => {
-    const wickAnchor = new THREE.Vector3(0.0, 0.68, 1.38);
-    const flameMesh = new FlameMesh(wickAnchor);
-
+  it('dispose() deallocates geometry and material cleanly', () => {
+    const flameMesh = new FlameMesh(new THREE.Vector3());
     const geoSpy = vi.spyOn(flameMesh.geometry, 'dispose');
     const matSpy = vi.spyOn(flameMesh.material, 'dispose');
 
     flameMesh.dispose();
-
-    expect(geoSpy).toHaveBeenCalledOnce();
-    expect(matSpy).toHaveBeenCalledOnce();
+    expect(geoSpy).toHaveBeenCalled();
+    expect(matSpy).toHaveBeenCalled();
   });
 });

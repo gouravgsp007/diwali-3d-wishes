@@ -78,6 +78,7 @@ export class SceneManager {
   private firecrackerWindow: FirecrackerWindow | null = null;
   private fireworks3D: Fireworks3D | null = null;
   private rocketStandManager: RocketStandManager | null = null;
+  private rocketAudioTimeouts: ReturnType<typeof setTimeout>[] = [];
   private raycaster = new THREE.Raycaster();
   private pointerNdc = new THREE.Vector2();
   private theme: ExperienceTheme | null = null;
@@ -530,15 +531,25 @@ export class SceneManager {
       }
 
       // 2. Camera perspective to frame launchpad & night sky
-      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.3, 4.3), 1000);
-      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 1.2, 0), 1000);
+      this.cameraRig?.dollyTo(new THREE.Vector3(0, 2.6, 4.8), 1000);
+      this.cameraRig?.panTargetTo(new THREE.Vector3(0, 1.4, 0), 1000);
 
       // 3. Mount Minimalist, Card-Less Ceremony HUD
       this.firecrackerWindow = new FirecrackerWindow({
         container: this.container,
         audioEngine: AudioEngine.getInstance(),
         onRocketTriggered: (id: number) => {
+          const audio = AudioEngine.getInstance();
+          audio.playSparklerSizzle();
+
+          // After 350ms fuse burn, play rocket whoosh launch
+          const timerId = setTimeout(() => {
+            audio.playRocketLaunch();
+          }, 350);
+          this.rocketAudioTimeouts.push(timerId);
+
           this.rocketStandManager?.launch(id, (detonatePos, typeId) => {
+            audio.playFireworksBurst();
             this.fireworks3D?.triggerBurst(detonatePos, typeId, 220);
           });
         },
@@ -966,6 +977,9 @@ export class SceneManager {
   }
 
   private cleanupFirecrackerCeremony(): void {
+    this.rocketAudioTimeouts.forEach((t) => clearTimeout(t));
+    this.rocketAudioTimeouts.length = 0;
+
     if (this.rocketStandManager) {
       this.scene.remove(this.rocketStandManager.group);
       this.rocketStandManager.dispose();

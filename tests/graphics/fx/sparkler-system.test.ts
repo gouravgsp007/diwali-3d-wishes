@@ -42,7 +42,8 @@ describe('SparklerSystem (Phuljhadi)', () => {
     expect(material.depthWrite).toBe(false);
     expect(material.vertexColors).toBe(true);
     expect(material.transparent).toBe(true);
-    expect(material.size).toBeCloseTo(0.075, 3);
+    expect(material.map).toBeDefined();
+    expect(material.size).toBeCloseTo(0.18, 2);
 
     system.dispose();
   });
