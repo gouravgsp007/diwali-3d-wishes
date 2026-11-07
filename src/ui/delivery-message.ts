@@ -39,7 +39,7 @@ export function formatDeliveryMessage(params: DeliveryMessageParams): string {
       `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
       '',
       'Wishing you a fantastic year filled with happiness and success! 🎂✨',
-      '— Handcrafted with love via @dreamroutes07',
+      '— Handcrafted with love via @thecodeverse09',
     ].join('\n');
   }
 
@@ -55,7 +55,7 @@ export function formatDeliveryMessage(params: DeliveryMessageParams): string {
       `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
       '',
       'Wishing the lovely couple a lifetime of joy and togetherness! 💍✨',
-      '— Handcrafted with love via @dreamroutes07',
+      '— Handcrafted with love via @thecodeverse09',
     ].join('\n');
   }
 
@@ -71,7 +71,7 @@ export function formatDeliveryMessage(params: DeliveryMessageParams): string {
       `🔑 *Your Secret Unlock Passcode:* *${passcode}*`,
       '',
       'Cheers to new beginnings, sparkling dreams, and endless joy! 🥂🎆',
-      '— Handcrafted with love via @dreamroutes07',
+      '— Handcrafted with love via @thecodeverse09',
     ].join('\n');
   }
 

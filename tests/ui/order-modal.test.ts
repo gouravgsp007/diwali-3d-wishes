@@ -21,7 +21,7 @@ describe('OrderModal UI Component', () => {
   });
 
   it('mounts order modal overlay (#order-modal-overlay) into container as hidden initially', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     const overlay = document.getElementById('order-modal-overlay');
@@ -32,24 +32,24 @@ describe('OrderModal UI Component', () => {
     expect(overlay?.classList.contains('pointer-events-none')).toBe(true);
   });
 
-  it('configures direct Instagram DM link and profile link for dreamroutes07', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+  it('configures direct Instagram DM link and profile link for thecodeverse09', () => {
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     const dmBtn = document.getElementById('order-instagram-btn') as HTMLAnchorElement | null;
     const profileLink = document.getElementById('order-instagram-profile-link') as HTMLAnchorElement | null;
 
     expect(dmBtn).not.toBeNull();
-    expect(dmBtn?.href).toBe('https://ig.me/m/dreamroutes07');
-    expect(dmBtn?.textContent).toContain('@dreamroutes07');
+    expect(dmBtn?.href).toContain('thecodeverse09');
+    expect(dmBtn?.textContent).toContain('@thecodeverse09');
 
     expect(profileLink).not.toBeNull();
-    expect(profileLink?.href).toBe('https://www.instagram.com/dreamroutes07');
-    expect(profileLink?.textContent).toContain('dreamroutes07');
+    expect(profileLink?.href).toContain('thecodeverse09');
+    expect(profileLink?.textContent).toContain('thecodeverse09');
   });
 
   it('transitions from hidden to visible on show() and back on hide()', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     const overlay = document.getElementById('order-modal-overlay');
@@ -67,7 +67,7 @@ describe('OrderModal UI Component', () => {
   });
 
   it('updates Instagram handle dynamically via setInstagramHandle()', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     orderModal.setInstagramHandle('@custom_seller');
@@ -81,7 +81,7 @@ describe('OrderModal UI Component', () => {
   });
 
   it('opens on hashchange to #order', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     expect(orderModal.isOpen()).toBe(false);
@@ -93,7 +93,7 @@ describe('OrderModal UI Component', () => {
   });
 
   it('removes overlay element and event listener on dispose()', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     expect(document.getElementById('order-modal-overlay')).not.toBeNull();
@@ -103,7 +103,7 @@ describe('OrderModal UI Component', () => {
   });
 
   it('renders the festive offer pricing of ₹49 with original ₹99 struck through', () => {
-    orderModal = new OrderModal(container, 'dreamroutes07');
+    orderModal = new OrderModal(container, 'thecodeverse09');
     orderModal.mount();
 
     const overlay = document.getElementById('order-modal-overlay');

@@ -96,7 +96,7 @@ export class GreetingModal {
         <div class="mt-3">
           <a
             id="creator-badge"
-            href="https://www.instagram.com/dreamroutes07?vrfl=MWhxb282aGZoYWpoeA=="
+            href="https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y"
             target="_blank"
             rel="noopener noreferrer"
             class="text-[11px] font-medium text-amber-400/80 hover:text-amber-300 underline underline-offset-4 transition-colors cursor-pointer pointer-events-none"

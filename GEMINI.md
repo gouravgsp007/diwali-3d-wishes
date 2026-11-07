@@ -27,7 +27,7 @@ Whenever the user requests a new feature, enhancement, or code modification:
 2. **Audio Autoplay Compliance**: Audio context unlock must remain strictly bound to direct user touch gesture on passcode submission or "Tap to Light".
 3. **Cryptographic Compatibility**: Never alter the `#d=` salt (`ShubhDiwali2026Salt`), PBKDF2 iterations (100,000), or AES-GCM 256-bit parameters. Existing wish links generated in the past must remain decryptable forever.
 4. **Admin Protection**: Admin PIN is strictly `2026`.
-5. **Instagram Routing**: Any public "Create Custom Wish" button must route to Instagram DM (`https://www.instagram.com/dreamroutes07?vrfl=MWhxb282aGZoYWpoeA==`).
+5. **Instagram Routing**: Any public "Create Custom Wish" button must route to Instagram DM (`https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y`).
 
 ---
 

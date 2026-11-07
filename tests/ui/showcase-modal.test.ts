@@ -67,12 +67,12 @@ describe('ShowcaseModal UI Controller', () => {
   });
 
   it('contains Instagram DM order button with correct link', () => {
-    modal = new ShowcaseModal({ container, instagramHandle: 'dreamroutes07' });
+    modal = new ShowcaseModal({ container, instagramHandle: 'thecodeverse09' });
     modal.mount();
 
     const orderBtn = container.querySelector('#showcase-order-btn') as HTMLAnchorElement;
     expect(orderBtn).not.toBeNull();
-    expect(orderBtn.href).toContain('instagram.com/dreamroutes07');
+    expect(orderBtn.href).toContain('instagram.com/thecodeverse09');
   });
 
   it('displays the festive offer pricing of ₹49 with original ₹99 struck through', () => {

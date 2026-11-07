@@ -45,7 +45,7 @@ export function bootstrap(): {
   const creatorPortal = new CreatorPortal({ container: sceneContainer });
   creatorPortal.mount();
 
-  const orderModal = new OrderModal(sceneContainer, 'dreamroutes07');
+  const orderModal = new OrderModal(sceneContainer, 'thecodeverse09');
   orderModal.mount();
 
   const festiveActionBar = new FestiveActionBar(sceneContainer, sceneManager);
@@ -62,7 +62,7 @@ export function bootstrap(): {
 
   const showcaseModal = new ShowcaseModal({
     container: sceneContainer,
-    instagramHandle: 'dreamroutes07',
+    instagramHandle: 'thecodeverse09',
     onSelectOccasion: (occasion) => {
       const theme = ThemeRegistry.getInstance().get(occasion);
       if (theme) {
@@ -82,7 +82,7 @@ export function bootstrap(): {
           type: 'UNLOCK_SUCCESS',
           payload: {
             recipient: 'You',
-            sender: 'dreamroutes07',
+            sender: 'thecodeverse09',
             message: theme.subtitle,
             templateId: occasion,
             createdAt: Date.now(),

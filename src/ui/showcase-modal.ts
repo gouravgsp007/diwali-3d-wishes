@@ -14,7 +14,7 @@ export interface ShowcaseModalOptions {
  * provides an Instagram Bio link showcase allowing prospective buyers
  * to preview all 4 festive experiences (Diwali, Birthday, Wedding, New Year)
  * in real-time 3D, and directly order their custom personalized package
- * via Instagram DM (@dreamroutes07) for festive offer of ₹49 (original ₹99).
+ * via Instagram DM (@thecodeverse09) for festive offer of ₹49 (original ₹99).
  */
 export class ShowcaseModal {
   private overlayEl: HTMLElement | null = null;
@@ -23,8 +23,11 @@ export class ShowcaseModal {
   private instagramUrl: string;
 
   constructor(private readonly options: ShowcaseModalOptions) {
-    const handle = options.instagramHandle || 'dreamroutes07';
-    this.instagramUrl = `https://www.instagram.com/${handle}?vrfl=MWhxb282aGZoYWpoeA==`;
+    const handle = options.instagramHandle || 'thecodeverse09';
+    this.instagramUrl =
+      handle === 'thecodeverse09'
+        ? 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y'
+        : `https://www.instagram.com/${handle}`;
     this.onHashChangeBound = this.handleHashChange.bind(this);
     window.addEventListener('hashchange', this.onHashChangeBound);
   }
@@ -190,7 +193,7 @@ export class ShowcaseModal {
 
         <!-- Footer Direct Order Link -->
         <div class="text-center text-[11px] text-amber-400/70">
-          Want your own custom personalized celebration? <a href="${this.instagramUrl}" target="_blank" rel="noopener noreferrer" class="underline text-amber-300 hover:text-amber-100">DM @dreamroutes07 on Instagram</a>
+          Want your own custom personalized celebration? <a href="${this.instagramUrl}" target="_blank" rel="noopener noreferrer" class="underline text-amber-300 hover:text-amber-100">DM @thecodeverse09 on Instagram</a>
         </div>
       </div>
     `;

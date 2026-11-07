@@ -147,7 +147,7 @@ describe('GreetingModal UI Component', () => {
 
     const badge = document.getElementById('creator-badge') as HTMLAnchorElement | null;
     expect(badge).not.toBeNull();
-    expect(badge?.getAttribute('href')).toContain('instagram.com/dreamroutes07');
+    expect(badge?.getAttribute('href')).toContain('instagram.com/thecodeverse09');
     expect(badge?.textContent).toContain('Order Your Custom 3D Wish');
   });
 

@@ -167,7 +167,7 @@ export class CreatorPortal {
             <p id="seller-pin-error" class="hidden text-xs text-rose-400 font-medium"></p>
           </form>
           <div class="pt-2 text-[11px] text-amber-400/60">
-            Want to order a custom wish? <a href="#order" class="underline text-amber-300">DM @dreamroutes07 on Instagram</a>
+            Want to order a custom wish? <a href="#order" class="underline text-amber-300">DM @thecodeverse09 on Instagram</a>
           </div>
         </div>
 

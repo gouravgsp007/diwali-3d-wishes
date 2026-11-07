@@ -89,7 +89,7 @@ async function run() {
 
   console.log('✓ WhatsApp button targets opened:', newTargetsOpened - targetsBeforeWhatsApp);
 
-  // Test 9: Test Order modal with @dreamroutes07 Instagram links
+  // Test 9: Test Order modal with @thecodeverse09 Instagram links
   console.log('9. Navigating to #order to verify Instagram DM links...');
   await page.goto('http://localhost:3000/#order', { waitUntil: 'networkidle0' });
   await page.waitForSelector('#order-card', { visible: true });
@@ -101,13 +101,13 @@ async function run() {
   console.log('  Instagram DM Button Text:', igDmText);
   console.log('  Instagram Profile Link:', igProfileHref);
 
-  if (igDmHref !== 'https://ig.me/m/dreamroutes07') {
-    throw new Error(`FAIL: Expected DM link https://ig.me/m/dreamroutes07, got ${igDmHref}`);
+  if (igDmHref !== 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y') {
+    throw new Error(`FAIL: Expected DM link https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y, got ${igDmHref}`);
   }
-  if (!igDmText?.includes('dreamroutes07')) {
-    throw new Error(`FAIL: Expected text to mention @dreamroutes07, got ${igDmText}`);
+  if (!igDmText?.includes('thecodeverse09')) {
+    throw new Error(`FAIL: Expected text to mention @thecodeverse09, got ${igDmText}`);
   }
-  console.log('✓ PASS: Instagram DM options properly configured for @dreamroutes07!');
+  console.log('✓ PASS: Instagram DM options properly configured for @thecodeverse09!');
 
   await browser.close();
   console.log('🎉 ALL END-TO-END CHECKS AND BUGFIX VERIFICATIONS PASSED 100%!');

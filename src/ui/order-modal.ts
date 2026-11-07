@@ -11,11 +11,11 @@ export class OrderModal {
   private overlayEl: HTMLElement | null = null;
   private isVisible = false;
   private readonly onHashChangeBound: () => void;
-  private instagramUrl = 'https://ig.me/m/dreamroutes07';
-  private instagramProfileUrl = 'https://www.instagram.com/dreamroutes07';
-  private instagramHandle = 'dreamroutes07';
+  private instagramUrl = 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y';
+  private instagramProfileUrl = 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y';
+  private instagramHandle = 'thecodeverse09';
 
-  constructor(private container: HTMLElement, instagramHandle: string = 'dreamroutes07') {
+  constructor(private container: HTMLElement, instagramHandle: string = 'thecodeverse09') {
     this.setInstagramHandle(instagramHandle);
     this.onHashChangeBound = this.handleHashChange.bind(this);
     window.addEventListener('hashchange', this.onHashChangeBound);
@@ -215,8 +215,14 @@ export class OrderModal {
   public setInstagramHandle(handle: string): void {
     const cleanHandle = handle.replace('@', '').trim();
     this.instagramHandle = cleanHandle;
-    this.instagramUrl = `https://ig.me/m/${cleanHandle}`;
-    this.instagramProfileUrl = `https://www.instagram.com/${cleanHandle}`;
+    this.instagramUrl =
+      cleanHandle === 'thecodeverse09'
+        ? 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y'
+        : `https://ig.me/m/${cleanHandle}`;
+    this.instagramProfileUrl =
+      cleanHandle === 'thecodeverse09'
+        ? 'https://www.instagram.com/thecodeverse09?xtok=bWZqdzczYzAwOG1y'
+        : `https://www.instagram.com/${cleanHandle}`;
     const btn = this.overlayEl?.querySelector('#order-instagram-btn') as HTMLAnchorElement | null;
     if (btn) {
       btn.href = this.instagramUrl;

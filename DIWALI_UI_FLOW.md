@@ -161,7 +161,7 @@ At the bottom of the screen rests a responsive, glassmorphic action bar with **4
     - Saves all generated wishes locally and syncs to a Google Sheets webhook.
     - Exports Excel spreadsheet (`.xlsx` / `.csv`) with UTF-8 BOM so Indian names and festive emojis display cleanly in Excel.
 - **Instagram DM Routing**:
-  - Public visitors attempting to generate custom wishes are routed directly to the creator's Instagram DM (`@dreamroutes07`) to purchase a package.
+  - Public visitors attempting to generate custom wishes are routed directly to the creator's Instagram DM (`@thecodeverse09`) to purchase a package.
 
 ---
 
